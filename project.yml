@@ -1,0 +1,103 @@
+name: RightKit
+
+options:
+  bundleIdPrefix: com.dozecat
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "13.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  RightKit:
+    type: application
+    platform: macOS
+    sources:
+      - path: RightKit
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit
+        PRODUCT_NAME: RightKit
+        INFOPLIST_FILE: RightKit/Info.plist
+        CODE_SIGN_ENTITLEMENTS: RightKit/RightKit.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_APP_SANDBOX: NO
+    dependencies:
+      - target: FinderExtension
+        embed: true
+        codeSign: true
+      - target: ScriptXPCService
+        embed: true
+        codeSign: true
+
+  FinderExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: FinderExtension
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.FinderExtension
+        PRODUCT_NAME: FinderExtension
+        INFOPLIST_FILE: FinderExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: FinderExtension/FinderExtension.entitlements
+        SKIP_INSTALL: YES
+
+  ScriptXPCService:
+    type: xpc-service
+    platform: macOS
+    sources:
+      - path: ScriptXPCService
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.ScriptXPCService
+        PRODUCT_NAME: ScriptXPCService
+        INFOPLIST_FILE: ScriptXPCService/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ScriptXPCService/ScriptXPCService.entitlements
+        SKIP_INSTALL: YES
+
+  RightKitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKitTests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  RightKit:
+    build:
+      targets:
+        RightKit: all
+        FinderExtension: all
+        ScriptXPCService: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - RightKitTests
+    archive:
+      config: Release
