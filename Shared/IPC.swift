@@ -1,7 +1,7 @@
 import Foundation
 
 @objc public protocol ScriptXPCProtocol {
-    func runScript(atPath path: String, arguments: [String], workingDirectory: String?, reply: @escaping (Int32) -> Void)
+    func executeScript(_ requestData: Data, reply: @escaping (Data) -> Void)
 }
 
 enum XPCService {

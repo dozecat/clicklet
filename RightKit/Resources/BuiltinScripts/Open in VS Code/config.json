@@ -1,0 +1,7 @@
+{
+  "name": "用 VS Code 打开",
+  "context": "all",
+  "multiple": true,
+  "confirm": false,
+  "order": 10
+}

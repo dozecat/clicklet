@@ -14,11 +14,14 @@
 ## 工程架构
 
 ```
-RightKit.app          主应用（设置界面）
-FinderSyncExtension   Finder 右键扩展
-ScriptXPCService      脚本执行服务
-Shared                三个 target 共用的业务逻辑源码
+RightKit.app          主应用（设置、操作协调）
+FinderSyncExtension   Finder 右键扩展（沙盒、菜单与请求）
+ScriptXPCService      脚本执行服务（仅主应用连接）
+Shared                三个进程共用的模型、存储与 IPC
+AppCore               仅主应用使用的业务逻辑
 ```
+
+Finder 扩展通过 App Group 请求和 `rightkit://` 唤起主应用，主应用再调用 XPC 执行脚本。扩展不直接连接 XPC。
 
 完整目录说明见 [docs/项目结构.md](docs/项目结构.md)。
 

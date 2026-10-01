@@ -1,0 +1,315 @@
+import AppKit
+import Darwin
+import Foundation
+
+@MainActor
+final class ActionCoordinator {
+    static let shared = ActionCoordinator()
+
+    private let xpcClient = ScriptXPCClient()
+    private var activityTokens: [UUID: NSObjectProtocol] = [:]
+    private var handledRequestIDs: Set<UUID> = []
+    private var requestDirectorySource: DispatchSourceFileSystemObject?
+
+    private init() {}
+
+    func start() {
+        DiagnosticsLog.log(
+            "coordinator start; pending=\(AppGroupStore.pendingActionRequestIDs().count) "
+                + "requestsDir=\(AppGroupStore.actionRequestsDirectory?.path ?? "UNAVAILABLE")"
+        )
+        processPendingRequests()
+        startMonitoringRequestDirectory()
+    }
+
+    func handle(url: URL) {
+        DiagnosticsLog.log("received url \(url.absoluteString)")
+        guard let requestID = FinderActionURL.requestID(from: url) else {
+            DiagnosticsLog.log("ignored invalid action URL")
+            NSLog("RightKit ignored invalid action URL: %@", url.absoluteString)
+            return
+        }
+        process(requestID: requestID)
+    }
+
+    func invalidate() {
+        requestDirectorySource?.cancel()
+        requestDirectorySource = nil
+        xpcClient.invalidate()
+    }
+
+    func processPendingRequests() {
+        for requestID in AppGroupStore.pendingActionRequestIDs() {
+            process(requestID: requestID)
+        }
+    }
+
+    private func process(requestID: UUID) {
+        guard !handledRequestIDs.contains(requestID) else {
+            return
+        }
+        handledRequestIDs.insert(requestID)
+        if handledRequestIDs.count > 50 {
+            handledRequestIDs.removeFirst()
+        }
+
+        do {
+            let request = try AppGroupStore.loadActionRequest(id: requestID)
+            AppGroupStore.removeActionRequest(id: requestID)
+            DiagnosticsLog.log(
+                "loaded request \(request.id.uuidString) kind=\(request.kind.rawValue) "
+                    + "template=\(request.templateID ?? "nil") dir=\(request.directoryPath)"
+            )
+            NSLog(
+                "RightKit handling action %@ request %@",
+                request.kind.rawValue,
+                request.id.uuidString
+            )
+            // Run the interaction on a later main-actor turn. When Finder cold
+            // launches the app through rightkit://, running a modal alert from
+            // inside application(_:open:) can leave the app without a key window
+            // and the alert never becomes visible.
+            Task { @MainActor [weak self] in
+                self?.handle(request)
+            }
+        } catch {
+            DiagnosticsLog.log("failed to load request \(requestID.uuidString): \(error.localizedDescription)")
+            NSLog("RightKit failed to load action request %@: %@", requestID.uuidString, error.localizedDescription)
+            presentError(error)
+        }
+    }
+
+    private func startMonitoringRequestDirectory() {
+        guard requestDirectorySource == nil,
+              let directory = AppGroupStore.actionRequestsDirectory else {
+            return
+        }
+
+        try? FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        let descriptor = open(directory.path, O_EVTONLY)
+        guard descriptor >= 0 else {
+            return
+        }
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: descriptor,
+            eventMask: [.write, .rename, .extend],
+            queue: .main
+        )
+        source.setEventHandler { [weak self] in
+            self?.processPendingRequests()
+        }
+        source.setCancelHandler {
+            close(descriptor)
+        }
+        source.resume()
+        requestDirectorySource = source
+    }
+
+    private func handle(_ request: FinderActionRequest) {
+        switch request.kind {
+        case .newFile:
+            createFile(for: request)
+        case .compress:
+            performCompression(.compress, for: request)
+        case .decompress:
+            performCompression(.decompress, for: request)
+        case .runScript:
+            runScript(for: request)
+        case .compressZip, .compressSevenZip, .decompressHere, .decompressIntoFolder:
+            performArchive(request.kind, for: request)
+        }
+    }
+
+    /// Runs an archive command off the main actor: these can take seconds and
+    /// must never block the settings window.
+    private func performArchive(_ kind: FinderActionKind, for request: FinderActionRequest) {
+        let urls = request.selectedPaths.map { URL(fileURLWithPath: $0) }
+        let directory = URL(fileURLWithPath: request.directoryPath, isDirectory: true)
+
+        DiagnosticsLog.log(
+            "archive \(kind.rawValue): \(urls.count) item(s) in \(directory.path)"
+        )
+
+        Task.detached { [weak self] in
+            do {
+                let result = try await ArchiveService.perform(
+                    kind,
+                    urls: urls,
+                    in: directory
+                )
+                await MainActor.run {
+                    if let result {
+                        NSWorkspace.shared.activateFileViewerSelecting([result])
+                    }
+                }
+            } catch {
+                await self?.presentError(error, title: "压缩 / 解压")
+            }
+        }
+    }
+
+    private func createFile(for request: FinderActionRequest) {
+        guard let templateID = request.templateID,
+              let template = resolveTemplate(id: templateID) else {
+            DiagnosticsLog.log("template unavailable: \(request.templateID ?? "nil")")
+            presentError(
+                ScriptCatalogError.templateUnavailable(request.templateID ?? "unknown"),
+                title: "New File"
+            )
+            return
+        }
+
+        let directory = URL(fileURLWithPath: request.directoryPath, isDirectory: true)
+        let name = NewFileService.defaultFileName(for: template)
+        DiagnosticsLog.log(
+            "createFile template=\(template.id) source=\(template.contentSource.rawValue) "
+                + "resource=\(template.contentPath ?? "nil") dir=\(directory.path) "
+                + "name=\(name) "
+                + "dirExists=\(FileManager.default.fileExists(atPath: directory.path))"
+        )
+
+        // No dialog: the item is created straight away and left in Finder with
+        // its name ready to edit, exactly like Finder's own "New Folder".
+        do {
+            let createdURL = try NewFileService.createFile(
+                from: template,
+                named: name,
+                in: directory
+            )
+            DiagnosticsLog.log("created file \(createdURL.path)")
+            NSLog("RightKit created file: %@", createdURL.path)
+            revealForRenaming(createdURL)
+        } catch {
+            DiagnosticsLog.log("create failed: \(error.localizedDescription)")
+            NSLog("RightKit failed to create file: %@", error.localizedDescription)
+            presentError(error, title: "Could not create \(template.name) file")
+        }
+    }
+
+    /// Brings Finder forward with the new item selected and starts its inline
+    /// rename. This app was only woken up to do the work, so it gets out of the
+    /// way instead of leaving its settings window in front.
+    private func revealForRenaming(_ url: URL) {
+        if NSApp.isActive {
+            NSApp.hide(nil)
+        }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+        FinderRenameService.beginRename(of: url)
+    }
+
+    /// Prefers the menu snapshot, which reflects the user's settings, and only
+    /// falls back to the bundled catalog when no snapshot has been written yet.
+    private func resolveTemplate(id: String) -> FileTemplate? {
+        if let snapshot = ScriptCatalogService.shared.currentSnapshot() {
+            return snapshot.templates.first { $0.id == id }
+        }
+
+        return BuiltinTemplates.all.first { $0.id == id }
+    }
+
+    private func performCompression(
+        _ operation: CompressionOperation,
+        for request: FinderActionRequest
+    ) {
+        let urls = request.selectedPaths.map {
+            URL(fileURLWithPath: $0)
+        }
+
+        Task {
+            do {
+                try await CompressionService.shared.perform(operation: operation, urls: urls)
+            } catch {
+                presentError(error, title: "Compression")
+            }
+        }
+    }
+
+    private func runScript(for request: FinderActionRequest) {
+        guard let scriptID = request.scriptID,
+              let script = ScriptCatalogService.shared.script(id: scriptID) else {
+            presentError(
+                ScriptCatalogError.scriptUnavailable(request.scriptID ?? "unknown"),
+                title: "Script"
+            )
+            return
+        }
+
+        if script.requiresConfirmation, !confirmScriptExecution(script) {
+            return
+        }
+
+        let arguments = request.selectedPaths.isEmpty
+            ? [request.directoryPath]
+            : request.selectedPaths
+        let job = ScriptJobRequest(
+            requestID: request.id,
+            scriptID: script.id,
+            arguments: arguments,
+            workingDirectory: request.directoryPath
+        )
+        let activityToken = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .suddenTerminationDisabled, .automaticTerminationDisabled],
+            reason: "Running RightKit script \(script.id)"
+        )
+        activityTokens[request.id] = activityToken
+
+        Task {
+            defer {
+                ProcessInfo.processInfo.endActivity(activityToken)
+                activityTokens.removeValue(forKey: request.id)
+            }
+            do {
+                let result = try await xpcClient.execute(job)
+                if result.succeeded {
+                    NotificationService.shared.post(
+                        title: script.name,
+                        body: "The script completed successfully."
+                    )
+                } else {
+                    NotificationService.shared.post(
+                        title: "\(script.name) failed",
+                        body: result.errorMessage ?? "Exit code: \(result.exitCode ?? -1)"
+                    )
+                }
+            } catch {
+                showError(error)
+            }
+        }
+    }
+
+    private func confirmScriptExecution(_ script: ScriptPackage) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Run \(script.name)?"
+        alert.informativeText = "This script can modify the selected files."
+        alert.addButton(withTitle: "Run")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private func showError(_ error: Error) {
+        NotificationService.shared.post(
+            title: "RightKit",
+            body: error.localizedDescription
+        )
+    }
+
+    /// Reports a failure the user just triggered. A notification is too easy to
+    /// miss, which made broken menu items look like they did nothing at all.
+    private func presentError(_ error: Error, title: String = "RightKit") {
+        DiagnosticsLog.log("presenting error [\(title)]: \(error.localizedDescription)")
+        NSLog("RightKit error: %@", error.localizedDescription)
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+}

@@ -1,0 +1,295 @@
+import AppKit
+import Foundation
+import SwiftUI
+import UserNotifications
+
+/// Owns the settings window's state and is the single place that writes user
+/// preferences back to the App Group and regenerates the Finder menu snapshot.
+///
+/// Before this existed nothing ever called `AppGroupStore.savePreferences`, so
+/// every change in the settings window was discarded and the Finder menu never
+/// changed.
+final class SettingsStore: ObservableObject {
+    static let shared = SettingsStore()
+
+    @Published private(set) var preferences = AppPreferences()
+    @Published private(set) var templates: [FileTemplate] = []
+    @Published private(set) var scripts: [ScriptPackage] = []
+    @Published private(set) var statusMessage: String?
+    @Published private(set) var finderMenuState: FinderExtensionController.State = .unknown
+    @Published private(set) var canAutoRename = FinderRenameService.isPermitted
+    @Published private(set) var notificationsAuthorized = false
+    @Published private(set) var launchAtLogin = LaunchAtLoginService.state == .enabled
+
+    private let catalog = ScriptCatalogService.shared
+
+    private init() {
+        // Both the Accessibility toggle and the notification switch live in
+        // System Settings, so re-read them whenever the user comes back.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshRenamePermission()
+            self?.refreshNotificationAuthorization()
+            self?.refreshLaunchAtLogin()
+            // Picking a script up after dropping it in the folder means
+            // rescanning, otherwise the list would look stale.
+            self?.reload()
+        }
+
+        reload()
+    }
+
+    var userTemplatesDirectory: URL? {
+        TemplateCatalogService.userTemplatesDirectory
+    }
+
+    var scriptsDirectory: URL {
+        AppPaths.scriptsDirectory
+    }
+
+    func reload() {
+        preferences = AppGroupStore.loadPreferences()
+        refreshFinderMenuState()
+        refreshRenamePermission()
+        refreshNotificationAuthorization()
+        refreshLaunchAtLogin()
+
+        do {
+            let snapshot = try catalog.refresh()
+            templates = TemplateCatalogService.orderedTemplates(preferences: preferences)
+            scripts = snapshot.scripts
+            statusMessage = nil
+        } catch {
+            // Fall back to a read-only view of the catalog so the window is
+            // still usable when the App Group container is unavailable.
+            templates = TemplateCatalogService.orderedTemplates(preferences: preferences)
+            scripts = []
+            report(error)
+        }
+    }
+
+    // MARK: - Finder extension
+
+    /// Reading the election state spawns `pluginkit`, so keep it off the main
+    /// thread and publish the result back on it.
+    func refreshFinderMenuState() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let state = FinderExtensionController.currentState()
+            DispatchQueue.main.async {
+                self?.finderMenuState = state
+            }
+        }
+    }
+
+    func setFinderMenuEnabled(_ isEnabled: Bool) {
+        do {
+            try FinderExtensionController.setEnabled(isEnabled)
+            statusMessage = nil
+        } catch {
+            report(error)
+        }
+
+        refreshFinderMenuState()
+    }
+
+    // MARK: - New file rename
+
+    func refreshRenamePermission() {
+        canAutoRename = FinderRenameService.isPermitted
+    }
+
+    func requestRenamePermission() {
+        FinderRenameService.requestPermission()
+        // macOS sends the user to System Settings; re-check shortly after in
+        // case they come straight back.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.refreshRenamePermission()
+        }
+    }
+
+    // MARK: - Launch at login
+
+    func refreshLaunchAtLogin() {
+        launchAtLogin = LaunchAtLoginService.state == .enabled
+    }
+
+    func setLaunchAtLogin(_ isEnabled: Bool) {
+        do {
+            try LaunchAtLoginService.setEnabled(isEnabled)
+            statusMessage = nil
+        } catch {
+            report(error)
+        }
+
+        refreshLaunchAtLogin()
+    }
+
+    // MARK: - Notifications
+
+    func refreshNotificationAuthorization() {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            let authorized = settings.authorizationStatus == .authorized
+                || settings.authorizationStatus == .provisional
+
+            DispatchQueue.main.async {
+                self?.notificationsAuthorized = authorized
+            }
+        }
+    }
+
+    // MARK: - Templates
+
+    func isTemplateEnabled(_ template: FileTemplate) -> Bool {
+        preferences.templates[template.id]?.isEnabled ?? true
+    }
+
+    func setTemplate(_ template: FileTemplate, enabled: Bool) {
+        var preference = preferences.templates[template.id] ?? TemplatePreference()
+        preference.isEnabled = enabled
+        preferences.templates[template.id] = preference
+        persist()
+    }
+
+    func revealTemplatesDirectory() {
+        guard let directory = userTemplatesDirectory else {
+            return
+        }
+        try? FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        NSWorkspace.shared.activateFileViewerSelecting([directory])
+    }
+
+    func requestNotificationAuthorization() {
+        NotificationService.shared.requestAuthorization()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.refreshNotificationAuthorization()
+        }
+    }
+
+    // MARK: - Toolbox
+
+    func isToolboxEnabled(_ id: ToolboxItemID) -> Bool {
+        preferences.toolbox[id.rawValue]?.isEnabled ?? true
+    }
+
+    /// Applies a drag in the toolbox list. The whole list is re-numbered so the
+    /// order stays stable when entries are added or removed later.
+    func moveToolbox(from source: IndexSet, to destination: Int) {
+        var ordered = orderedToolbox
+        ordered.move(fromOffsets: source, toOffset: destination)
+
+        for (position, item) in ordered.enumerated() {
+            var preference = preferences.toolbox[item.id.rawValue] ?? ToolboxPreference()
+            preference.order = (position + 1) * 10
+            preferences.toolbox[item.id.rawValue] = preference
+        }
+        persist()
+    }
+
+    /// Applies a drag in the template list.
+    func moveTemplates(from source: IndexSet, to destination: Int) {
+        var ordered = templates
+        ordered.move(fromOffsets: source, toOffset: destination)
+
+        for (position, template) in ordered.enumerated() {
+            var preference = preferences.templates[template.id] ?? TemplatePreference()
+            preference.order = (position + 1) * 10
+            preferences.templates[template.id] = preference
+        }
+        persist()
+    }
+
+    /// Toolbox entries in menu order, including disabled ones. Entries the
+    /// chosen compressor cannot perform (7z with the built-in tools) are absent.
+    var orderedToolbox: [ToolboxItem] {
+        ToolboxCatalog.orderedItems(
+            preferences: preferences.toolbox,
+            creatableFormats: selectedCreatableFormats
+        )
+    }
+
+    /// Formats the chosen compressor can produce.
+    var selectedCreatableFormats: Set<String> {
+        CompressionService.shared
+            .compressor(for: preferences)
+            .capabilities
+            .createsFormats
+    }
+
+    func setToolbox(_ id: ToolboxItemID, enabled: Bool) {
+        var preference = preferences.toolbox[id.rawValue] ?? ToolboxPreference()
+        preference.isEnabled = enabled
+        preferences.toolbox[id.rawValue] = preference
+        persist()
+    }
+
+    // MARK: - Scripts
+
+    func isScriptEnabled(_ script: ScriptPackage) -> Bool {
+        preferences.scripts[script.id]?.isEnabled ?? true
+    }
+
+    func setScript(_ script: ScriptPackage, enabled: Bool) {
+        var preference = preferences.scripts[script.id] ?? ScriptPreference()
+        preference.isEnabled = enabled
+        preferences.scripts[script.id] = preference
+        persist()
+    }
+
+    func removeScript(_ script: ScriptPackage) throws {
+        let root = AppPaths.scriptsDirectory
+        let directory = root.appendingPathComponent(script.relativeDirectory, isDirectory: true)
+
+        // Defensive: only ever delete something inside the scripts directory.
+        guard directory.path != root.path,
+              directory.path.hasPrefix(root.path + "/") else {
+            throw ScriptCatalogError.scriptUnavailable(script.id)
+        }
+
+        try FileManager.default.removeItem(at: directory)
+        preferences.scripts.removeValue(forKey: script.id)
+        DiagnosticsLog.log("script removed: \(directory.path)")
+        persist()
+    }
+
+    func revealScriptsDirectory() {
+        let directory = scriptsDirectory
+        try? FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        NSWorkspace.shared.activateFileViewerSelecting([directory])
+    }
+
+    // MARK: - Compression
+
+    func setCompressor(_ identifier: String?) {
+        preferences.compressorIdentifier = identifier
+        persist()
+    }
+
+    // MARK: - Persistence
+
+    private func persist() {
+        do {
+            try AppGroupStore.savePreferences(preferences)
+            let snapshot = try catalog.refresh()
+            templates = TemplateCatalogService.orderedTemplates(preferences: preferences)
+            scripts = snapshot.scripts
+            statusMessage = nil
+        } catch {
+            report(error)
+        }
+    }
+
+    private func report(_ error: Error) {
+        NSLog("RightKit settings error: %@", error.localizedDescription)
+        statusMessage = error.localizedDescription
+    }
+
+}
