@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 struct ScriptConfig: Codable, Equatable {
@@ -156,6 +157,25 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
     static var defaultFromSystem: AppLanguage {
         let preferred = (Locale.preferredLanguages.first ?? "en").lowercased()
         return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
+    }
+
+    /// 写进 App 自己的偏好域。SwiftUI 与 Bundle 在**进程启动时**读它，
+    /// 所以写完必须重开才生效——这也是为什么需要 relaunchApp()。
+    static func applyToProcess(_ language: AppLanguage) {
+        UserDefaults.standard.set([language.lprojCode], forKey: "AppleLanguages")
+    }
+
+    /// 重开自己：新进程会在启动时读到刚写入的语言。
+    @MainActor
+    static func relaunchApp() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(
+            at: Bundle.main.bundleURL,
+            configuration: configuration
+        ) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
     }
 
     /// 界面上显示的名字，用各自语言的原生写法，两者都不翻译。

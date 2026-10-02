@@ -30,16 +30,25 @@ final class SettingsStore: ObservableObject {
 
     /// 打开「登录项与扩展」的系统设置页。Ventura 之后扩展搬到了这里，
     /// 旧的面板标识留作回退。通用页与自检页共用。
+    /// 会调用 MainActor 隔离的重启，所以整个方法标上。
+    @MainActor
     func setLanguage(_ language: AppLanguage) {
+        let previous = preferences.resolvedLanguage
         var updated = preferences
         updated.language = language
         preferences = updated
-        // 和别处一致：写偏好失败不该让界面崩，记日志即可。
         do {
             try AppGroupStore.savePreferences(preferences)
         } catch {
             DiagnosticsLog.log("language preference not saved: \(error.localizedDescription)")
         }
+
+        // 语言只有在**进程启动时**才会被 SwiftUI 读进去，所以光写偏好不够：
+        // 之前只有启动时才写 AppleLanguages，于是选完不重启，值还停在旧语言。
+        // 这里当场写，然后自动重开一次——用户要的是"自动变"，不是手动重启按钮。
+        guard language != previous else { return }
+        AppLanguage.applyToProcess(language)
+        AppLanguage.relaunchApp()
     }
 
     func openExtensionSettings() {

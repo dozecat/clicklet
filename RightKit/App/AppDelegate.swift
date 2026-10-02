@@ -5,8 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// willFinishLaunching 而不是 didFinishLaunching——后者往往已经太晚，
     /// 那就得重启才看得到效果。
     func applicationWillFinishLaunching(_ notification: Notification) {
-        let language = AppGroupStore.loadPreferences().resolvedLanguage
-        UserDefaults.standard.set([language.lprojCode], forKey: "AppleLanguages")
+        AppLanguage.applyToProcess(AppGroupStore.loadPreferences().resolvedLanguage)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
