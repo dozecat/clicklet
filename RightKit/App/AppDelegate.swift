@@ -14,9 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !AppGroupStore.hasCompletedFirstRun {
             AppGroupStore.markFirstRunCompleted()
             if AppGroupStore.pendingActionRequestIDs().isEmpty {
-                SettingsStore.shared.requestTab(.selfCheck)
+                SettingsStore.shared.showHealthCheck()
                 SettingsOpener.show()
-                DiagnosticsLog.log("first run: opened settings on the self-check tab")
+                DiagnosticsLog.log("first run: showing the health check sheet")
             }
         }
 

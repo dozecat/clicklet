@@ -1,41 +1,67 @@
 import AppKit
 import SwiftUI
 
-/// 自检页。首次运行时也会自动打开这里，所以它同时充当首次设置引导：
-/// 每一行就是一项该配好的东西，缺什么当场给一个按钮。
-struct SelfCheckPane: View {
+/// 自检面板（sheet）。
+///
+/// 不占页签：设置是"配置"，自检是"排查"，两者心智不同；而且自检的常态是
+/// "一切正常"，一个永远说废话的页签不值得占位置。
+/// 首次运行时自动弹一次，之后从「帮助 → 检查运行状态…」叫出来。
+struct SelfCheckSheet: View {
     @EnvironmentObject private var store: SettingsStore
 
     @State private var results: [HealthCheckResult] = []
 
     var body: some View {
-        SettingsPane {
-            SettingsRow("总体") {
-                SettingsValue(text: results.isEmpty ? "检查中…" : HealthCheck.summary(results))
+        VStack(spacing: 0) {
+            HStack {
+                Text("检查运行状态")
+                    .font(.headline)
+                Spacer()
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
 
-            SettingsGroupSeparator()
+            Divider()
 
-            ForEach(results) { result in
-                SettingsRow(result.title) {
-                    HStack(spacing: 8) {
-                        Image(systemName: symbol(for: result.level))
-                            .foregroundStyle(colour(for: result.level))
-                        SettingsValue(text: result.detail)
-                        if let fix = result.fix, let title = result.fixTitle {
-                            Button(title) { perform(fix) }
+            SettingsPane {
+                SettingsRow("总体") {
+                    SettingsValue(text: results.isEmpty ? "检查中…" : HealthCheck.summary(results))
+                }
+
+                SettingsGroupSeparator()
+
+                ForEach(results) { result in
+                    SettingsRow(result.title) {
+                        HStack(spacing: 8) {
+                            Image(systemName: symbol(for: result.level))
+                                .foregroundStyle(colour(for: result.level))
+                            SettingsValue(text: result.detail)
+                            if let fix = result.fix, let title = result.fixTitle {
+                                Button(title) { perform(fix) }
+                            }
                         }
                     }
                 }
-            }
 
-            SettingsGroupSeparator()
+                SettingsGroupSeparator()
 
-            SettingsRow("重新检查") {
-                Button("检查") { refresh() }
-                    .help("改完系统设置后回来点一下")
+                SettingsRow("重新检查") {
+                    Button("检查") { refresh() }
+                        .help("改完系统设置后回来点一下")
+                }
             }
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("完成") { store.dismissHealthCheck() }
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
+        // 高度按内容给足：辅助功能那行说明会换两行，440 时最后一项会被裁掉。
+        .frame(width: 620, height: 520)
         .onAppear { refresh() }
         .onReceive(store.$finderMenuState) { _ in refresh() }
         .onReceive(store.$canAutoRename) { _ in refresh() }

@@ -21,11 +21,12 @@ final class SettingsStore: ObservableObject {
     @Published private(set) var notificationsAuthorized = false
     @Published private(set) var launchAtLogin = LaunchAtLoginService.state == .enabled
 
-    /// 谁想让设置窗口切到某个页签（首次运行、或从自检页跳过来）。
-    @Published private(set) var requestedTab: SettingsTab?
+    /// 自检以 sheet 形式出现，不占页签：设置是"配置"，自检是"排查"，
+    /// 而且自检的常态是"一切正常"——一个永远说废话的页签不值得占位置。
+    @Published private(set) var showsHealthCheck = false
 
-    func requestTab(_ tab: SettingsTab) { requestedTab = tab }
-    func consumeRequestedTab() { requestedTab = nil }
+    func showHealthCheck() { showsHealthCheck = true }
+    func dismissHealthCheck() { showsHealthCheck = false }
 
     /// 打开「登录项与扩展」的系统设置页。Ventura 之后扩展搬到了这里，
     /// 旧的面板标识留作回退。通用页与自检页共用。

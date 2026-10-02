@@ -27,6 +27,14 @@ struct RightKitApp: App {
                 }
             }
 
+            // 自检不占页签，从「帮助」菜单进——出问题时才需要，平时不可见。
+            CommandGroup(after: .help) {
+                Button("检查运行状态…") {
+                    SettingsStore.shared.showHealthCheck()
+                    SettingsOpener.show()
+                }
+            }
+
             // Replaced on purpose this time: `SettingsLink` is the only route
             // SwiftUI supports for the Settings scene on macOS 14 and later.
             CommandGroup(replacing: .appSettings) {
