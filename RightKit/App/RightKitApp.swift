@@ -27,6 +27,24 @@ struct RightKitApp: App {
                 }
             }
 
+            // 删掉 SwiftUI 自动生成的样板菜单。
+            //
+            // 这个 App 没有文档概念、只有一个固定尺寸的设置窗口，所以「文件」
+            // 「显示」「窗口缩放」里的条目全是死的——留着只会让人以为是坏的。
+            //
+            // 刻意**保留**的：App 菜单（关于 / 设置 / 退出）、编辑菜单的剪切
+            // 拷贝粘贴（路径那类可选文本要用）、帮助菜单。⌘Q 与 ⌘, 都在 App
+            // 菜单里，删菜单时不能把它们一起删掉。
+            CommandGroup(replacing: .newItem) {}
+            CommandGroup(replacing: .saveItem) {}
+            CommandGroup(replacing: .importExport) {}
+            CommandGroup(replacing: .printItem) {}
+            CommandGroup(replacing: .undoRedo) {}
+            CommandGroup(replacing: .toolbar) {}
+            CommandGroup(replacing: .sidebar) {}
+            CommandGroup(replacing: .windowSize) {}
+            CommandGroup(replacing: .windowList) {}
+
             // 自检不占页签，从「帮助」菜单进——出问题时才需要，平时不可见。
             CommandGroup(after: .help) {
                 Button("检查运行状态…") {
