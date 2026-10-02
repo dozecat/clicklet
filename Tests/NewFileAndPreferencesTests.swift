@@ -185,3 +185,42 @@ final class TemplateCatalogServiceTests: XCTestCase {
         XCTAssertEqual(templates.first?.id, "builtin.pptx")
     }
 }
+
+/// 偏好里**每个字段都必须能往返**。
+///
+/// AppPreferences 用的是手写的逐字段解码（为了老/新版本的文件都不会整体加载失败），
+/// 所以新增字段要改三个地方：属性、CodingKeys、以及那个解码器。漏掉第三个时，
+/// 存进去的值读回来就没了，界面看起来像"设置完又自己变回去"。
+final class AppPreferencesRoundTripTests: XCTestCase {
+    func testLanguageSurvivesARoundTrip() throws {
+        let original = AppPreferences(language: .english)
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(AppPreferences.self, from: data)
+        XCTAssertEqual(decoded.language, .english)
+        XCTAssertEqual(decoded.resolvedLanguage, .english)
+    }
+
+    /// 老文件没有 language 这个键，必须能正常加载，并且退化成跟随系统。
+    func testMissingLanguageDecodesAsFollowSystem() throws {
+        let legacy = Data(#"{"version":2,"scripts":{},"templates":{},"toolbox":{}}"#.utf8)
+        let decoded = try JSONDecoder().decode(AppPreferences.self, from: legacy)
+        XCTAssertNil(decoded.language)
+        XCTAssertEqual(decoded.resolvedLanguage, .system)
+    }
+
+    /// 其它字段也不能在往返中丢失。
+    func testEveryFieldSurvivesARoundTrip() throws {
+        let original = AppPreferences(
+            scripts: ["a": ScriptPreference(isEnabled: true, order: 1)],
+            templates: ["b": TemplatePreference(isEnabled: false, order: 2)],
+            toolbox: ["copyPath": ToolboxPreference(isEnabled: true, order: 3)],
+            compressorIdentifier: "keka",
+            language: .simplifiedChinese
+        )
+        let decoded = try JSONDecoder().decode(
+            AppPreferences.self,
+            from: try JSONEncoder().encode(original)
+        )
+        XCTAssertEqual(decoded, original)
+    }
+}

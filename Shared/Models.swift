@@ -227,6 +227,13 @@ struct AppPreferences: Codable, Equatable {
             String.self,
             forKey: .compressorIdentifier
         )
+        // 新增字段必须同时加在这里：这是手写的逐字段解码，
+        // 只加进结构体与 CodingKeys 是不够的——漏了这里，每次读盘都会把
+        // 该字段丢掉，界面看起来就像"设置完又自己变回去了"。
+        language = try container.decodeIfPresent(
+            AppLanguage.self,
+            forKey: .language
+        )
     }
 }
 
