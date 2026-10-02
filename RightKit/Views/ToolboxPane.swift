@@ -35,6 +35,10 @@ struct ToolboxPane: View {
                 // column, which the control insets to the left.
                 .padding(.leading, settingsCheckboxHeaderNudge)
                 .frame(width: 52, alignment: .leading)
+
+            // Matches the row below. Without it the 启用 column sits 12pt
+            // further right here than on the scripts tab.
+            Spacer(minLength: 12)
         }
         .font(.system(size: 13))
         .foregroundStyle(.secondary)
@@ -68,6 +72,10 @@ struct ToolboxPane: View {
             .labelsHidden()
             .toggleStyle(.checkbox)
             .frame(width: 52, alignment: .leading)
+
+            // Keeps the checkbox off the card edge, and keeps this column in the
+            // same place as on the scripts tab.
+            Spacer(minLength: 12)
         }
         .padding(.leading, settingsTableLeadingInset)
         .padding(.trailing, 18)

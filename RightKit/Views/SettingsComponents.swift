@@ -143,11 +143,19 @@ let settingsLabelWidth: CGFloat = 140
 /// Table panes start further left than the label/control panes: their first
 /// column is an icon, not a right-aligned label, so the label column's indent
 /// only pushed everything against the right edge.
-let settingsTableLeadingInset: CGFloat = 118
+///
+/// The value is set so a row card's padding looks balanced: the row cards are
+/// inset 8 from the window (see `ReorderableRows.cardInset`), and the gap from
+/// the card's left edge to the icon should match the gap from the checkbox to
+/// the card's right edge. At 118 the left gap measured 110pt against 65pt on the
+/// right; 72 evens them up.
+let settingsTableLeadingInset: CGFloat = 72
 
-/// A borderless checkbox draws its box about 10pt left of its frame, so a
-/// column header needs the same nudge to sit directly above the boxes.
-let settingsCheckboxHeaderNudge: CGFloat = -6.5
+/// Optical nudge for the 启用 column header so the word sits directly above the
+/// checkboxes rather than above their column. The value is calibrated against a
+/// rendered pane (`+2.5` puts both left edges at the same pixel); it depends on
+/// the row's trailing structure, so re-measure it if that changes.
+let settingsCheckboxHeaderNudge: CGFloat = 2.5
 private let settingsLabelGap: CGFloat = 10
 
 /// One settings row: a right-aligned label and a single control on the same line.
