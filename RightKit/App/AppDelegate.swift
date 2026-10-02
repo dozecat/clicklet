@@ -1,6 +1,14 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// 界面语言必须在**任何** SwiftUI 文案被解析之前写进去，所以放在
+    /// willFinishLaunching 而不是 didFinishLaunching——后者往往已经太晚，
+    /// 那就得重启才看得到效果。
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        let language = AppGroupStore.loadPreferences().resolvedLanguage
+        UserDefaults.standard.set([language.lprojCode], forKey: "AppleLanguages")
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         DiagnosticsLog.log(
             "app launched; version=\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") "
@@ -18,16 +26,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 SettingsOpener.show()
                 DiagnosticsLog.log("first run: showing the health check sheet")
             }
-        }
-
-        // 界面语言。SwiftUI 的文案是进程级的，所以在这里预先写进
-        // AppleLanguages；改语言要重启才看得到（设置里给了重启按钮）。
-        // 选「跟随系统」时必须把键删掉，否则上一次写进去的语言会一直留着。
-        let language = AppGroupStore.loadPreferences().resolvedLanguage
-        if let code = language.lprojCode {
-            UserDefaults.standard.set([code], forKey: "AppleLanguages")
-        } else {
-            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
         }
 
         let seeded = BuiltinScriptSeeder.seedIfNeeded()

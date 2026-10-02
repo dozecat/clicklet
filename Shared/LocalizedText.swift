@@ -20,9 +20,6 @@ enum LocalizedText {
 
     static func string(_ key: String, language: AppLanguage) -> String {
         switch language {
-        case .system:
-            // 跟随系统：交给进程语言
-            return String(localized: String.LocalizationValue(key))
         case .simplifiedChinese:
             // 源语言就是键本身（catalog 的 sourceLanguage 是 zh-Hans，
             // 所以**不会**有 zh-Hans.lproj 可查），直接返回键

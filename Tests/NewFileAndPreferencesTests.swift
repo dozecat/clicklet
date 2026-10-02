@@ -200,12 +200,21 @@ final class AppPreferencesRoundTripTests: XCTestCase {
         XCTAssertEqual(decoded.resolvedLanguage, .english)
     }
 
-    /// 老文件没有 language 这个键，必须能正常加载，并且退化成跟随系统。
-    func testMissingLanguageDecodesAsFollowSystem() throws {
+    /// 老文件没有 language 这个键，必须能正常加载，并按系统挑一个具体语言。
+    func testMissingLanguageDecodesToAConcreteLanguage() throws {
         let legacy = Data(#"{"version":2,"scripts":{},"templates":{},"toolbox":{}}"#.utf8)
         let decoded = try JSONDecoder().decode(AppPreferences.self, from: legacy)
         XCTAssertNil(decoded.language)
-        XCTAssertEqual(decoded.resolvedLanguage, .system)
+        XCTAssertEqual(decoded.resolvedLanguage, AppLanguage.defaultFromSystem)
+    }
+
+    /// 老文件里可能存着已经删掉的 system 值。
+    /// 严格解码会抛错，而调用方一旦失败就整体退回默认值，别的设置也会一起丢。
+    func testUnknownLanguageValueDoesNotBreakLoading() throws {
+        let legacy = Data(#"{"version":2,"scripts":{},"templates":{},"toolbox":{},"language":"system"}"#.utf8)
+        let decoded = try JSONDecoder().decode(AppPreferences.self, from: legacy)
+        XCTAssertNil(decoded.language)
+        XCTAssertEqual(decoded.resolvedLanguage, AppLanguage.defaultFromSystem)
     }
 
     /// 其它字段也不能在往返中丢失。

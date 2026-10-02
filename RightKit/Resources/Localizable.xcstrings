@@ -520,17 +520,6 @@
         }
       }
     },
-    "跟随系统": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Follow System"
-          }
-        }
-      }
-    },
     "路径": {
       "localizations": {
         "en": {

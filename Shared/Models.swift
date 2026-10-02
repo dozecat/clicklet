@@ -143,22 +143,24 @@ extension ScriptPackage {
 /// - 访达扩展：跑在 Finder 进程里，用进程级偏好会把**访达**的语言也改掉，
 ///   所以只能按偏好显式挑 lproj 查表（见 LocalizedText）
 enum AppLanguage: String, Codable, CaseIterable, Identifiable {
-    case system
     case simplifiedChinese = "zh-Hans"
     case english = "en"
 
     var id: String { rawValue }
 
-    /// lproj 代码；跟随系统时为 nil。
-    var lprojCode: String? {
-        self == .system ? nil : rawValue
+    /// lproj 代码。
+    var lprojCode: String { rawValue }
+
+    /// 偏好里还没有语言时，按系统偏好挑一个具体语言。
+    /// 用户明确要求不要「跟随系统」这一项，所以这里给的是一个确定的语言。
+    static var defaultFromSystem: AppLanguage {
+        let preferred = (Locale.preferredLanguages.first ?? "en").lowercased()
+        return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
     }
 
-    /// 界面上显示的名字，刻意用各自语言的原生写法。
-    /// 「跟随系统」需要翻译，另外两个不需要。
+    /// 界面上显示的名字，用各自语言的原生写法，两者都不翻译。
     var displayName: String {
         switch self {
-        case .system: return "跟随系统"
         case .simplifiedChinese: return "简体中文"
         case .english: return "English"
         }
@@ -179,7 +181,7 @@ struct AppPreferences: Codable, Equatable {
     var language: AppLanguage?
 
     /// 实际生效的语言。
-    var resolvedLanguage: AppLanguage { language ?? .system }
+    var resolvedLanguage: AppLanguage { language ?? .defaultFromSystem }
 
     init(
         scripts: [String: ScriptPreference] = [:],
@@ -230,10 +232,12 @@ struct AppPreferences: Codable, Equatable {
         // 新增字段必须同时加在这里：这是手写的逐字段解码，
         // 只加进结构体与 CodingKeys 是不够的——漏了这里，每次读盘都会把
         // 该字段丢掉，界面看起来就像"设置完又自己变回去了"。
-        language = try container.decodeIfPresent(
+        // 用 try?：老文件里可能存着已删除的语言值（例如 "system"），
+        // 严格解码会抛错，而调用方一旦失败就整体退回默认值，把别的设置也一起丢掉。
+        language = (try? container.decodeIfPresent(
             AppLanguage.self,
             forKey: .language
-        )
+        )) ?? nil
     }
 }
 
