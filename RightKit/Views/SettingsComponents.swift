@@ -12,6 +12,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case newFile
     case compression
     case scripts
+    case about
 
     var id: String { rawValue }
 
@@ -27,6 +28,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             return "压缩解压"
         case .scripts:
             return "脚本"
+        case .about:
+            return "关于"
         }
     }
 
@@ -47,6 +50,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             // Terminal.app's own icon, which the 工具箱 tab already shows for
             // 在终端中打开.
             return "chevron.left.forwardslash.chevron.right"
+        case .about:
+            return "info.circle"
         }
     }
 }
