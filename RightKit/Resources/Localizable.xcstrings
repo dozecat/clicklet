@@ -521,6 +521,7 @@
       }
     },
     "跟随系统": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -569,16 +570,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications"
-          }
-        }
-      }
-    },
-    "重新启动": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relaunch"
           }
         }
       }

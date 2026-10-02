@@ -5,14 +5,6 @@ struct GeneralPane: View {
     @EnvironmentObject private var store: SettingsStore
     @State private var isConfirmingReset = false
 
-    /// 语言是进程级的，切完必须重开才生效。
-    private func relaunch() {
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
-        }
-    }
 
     var body: some View {
         SettingsPane {
@@ -41,8 +33,6 @@ struct GeneralPane: View {
                     }
                     .labelsHidden()
                     .frame(width: 130)
-
-                    Button("重新启动") { relaunch() }
                 }
             }
 
