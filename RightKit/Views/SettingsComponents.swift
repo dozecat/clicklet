@@ -343,27 +343,6 @@ struct SettingsEmptyState: View {
 
 // MARK: - Small pieces
 
-struct SettingsBadge: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(Capsule().fill(Color.secondary.opacity(0.15)))
-    }
-}
-
-/// Marks a control that the agreed design calls for but that is not built yet.
-/// Shown instead of a dead switch so the window never looks broken.
-struct SettingsPlannedBadge: View {
-    var body: some View {
-        SettingsBadge(text: "即将支持")
-    }
-}
-
 struct SettingsStatusDot: View {
     enum Kind {
         case ok

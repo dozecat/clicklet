@@ -1,21 +1,27 @@
 import AppKit
 import SwiftUI
 
-/// 状态栏图标的手绘兜底形状：把 App 图标的轮廓简化到菜单栏尺寸。
-/// 正常路径用的是用户提供的 StatusIcon.png（见 StatusItemImage）。
+/// The hand-drawn fallback shape for the status bar icon: the app icon's
+/// outline reduced to menu bar size. The normal path uses the artwork the user
+/// supplied as StatusIcon.png (see StatusItemImage).
 ///
-/// App 图标是「圆角方块 + 卡片 + 光标」，但把它整个缩到 18pt 只会得到一团蓝块
-/// （渲染实测过）。菜单栏版只保留能读出来的两样：**圆角方块的轮廓**和**光标**——
-/// 卡片上那些细线在这个尺寸下必然糊掉，只能舍掉。
+/// The app icon is a rounded square with a card and a cursor, but shrinking all
+/// of that to 18pt produces a blue blob — verified by rendering it. The menu bar
+/// version keeps only the two things that survive: the rounded square outline
+/// and the cursor. The card's fine lines cannot help but smudge at this size,
+/// so they are dropped.
 ///
-/// 画成 SwiftUI 视图后再转成 template 图片交给系统，这样浅色/深色菜单栏、
-/// 以及选中时的反白都由系统负责，不会出现"深色模式下还是黑图标"这种问题。
+/// Drawing it as a SwiftUI view and handing the system a template image lets
+/// light and dark menu bars, and the inversion while selected, be the system's
+/// problem rather than something that goes wrong.
 struct StatusItemGlyph: View {
     var body: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
-            // 方块与光标要**彻底分开**：贴着放时两者的边会粘成一坨
-            // （渲染实测过两次）。所以方块缩到左上、光标退到右下，中间留空隙。
+            // The square and the cursor have to be fully separated: placed
+            // against each other their edges merge into one blob, which two
+            // renders confirmed. So the square moves up and left, the cursor
+            // down and right, with a gap between them.
             let stroke = side * 0.08
             let box = side * 0.58
 
@@ -34,22 +40,25 @@ struct StatusItemGlyph: View {
     }
 }
 
-/// ImageRenderer 是 MainActor 隔离的（兜底路径会用到），所以整个枚举都标上，
-/// 这样 static let 也只在主线程上初始化。
+/// ImageRenderer is MainActor-isolated and the fallback path uses it, so the
+/// whole enum is annotated and the static let is initialised on the main
+/// thread.
 @MainActor
 enum StatusItemImage {
-    /// 菜单栏图标的逻辑尺寸。
+    /// The logical size of the menu bar icon.
     ///
-    /// 用 18 而不是 16：用户提供的图标是一张「卡片 + 线条 + 光标」，
-    /// 渲染实测 16pt 下三样东西会挤成一团，18pt 才勉强读得出，20pt 最清楚。
-    /// 系统实际给多少由菜单栏决定，这里定的是我们提交的逻辑尺寸。
+    /// 18 rather than 16: the supplied artwork is a card with lines and a
+    /// cursor, and rendering showed 16pt squeezes all three into a blob. 18pt
+    /// is just readable and 20pt is clearest. How much the system actually
+    /// gives it is up to the menu bar; this is the size we submit.
     private static let size: CGFloat = 18
 
-    /// 用户提供的形状，已经转成菜单栏要的「黑 + alpha」模板。
+    /// The supplied shape, converted to the black-plus-alpha template a menu
+    /// bar extra needs.
     static let normal: NSImage = make()
 
     private static func make() -> NSImage {
-        // 手绘的兜底形状：万一资源缺失也不至于没有图标
+        // The hand-drawn fallback, so a missing resource still leaves an icon.
         func fallback() -> NSImage {
             let renderer = ImageRenderer(
                 content: StatusItemGlyph().frame(width: size, height: size).foregroundStyle(.black)
@@ -70,9 +79,11 @@ enum StatusItemImage {
             return fallback()
         }
 
-        // 512px 的源图按逻辑尺寸提交，位图本身留给系统在 Retina 上取用。
+        // The 512px source is submitted at the logical size; the bitmap itself
+        // is left for the system to use on Retina displays.
         image.size = NSSize(width: size, height: size)
-        // 关键：template 让系统负责配色（浅色/深色菜单栏、选中反白）
+        // Template, so the system owns the colour: light and dark menu bars,
+        // and the inversion while selected.
         image.isTemplate = true
         return image
     }
