@@ -224,6 +224,24 @@ final class BuiltinScriptSeederTests: XCTestCase {
         )
     }
 
+    /// A shared script package carries the icon away with it, so the file has to
+    /// say where it came from and that it should not be passed on.
+    func testGeneratedIconCarriesItsProvenance() throws {
+        try makePackage(
+            named: "Open in Terminal",
+            body: "#!/bin/zsh\nexit 0\n",
+            bundleIdentifier: "com.apple.Terminal"
+        )
+        _ = seed()
+
+        let icon = scripts.appendingPathComponent("Open in Terminal/icon.png")
+        let data = try Data(contentsOf: icon)
+        let text = String(decoding: data, as: UTF8.self)
+
+        XCTAssertTrue(text.contains("com.apple.Terminal"), "the source application should be recorded")
+        XCTAssertTrue(text.contains("Do not redistribute"), "the warning should travel with the file")
+    }
+
     // MARK: - User files
 
     /// Updating replaces the shipped files only; anything the user added stays put

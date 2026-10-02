@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 import Foundation
+import ImageIO
 
 /// Copies the script packages shipped inside the app into the user's scripts
 /// directory, and keeps them up to date afterwards.
@@ -226,9 +227,17 @@ enum BuiltinScriptSeeder {
         icon.draw(in: NSRect(x: 0, y: 0, width: side, height: side))
         image.unlockFocus()
 
-        guard let tiff = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiff),
-              let png = bitmap.representation(using: .png, properties: [:]) else {
+        // The artwork belongs to that application. Writing it is fine — it is a
+        // local copy made from software this user already has, for their own
+        // screen — but a script package is meant to be shareable, and passing the
+        // folder on would redistribute it. Record the provenance in the file so
+        // that is discoverable wherever the PNG ends up. Deleting it is safe: the
+        // next launch regenerates it on the receiving machine.
+        let provenance = "Generated locally by RightKit from \(identifier). "
+            + "Do not redistribute; delete this file before sharing the script package."
+
+        guard let png = pngData(from: image, provenance: provenance) else {
+            DiagnosticsLog.log("builtin script icon: could not encode \(package.lastPathComponent)")
             return
         }
 
@@ -238,6 +247,37 @@ enum BuiltinScriptSeeder {
         } catch {
             DiagnosticsLog.log("builtin script icon failed: \(error.localizedDescription)")
         }
+    }
+
+    /// PNG with a `Description` text chunk carrying the provenance note.
+    private static func pngData(from image: NSImage, provenance: String) -> Data? {
+        guard let tiff = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiff),
+              let cgImage = bitmap.cgImage else {
+            return nil
+        }
+
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            data,
+            "public.png" as CFString,
+            1,
+            nil
+        ) else {
+            return nil
+        }
+
+        let properties: [CFString: Any] = [
+            kCGImagePropertyPNGDictionary: [
+                kCGImagePropertyPNGDescription: provenance
+            ]
+        ]
+        CGImageDestinationAddImage(destination, cgImage, properties as CFDictionary)
+
+        guard CGImageDestinationFinalize(destination) else {
+            return nil
+        }
+        return data as Data
     }
 
     private static func makeExecutable(_ url: URL, fileManager: FileManager) {
