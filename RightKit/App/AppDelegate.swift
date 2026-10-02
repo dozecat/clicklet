@@ -20,6 +20,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // 界面语言。SwiftUI 的文案是进程级的，所以在这里预先写进
+        // AppleLanguages；改语言要重启才看得到（设置里给了重启按钮）。
+        // 选「跟随系统」时必须把键删掉，否则上一次写进去的语言会一直留着。
+        let language = AppGroupStore.loadPreferences().resolvedLanguage
+        if let code = language.lprojCode {
+            UserDefaults.standard.set([code], forKey: "AppleLanguages")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+        }
+
         let seeded = BuiltinScriptSeeder.seedIfNeeded()
         if !seeded.isEmpty {
             DiagnosticsLog.log("built-in scripts offered: \(seeded)")

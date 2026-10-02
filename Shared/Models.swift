@@ -136,6 +136,35 @@ extension ScriptPackage {
     }
 }
 
+/// 界面语言。`system` 表示跟随系统；其余是对应的 lproj 代码。
+///
+/// 两种界面要用**两套机制**，不能混：
+/// - 主 App：进程级 `AppleLanguages`，改完要重启
+/// - 访达扩展：跑在 Finder 进程里，用进程级偏好会把**访达**的语言也改掉，
+///   所以只能按偏好显式挑 lproj 查表（见 LocalizedText）
+enum AppLanguage: String, Codable, CaseIterable, Identifiable {
+    case system
+    case simplifiedChinese = "zh-Hans"
+    case english = "en"
+
+    var id: String { rawValue }
+
+    /// lproj 代码；跟随系统时为 nil。
+    var lprojCode: String? {
+        self == .system ? nil : rawValue
+    }
+
+    /// 界面上显示的名字，刻意用各自语言的原生写法。
+    /// 「跟随系统」需要翻译，另外两个不需要。
+    var displayName: String {
+        switch self {
+        case .system: return "跟随系统"
+        case .simplifiedChinese: return "简体中文"
+        case .english: return "English"
+        }
+    }
+}
+
 struct AppPreferences: Codable, Equatable {
     /// Bumped whenever a change has to be applied to preferences written by an
     /// older build. See `AppGroupStore.migrate`.
@@ -146,12 +175,18 @@ struct AppPreferences: Codable, Equatable {
     var templates: [String: TemplatePreference]
     var toolbox: [String: ToolboxPreference]
     var compressorIdentifier: String?
+    /// 可选：老配置里没有这个键，缺省即跟随系统。
+    var language: AppLanguage?
+
+    /// 实际生效的语言。
+    var resolvedLanguage: AppLanguage { language ?? .system }
 
     init(
         scripts: [String: ScriptPreference] = [:],
         templates: [String: TemplatePreference] = [:],
         toolbox: [String: ToolboxPreference] = [:],
         compressorIdentifier: String? = nil,
+        language: AppLanguage? = nil,
         version: Int? = AppPreferences.currentVersion
     ) {
         self.version = version
@@ -159,6 +194,7 @@ struct AppPreferences: Codable, Equatable {
         self.templates = templates
         self.toolbox = toolbox
         self.compressorIdentifier = compressorIdentifier
+        self.language = language
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -167,6 +203,7 @@ struct AppPreferences: Codable, Equatable {
         case templates
         case toolbox
         case compressorIdentifier
+        case language
     }
 
     /// Decoded field by field so that a preferences file written by an older or

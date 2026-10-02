@@ -5,6 +5,7 @@ options:
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "13.0"
+  developmentLanguage: zh-Hans
 
 settings:
   base:

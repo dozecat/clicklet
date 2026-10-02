@@ -30,6 +30,18 @@ final class SettingsStore: ObservableObject {
 
     /// 打开「登录项与扩展」的系统设置页。Ventura 之后扩展搬到了这里，
     /// 旧的面板标识留作回退。通用页与自检页共用。
+    func setLanguage(_ language: AppLanguage) {
+        var updated = preferences
+        updated.language = language
+        preferences = updated
+        // 和别处一致：写偏好失败不该让界面崩，记日志即可。
+        do {
+            try AppGroupStore.savePreferences(preferences)
+        } catch {
+            DiagnosticsLog.log("language preference not saved: \(error.localizedDescription)")
+        }
+    }
+
     func openExtensionSettings() {
         let candidates = [
             "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",

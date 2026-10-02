@@ -5,6 +5,15 @@ struct GeneralPane: View {
     @EnvironmentObject private var store: SettingsStore
     @State private var isConfirmingReset = false
 
+    /// 语言是进程级的，切完必须重开才生效。
+    private func relaunch() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+    }
+
     var body: some View {
         SettingsPane {
             SettingsRow("登录时启动") {
@@ -19,7 +28,22 @@ struct GeneralPane: View {
             }
 
             SettingsRow("语言") {
-                SettingsValue(text: "简体中文")
+                HStack(spacing: 10) {
+                    Picker("", selection: Binding(
+                        get: { store.preferences.resolvedLanguage },
+                        set: { store.setLanguage($0) }
+                    )) {
+                        ForEach(AppLanguage.allCases) { language in
+                            // 「跟随系统」要翻译；「简体中文」「English」用各自语言的
+                            // 原生写法，catalog 里没有它们，于是原样显示。
+                            Text(LocalizedStringKey(language.displayName)).tag(language)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 130)
+
+                    Button("重新启动") { relaunch() }
+                }
             }
 
             SettingsGroupSeparator()

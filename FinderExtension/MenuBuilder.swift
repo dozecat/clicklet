@@ -165,7 +165,7 @@ enum MenuBuilder {
             return
         }
 
-        let item = NSMenuItem(title: String(localized: "脚本"), action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: LocalizedText.string("脚本", language: AppGroupStore.loadPreferences().resolvedLanguage), action: nil, keyEquivalent: "")
         item.image = image(MenuIconKey.toolbox(.scripts), in: icons)
         let submenu = NSMenu(title: "脚本")
         for script in scripts {
@@ -194,7 +194,7 @@ enum MenuBuilder {
             return
         }
 
-        let item = NSMenuItem(title: String(localized: "新建文件"), action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: LocalizedText.string("新建文件", language: AppGroupStore.loadPreferences().resolvedLanguage), action: nil, keyEquivalent: "")
         item.image = image(MenuIconKey.toolbox(.newFile), in: icons)
         let submenu = NSMenu(title: "新建文件")
         for template in templates {
@@ -252,8 +252,10 @@ enum MenuBuilder {
         to menu: NSMenu
     ) {
         // 标题来自数据（工具箱目录、模板名、脚本名），不会自动本地化，
-        // 而这里是所有菜单项的必经之处，所以在这一处统一转成可本地化的键。
-        let localizedTitle = String(localized: String.LocalizationValue(title))
+        // 而这里是所有菜单项的必经之处，所以在这一处统一查表。
+        // 用用户选的语言而不是进程语言：扩展跑在 Finder 进程里。
+        let language = AppGroupStore.loadPreferences().resolvedLanguage
+        let localizedTitle = LocalizedText.string(title, language: language)
         let item = NSMenuItem(title: localizedTitle, action: action, keyEquivalent: "")
         item.target = target
         item.tag = tag
