@@ -259,6 +259,10 @@ enum MenuBuilder {
             // symbols and full-colour application icons. Letting AppKit template
             // them would flatten the application icons to a single colour.
             image.isTemplate = false
+            // 必须在这里标：图标是渲染成 PNG 存盘、再由这里 NSImage(data:)
+            // 读回来的，而 isTemplate 不会存进 PNG。不标的话 AppKit 会把它
+            // 当普通图片画成原色，悬停高亮时就和背景同色 —— 图标直接消失。
+            image.isTemplate = true
             item.image = image
         }
         menu.addItem(item)

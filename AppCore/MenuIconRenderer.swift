@@ -46,13 +46,14 @@ enum MenuIconRenderer {
     }
 
     static func png(systemSymbol: String) -> Data? {
-        // Tinted through the symbol configuration. Setting `NSColor.set()` and
-        // then drawing does nothing at all: that sets the fill colour for drawing
-        // operations, not for an image, so the symbol came out in its own black.
+        // Deliberately NOT tinted.
+        //
+        // Menu icons must be templates (see the isTemplate assignment in
+        // MenuBuilder). Tinting them with the accent colour made them the same
+        // colour as the highlight background, so hovering an item made its icon
+        // disappear. A template image carries only its alpha; the system picks
+        // the colour, including the white used while an item is highlighted.
         let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-            .applying(
-                NSImage.SymbolConfiguration(paletteColors: [NSColor.controlAccentColor])
-            )
 
         guard let symbol = NSImage(
             systemSymbolName: systemSymbol,
