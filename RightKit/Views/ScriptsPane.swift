@@ -181,10 +181,17 @@ struct ScriptsPane: View {
         }
     }
 
-    /// A script may ship its own `icon.png`; otherwise a symbol stands in.
+    /// A script may ship its own `icon.png`, or name an application to borrow
+    /// the icon from; otherwise a symbol stands in.
     @ViewBuilder
     private func icon(for script: ScriptPackage) -> some View {
         if let path = script.iconPath, let image = NSImage(contentsOfFile: path) {
+            Image(nsImage: image)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 18, height: 18)
+        } else if let identifier = script.applicationBundleIdentifier,
+                  let image = SystemIcon.application(bundleIdentifier: identifier) {
             Image(nsImage: image)
                 .resizable()
                 .interpolation(.high)

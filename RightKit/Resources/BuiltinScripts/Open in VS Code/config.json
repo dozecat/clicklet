@@ -3,5 +3,6 @@
   "context": "all",
   "multiple": true,
   "confirm": false,
-  "order": 10
+  "order": 10,
+  "applicationBundleIdentifier": "com.microsoft.VSCode"
 }

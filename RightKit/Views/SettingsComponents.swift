@@ -43,7 +43,10 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             // "archive" idea than the generic shipping box.
             return "doc.zipper"
         case .scripts:
-            return "terminal"
+            // Not "terminal": that symbol is the same rounded box with ">_" as
+            // Terminal.app's own icon, which the 工具箱 tab already shows for
+            // 在终端中打开.
+            return "chevron.left.forwardslash.chevron.right"
         }
     }
 }

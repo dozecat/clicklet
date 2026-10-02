@@ -8,6 +8,10 @@ struct ScriptConfig: Codable, Equatable {
     var extensions: [String]?
     var confirm: Bool?
     var order: Int?
+    /// Bundle identifier of an app whose icon stands in for this script. Lets a
+    /// bundled script show its tool's real artwork without redistributing an
+    /// icon that belongs to someone else.
+    var applicationBundleIdentifier: String?
 
     init(
         name: String? = nil,
@@ -16,7 +20,8 @@ struct ScriptConfig: Codable, Equatable {
         multiple: Bool? = nil,
         extensions: [String]? = nil,
         confirm: Bool? = nil,
-        order: Int? = nil
+        order: Int? = nil,
+        applicationBundleIdentifier: String? = nil
     ) {
         self.name = name
         self.icon = icon
@@ -25,6 +30,7 @@ struct ScriptConfig: Codable, Equatable {
         self.extensions = extensions
         self.confirm = confirm
         self.order = order
+        self.applicationBundleIdentifier = applicationBundleIdentifier
     }
 }
 
@@ -48,6 +54,8 @@ struct ScriptPackage: Codable, Equatable, Identifiable {
     let requiresConfirmation: Bool
     let order: Int
     let isEnabled: Bool
+    /// See `ScriptConfig.applicationBundleIdentifier`.
+    let applicationBundleIdentifier: String?
 }
 
 struct ScriptPreference: Codable, Equatable {
@@ -122,7 +130,8 @@ extension ScriptPackage {
             extensions: extensions,
             requiresConfirmation: requiresConfirmation,
             order: preference.order ?? order,
-            isEnabled: preference.isEnabled ?? isEnabled
+            isEnabled: preference.isEnabled ?? isEnabled,
+            applicationBundleIdentifier: applicationBundleIdentifier
         )
     }
 }

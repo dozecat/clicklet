@@ -104,7 +104,8 @@ enum ScriptScanner {
             },
             requiresConfirmation: config.confirm ?? false,
             order: config.order ?? 1_000,
-            isEnabled: true
+            isEnabled: true,
+            applicationBundleIdentifier: config.applicationBundleIdentifier
         )
         .applying(preferences)
     }
