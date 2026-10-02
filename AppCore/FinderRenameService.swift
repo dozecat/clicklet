@@ -27,7 +27,14 @@ enum FinderRenameService {
         _ = AXIsProcessTrustedWithOptions(options as CFDictionary)
     }
 
-    static func beginRename(of url: URL, delay: TimeInterval = defaultDelay) {
+    /// Polls until Finder is genuinely in front, then types Return.
+    ///
+    /// A single fixed delay does not work. This app is woken by the URL that
+    /// carries the action, and macOS activates it for that URL — sometimes
+    /// *after* the handler has already hidden the app — so it and Finder spend a
+    /// moment contending for the front. Waiting for the state we actually need,
+    /// instead of guessing at a delay, is what makes the rename land.
+    static func beginRename(of url: URL, timeout: TimeInterval = 2.5) {
         guard isPermitted else {
             DiagnosticsLog.log(
                 "inline rename skipped for \(url.lastPathComponent): "
@@ -36,15 +43,35 @@ enum FinderRenameService {
             return
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            // Never type into whatever happens to be frontmost: a stray Return
-            // elsewhere could open a file.
-            guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier
-                == finderBundleIdentifier else {
-                DiagnosticsLog.log("inline rename skipped: Finder is not frontmost")
-                return
-            }
+        waitForFinder(deadline: Date().addingTimeInterval(timeout), url: url)
+    }
 
+    private static func waitForFinder(deadline: Date, url: URL) {
+        guard Date() < deadline else {
+            DiagnosticsLog.log(
+                "inline rename gave up for \(url.lastPathComponent): "
+                    + "Finder never came to the front"
+            )
+            return
+        }
+
+        // Step aside again if the URL activation pulled us forward after the
+        // handler hid us.
+        if NSApp.isActive {
+            NSApp.hide(nil)
+        }
+
+        guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+            == finderBundleIdentifier else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                waitForFinder(deadline: deadline, url: url)
+            }
+            return
+        }
+
+        // Finder is in front; let it finish applying the selection before the
+        // keystroke lands.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             postReturnKey()
             DiagnosticsLog.log("inline rename requested for \(url.lastPathComponent)")
         }

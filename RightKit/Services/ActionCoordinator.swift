@@ -194,9 +194,9 @@ final class ActionCoordinator {
     /// rename. This app was only woken up to do the work, so it gets out of the
     /// way instead of leaving its settings window in front.
     private func revealForRenaming(_ url: URL) {
-        if NSApp.isActive {
-            NSApp.hide(nil)
-        }
+        // Hidden unconditionally: hiding an inactive app costs nothing, and this
+        // app may be about to be activated by the URL that woke it.
+        NSApp.hide(nil)
         NSWorkspace.shared.activateFileViewerSelecting([url])
         FinderRenameService.beginRename(of: url)
     }

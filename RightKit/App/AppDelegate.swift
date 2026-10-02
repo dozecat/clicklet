@@ -36,6 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication,
         hasVisibleWindows flag: Bool
     ) -> Bool {
+        // There is no window at launch any more, so clicking the Dock icon has to
+        // be what brings the settings window up.
+        if !flag {
+            RightKitApp.showSettingsWindow()
+        }
         return true
     }
 

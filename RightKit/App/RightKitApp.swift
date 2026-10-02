@@ -27,12 +27,9 @@ struct RightKitApp: App {
                 }
             }
 
-            CommandGroup(replacing: .appSettings) {
-                Button("设置…") {
-                    showSettingsWindow()
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
+            // .appSettings is deliberately NOT replaced: SwiftUI's own item is
+            // what opens the Settings scene, complete with ⌘, . Replacing it
+            // with a hand-rolled button meant nothing could open the window.
         }
     }
 
@@ -48,15 +45,19 @@ struct RightKitApp: App {
         )
     }
 
-    /// Opens the settings window on demand.
-    private func showSettingsWindow() {
+    /// Opens the settings window from somewhere other than the app menu, such as
+    /// a click on the Dock icon.
+    ///
+    /// The selector rename happened in Ventura, so both spellings are tried.
+    static func showSettingsWindow() {
         NSApp.activate(ignoringOtherApps: true)
 
-        // The Settings scene is opened by this selector; the window lookup is a
-        // fallback for a build where it is not answered.
-        if NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) {
-            return
+        for name in ["showSettingsWindow:", "showPreferencesWindow:"] {
+            if NSApp.sendAction(Selector(name), to: nil, from: nil) {
+                return
+            }
         }
+
         NSApp.windows.first { $0.canBecomeMain }?.makeKeyAndOrderFront(nil)
     }
 }
