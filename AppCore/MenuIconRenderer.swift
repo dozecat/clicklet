@@ -46,7 +46,14 @@ enum MenuIconRenderer {
     }
 
     static func png(systemSymbol: String) -> Data? {
+        // Tinted through the symbol configuration. Setting `NSColor.set()` and
+        // then drawing does nothing at all: that sets the fill colour for drawing
+        // operations, not for an image, so the symbol came out in its own black.
         let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+            .applying(
+                NSImage.SymbolConfiguration(paletteColors: [NSColor.controlAccentColor])
+            )
+
         guard let symbol = NSImage(
             systemSymbolName: systemSymbol,
             accessibilityDescription: nil
@@ -54,10 +61,8 @@ enum MenuIconRenderer {
             return nil
         }
 
-        // Drawn in the accent colour, matching how the settings list shows it.
         let tinted = NSImage(size: NSSize(width: side, height: side))
         tinted.lockFocus()
-        NSColor.controlAccentColor.set()
         symbol.draw(
             in: NSRect(
                 x: (side - symbol.size.width) / 2,

@@ -250,6 +250,10 @@ enum MenuBuilder {
         item.target = target
         item.tag = tag
         if let icon, let image = NSImage(data: icon) {
+            // Not a template: the snapshot ships finished pixels — accent-tinted
+            // symbols and full-colour application icons. Letting AppKit template
+            // them would flatten the application icons to a single colour.
+            image.isTemplate = false
             item.image = image
         }
         menu.addItem(item)
