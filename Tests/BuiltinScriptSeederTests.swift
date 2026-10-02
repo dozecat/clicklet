@@ -179,6 +179,66 @@ final class BuiltinScriptSeederTests: XCTestCase {
         )
     }
 
+    /// Shipping a new file must not look like a user edit.
+    ///
+    /// The record used to hold one fingerprint for the whole package, taken over
+    /// the bundle's file list at the time. Add a file to the bundle and that
+    /// fingerprint no longer matched a copy written from the previous list, so
+    /// the package was misread as user-edited and silently stopped updating.
+    func testDeliversAnUpdateThatAddsAFile() throws {
+        _ = seed()
+        try Data("#!/bin/zsh\nexit 0\n".utf8).write(
+            to: source.appendingPathComponent("Open in VS Code/extra.sh")
+        )
+
+        let seeded = seed()
+
+        XCTAssertEqual(seeded, ["Open in VS Code"], "adding a shipped file is a change to deliver")
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: scripts.appendingPathComponent("Open in VS Code/extra.sh").path
+            )
+        )
+    }
+
+    /// The same in reverse: removing a shipped file is also a change.
+    func testDeliversAnUpdateThatRemovesAFile() throws {
+        // Ship it first, so the record knows this file came from us...
+        try Data("#!/bin/zsh\nexit 0\n".utf8).write(
+            to: source.appendingPathComponent("Open in VS Code/extra.sh")
+        )
+        _ = seed()
+
+        // ...then stop shipping it.
+        try FileManager.default.removeItem(
+            at: source.appendingPathComponent("Open in VS Code/extra.sh")
+        )
+
+        let seeded = seed()
+
+        XCTAssertEqual(seeded, ["Open in VS Code"])
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: scripts.appendingPathComponent("Open in VS Code/extra.sh").path
+            ),
+            "a file the bundle no longer ships should not linger"
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: scripts.appendingPathComponent("Open in VS Code/config.json").path
+            ),
+            "files the bundle still ships must stay"
+        )
+    }
+
+    /// The current record format, so a future change to it is a deliberate act.
+    func testRecordStoresAHundredAndSixtyFourBits() throws {
+        _ = seed()
+        let text = try String(contentsOf: record, encoding: .utf8)
+
+        XCTAssertTrue(text.contains("\"files\""), "records are per file now, not one hash: \(text)")
+    }
+
     // MARK: - Icons
 
     /// The icon ends up as a real file in the package, generated here rather than

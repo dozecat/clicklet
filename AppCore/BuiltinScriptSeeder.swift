@@ -24,10 +24,20 @@ enum BuiltinScriptSeeder {
     /// allowed one upgrade — after which they carry a real fingerprint.
     private static let unknownFingerprint = ""
 
-    private struct Record: Codable {
-        var seeded: [String: String]
+    /// What we wrote for one package: relative path -> SHA-256 of the contents.
+    ///
+    /// Per file rather than one hash for the whole package, because the set of
+    /// shipped files changes. A whole-package fingerprint taken over the *current*
+    /// bundle's file list stops matching a record written over the previous list,
+    /// and the package is then misread as user-edited and never updated again.
+    private struct Entry: Codable {
+        var files: [String: String]
+    }
 
-        init(seeded: [String: String] = [:]) {
+    private struct Record: Codable {
+        var seeded: [String: Entry]
+
+        init(seeded: [String: Entry] = [:]) {
             self.seeded = seeded
         }
 
@@ -38,15 +48,23 @@ enum BuiltinScriptSeeder {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            if let map = try? container.decode([String: String].self, forKey: .seeded) {
+            if let map = try? container.decode([String: Entry].self, forKey: .seeded) {
                 seeded = map
-            } else if let list = try? container.decode([String].self, forKey: .seeded) {
-                seeded = Dictionary(
-                    uniqueKeysWithValues: list.map { ($0, unknownFingerprint) }
-                )
-            } else {
-                seeded = [:]
+                return
             }
+
+            // Older records: a bare name list, or one fingerprint per package.
+            // The names are kept so a deleted package stays deleted, but there is
+            // no per-file detail, so those packages are upgraded once.
+            var names: [String] = []
+            if let legacy = try? container.decode([String: String].self, forKey: .seeded) {
+                names = Array(legacy.keys)
+            } else if let list = try? container.decode([String].self, forKey: .seeded) {
+                names = list
+            }
+            seeded = Dictionary(
+                uniqueKeysWithValues: names.map { ($0, Entry(files: [:])) }
+            )
         }
     }
 
@@ -100,44 +118,67 @@ enum BuiltinScriptSeeder {
 
             let destination = scriptsDirectory.appendingPathComponent(name, isDirectory: true)
             let recorded = record.seeded[name]
-            let disk = fingerprint(of: destination, matching: package, fileManager: fileManager)
-            let bundled = fingerprint(of: package, matching: package, fileManager: fileManager)
+            let exists = fileManager.fileExists(atPath: destination.path)
 
-            switch (recorded, disk) {
-            case (nil, nil):
+            switch (recorded, exists) {
+            case (nil, false):
                 // Never offered and not present: offer it.
                 if write(package, to: destination, fileManager: fileManager) {
-                    record.seeded[name] = bundled
+                    record.seeded[name] = entry(for: package, fileManager: fileManager)
                     touched.append(name)
                 }
 
-            case (.some, nil):
+            case (.some, false):
                 // Recorded but gone: the user deleted it. Leave it deleted.
                 continue
 
-            case (nil, .some):
+            case (nil, true):
                 // A package the user made themselves, with the same name.
                 continue
 
-            case let (.some(recorded), .some(disk)):
-                guard recorded == disk || recorded == unknownFingerprint else {
-                    // Changed on disk since we wrote it: the user's version wins.
+            case let (.some(entry), true):
+                let onDisk = hashes(in: destination, fileManager: fileManager)
+                let shipped = hashes(in: package, fileManager: fileManager)
+
+                guard !entry.files.isEmpty else {
+                    // Written by a version that recorded no per-file detail.
+                    DiagnosticsLog.log("builtin script \(name): upgrading a pre-hash copy")
+                    if write(package, to: destination, fileManager: fileManager) {
+                        record.seeded[name] = self.entry(for: package, fileManager: fileManager)
+                        touched.append(name)
+                    }
                     continue
                 }
-                guard disk != bundled else {
-                    // Already current. The icon is generated on this machine and
-                    // is not part of the bundle, so a package that was seeded
-                    // before icons existed still needs one — check every launch
-                    // rather than only when the shipped files change.
+
+                // Only the files we wrote are compared: anything the user or a
+                // previous run added is none of our business.
+                let edited = entry.files.contains { path, hash in
+                    onDisk[path] != hash
+                }
+                guard !edited else {
+                    continue
+                }
+
+                // Files we wrote last time that the bundle no longer ships are
+                // removed, so a renamed script does not leave the old one behind.
+                // Anything else in the folder belongs to the user and is left
+                // alone — which is why this is driven by the record, not by
+                // diffing the directory.
+                for stale in entry.files.keys where shipped[stale] == nil {
+                    try? fileManager.removeItem(
+                        at: destination.appendingPathComponent(stale)
+                    )
+                }
+
+                guard shipped != entry.files else {
+                    // Already current; the icon may still be missing on this
+                    // machine, so check every launch rather than only on change.
                     materialiseIcon(for: destination, fileManager: fileManager)
-                    record.seeded[name] = bundled
                     continue
                 }
-                if recorded == unknownFingerprint {
-                    DiagnosticsLog.log("builtin script \(name): upgrading a pre-fingerprint copy")
-                }
+
                 if write(package, to: destination, fileManager: fileManager) {
-                    record.seeded[name] = bundled
+                    record.seeded[name] = self.entry(for: package, fileManager: fileManager)
                     touched.append(name)
                 }
             }
@@ -287,29 +328,20 @@ enum BuiltinScriptSeeder {
         try? fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
     }
 
-    /// Fingerprint of `directory`, covering exactly the files `package` ships.
-    ///
-    /// Anything present only in `directory` — an icon this app generated, a note
-    /// the user dropped in — is ignored. Counting it would make a package look
-    /// user-edited the moment they add a file, freezing every future update.
-    private static func fingerprint(
-        of directory: URL,
-        matching package: URL,
-        fileManager: FileManager
-    ) -> String? {
-        guard fileManager.fileExists(atPath: directory.path) else {
-            return nil
-        }
+    private static func entry(for package: URL, fileManager: FileManager) -> Entry {
+        Entry(files: hashes(in: package, fileManager: fileManager))
+    }
 
-        var entries: [String] = []
+    /// Relative path -> SHA-256 for every regular file in a package.
+    private static func hashes(in package: URL, fileManager: FileManager) -> [String: String] {
+        var result: [String: String] = [:]
 
         for relative in relativeFiles(in: package, fileManager: fileManager) {
-            let url = directory.appendingPathComponent(relative)
-            let value = (try? Data(contentsOf: url)).map(digest) ?? "missing"
-            entries.append("\(relative):\(value)")
+            let url = package.appendingPathComponent(relative)
+            result[relative] = (try? Data(contentsOf: url)).map(digest) ?? "missing"
         }
 
-        return entries.sorted().joined(separator: "|")
+        return result
     }
 
     /// Regular files inside a package, as paths relative to it.
