@@ -87,25 +87,40 @@ enum ArchiveService {
         )
         let names = urls.map(\.lastPathComponent)
 
+        // 失败时把半成品删掉：压缩工具常常先建出一个 0 文件的包再报错，
+        // 留着它会让人以为压缩成功了。
+        func discardOutputOnFailure(_ body: () async throws -> Void) async throws {
+            do {
+                try await body()
+            } catch {
+                try? FileManager.default.removeItem(at: output)
+                throw error
+            }
+        }
+
         switch format {
         case .zip:
             // `-r` for folders, `-X` to skip Finder metadata.
-            try await run(
-                URL(fileURLWithPath: "/usr/bin/zip"),
-                ["-r", "-X", output.lastPathComponent] + names,
-                in: directory
-            )
+            try await discardOutputOnFailure {
+                try await run(
+                    URL(fileURLWithPath: "/usr/bin/zip"),
+                    ["-r", "-X", output.lastPathComponent] + names,
+                    in: directory
+                )
+            }
         case .sevenZip:
             guard capabilities.supportsSevenZip else {
                 // The built-in tools cannot make 7z archives; the toolbox hides
                 // this command in that case, so this is a last-resort guard.
                 throw ArchiveError.unsupportedForSelectedTool("7z")
             }
-            try await run(
-                try kekaExecutable(),
-                ["--cli", "7zz", "a", "-y", output.lastPathComponent] + names,
-                in: directory
-            )
+            try await discardOutputOnFailure {
+                try await run(
+                    try kekaExecutable(),
+                    ["--cli", "7zz", "a", "-y", output.lastPathComponent] + names,
+                    in: directory
+                )
+            }
         }
 
         return output
@@ -215,6 +230,14 @@ enum ArchiveService {
             .appendingPathComponent("Keka")
     }
 
+    /// 在 `directory` 里执行 `executable`。
+    ///
+    /// cwd 用 `/bin/sh -c 'cd …; exec …'` 强制设置，而不是只依赖
+    /// `Process.currentDirectoryURL`：Keka 的 `--cli` 是个包装器，它会再 exec
+    /// 真正的 7zz，而实测（用户日志）那条路径下 7zz 找不到同一目录里的输入文件
+    /// （errno=2），说明它没有继承我们设的工作目录。
+    ///
+    /// 参数走 argv 传给 sh，不做字符串拼接，所以文件名里的空格、中文都安全。
     private static func run(
         _ executable: URL,
         _ arguments: [String],
@@ -225,8 +248,11 @@ enum ArchiveService {
         )
 
         let process = Process()
-        process.executableURL = executable
-        process.arguments = arguments
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = [
+            "-c", #"cd "$1" || exit 66; shift; exec "$@""#,
+            "sh", directory.path, executable.path
+        ] + arguments
         process.currentDirectoryURL = directory
 
         let pipe = Pipe()
