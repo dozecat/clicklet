@@ -21,6 +21,10 @@ xcuserdata/
 .build/
 .swiftpm/
 
+# 内置脚本的图标由 App 在用户本机生成，不入库
+# （图标属于各应用自己的商标资源，随仓库分发等于再分发他人资产）
+RightKit/Resources/BuiltinScripts/**/icon.png
+
 # 本地签名与脚本
 *.p12
 *.mobileprovision

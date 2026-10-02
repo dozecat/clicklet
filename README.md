@@ -49,6 +49,11 @@ brew install swiftlint
 swiftlint
 ```
 
+## 第三方资源
+
+仓库不包含任何第三方的图标或图片文件：品牌图标一律在运行时从用户已安装的应用中解析，脚本包只存 bundle identifier。
+详见 [第三方资源说明](docs/第三方资源说明.md)。
+
 ## 许可
 
 [GNU General Public License v3.0](LICENSE)
