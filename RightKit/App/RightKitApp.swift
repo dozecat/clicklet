@@ -33,9 +33,6 @@ struct RightKitApp: App {
                 SettingsMenuButton()
             }
 
-            // .appSettings is deliberately NOT replaced: SwiftUI's own item is
-            // what opens the Settings scene, complete with ⌘, . Replacing it
-            // with a hand-rolled button meant nothing could open the window.
         }
     }
 

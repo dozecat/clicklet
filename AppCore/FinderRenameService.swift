@@ -43,10 +43,11 @@ enum FinderRenameService {
             return
         }
 
-        waitForFinder(deadline: Date().addingTimeInterval(timeout), url: url)
+        let started = Date()
+        waitForFinder(deadline: started.addingTimeInterval(timeout), started: started, url: url)
     }
 
-    private static func waitForFinder(deadline: Date, url: URL) {
+    private static func waitForFinder(deadline: Date, started: Date, url: URL) {
         guard Date() < deadline else {
             DiagnosticsLog.log(
                 "inline rename gave up for \(url.lastPathComponent): "
@@ -55,16 +56,18 @@ enum FinderRenameService {
             return
         }
 
-        // Step aside again if the URL activation pulled us forward after the
-        // handler hid us.
-        if NSApp.isActive {
+        // Step aside only if we have been in the way for a while. Hiding at once
+        // would take an open settings window off screen, and the app is normally
+        // woken in the background anyway, so this rarely fires.
+        if NSApp.isActive, Date().timeIntervalSince(started) > 0.6 {
+            DiagnosticsLog.log("inline rename: stepping aside for Finder")
             NSApp.hide(nil)
         }
 
         guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier
             == finderBundleIdentifier else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                waitForFinder(deadline: deadline, url: url)
+                waitForFinder(deadline: deadline, started: started, url: url)
             }
             return
         }

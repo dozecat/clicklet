@@ -44,6 +44,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    /// macOS reopens the windows an app had when it last quit. For a utility that
+    /// is woken by Finder actions, that means the settings window reappears the
+    /// next time an action runs — it looks like the app woke the window itself,
+    /// and it flashes on every action while the window is already open.
+    ///
+    /// Turning restoration off at the application level rather than per scene:
+    /// SwiftUI's `.restorationBehavior` needs macOS 15, and `SceneBuilder` cannot
+    /// express an availability check.
+    func applicationShouldSaveApplicationState(_ app: NSApplication) -> Bool {
+        false
+    }
+
+    func applicationShouldRestoreApplicationState(_ app: NSApplication) -> Bool {
+        false
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         ActionCoordinator.shared.invalidate()
     }

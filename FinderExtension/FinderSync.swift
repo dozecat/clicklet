@@ -240,27 +240,42 @@ final class FinderSync: FIFinderSync {
                 DiagnosticsLog.log("could not build action URL")
                 return
             }
-            if NSWorkspace.shared.open(url) {
-                DiagnosticsLog.log("opened \(url.absoluteString)")
-                NSLog("RightKit opened action URL %@", url.absoluteString)
-                return
-            }
+            // Woken without being brought forward. Pulling the app to the front
+            // here is what fought Finder for the foreground (breaking the inline
+            // rename) and flashed the settings window whenever one was open.
+            let openConfiguration = NSWorkspace.OpenConfiguration()
+            openConfiguration.activates = false
 
-            // LaunchServices may not have the rightkit:// scheme registered yet,
-            // for instance right after the app was moved. The request is already
-            // in the App Group and the app drains that queue on launch.
-            DiagnosticsLog.log("open failed for \(url.absoluteString); launching app directly")
-            NSLog("RightKit could not open %@; launching the app directly", url.absoluteString)
-            NSWorkspace.shared.openApplication(
-                at: containingAppURL,
-                configuration: NSWorkspace.OpenConfiguration()
-            ) { _, error in
-                if let error {
-                    DiagnosticsLog.log("launch failed: \(error.localizedDescription)")
-                    NSLog(
-                        "RightKit could not launch the app: %@",
-                        error.localizedDescription
-                    )
+            NSWorkspace.shared.open(url, configuration: openConfiguration) { _, error in
+                guard let error else {
+                    DiagnosticsLog.log("opened \(url.absoluteString)")
+                    NSLog("RightKit opened action URL %@", url.absoluteString)
+                    return
+                }
+
+                // LaunchServices may not have the rightkit:// scheme registered
+                // yet, for instance right after the app was moved. The request is
+                // already in the App Group and the app drains that queue on
+                // launch.
+                DiagnosticsLog.log(
+                    "open failed for \(url.absoluteString) (\(error.localizedDescription)); "
+                        + "launching app directly"
+                )
+                NSLog("RightKit could not open %@; launching the app directly", url.absoluteString)
+
+                let launchConfiguration = NSWorkspace.OpenConfiguration()
+                launchConfiguration.activates = false
+                NSWorkspace.shared.openApplication(
+                    at: self.containingAppURL,
+                    configuration: launchConfiguration
+                ) { _, launchError in
+                    if let launchError {
+                        DiagnosticsLog.log("launch failed: \(launchError.localizedDescription)")
+                        NSLog(
+                            "RightKit could not launch the app: %@",
+                            launchError.localizedDescription
+                        )
+                    }
                 }
             }
         } catch {
