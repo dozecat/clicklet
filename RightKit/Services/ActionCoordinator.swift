@@ -113,10 +113,6 @@ final class ActionCoordinator {
         switch request.kind {
         case .newFile:
             createFile(for: request)
-        case .compress:
-            performCompression(.compress, for: request)
-        case .decompress:
-            performCompression(.decompress, for: request)
         case .runScript:
             runScript(for: request)
         case .compressZip, .compressSevenZip, .decompressHere, .decompressIntoFolder:
@@ -213,22 +209,6 @@ final class ActionCoordinator {
         return BuiltinTemplates.all.first { $0.id == id }
     }
 
-    private func performCompression(
-        _ operation: CompressionOperation,
-        for request: FinderActionRequest
-    ) {
-        let urls = request.selectedPaths.map {
-            URL(fileURLWithPath: $0)
-        }
-
-        Task {
-            do {
-                try await CompressionService.shared.perform(operation: operation, urls: urls)
-            } catch {
-                presentError(error, title: "Compression")
-            }
-        }
-    }
 
     private func runScript(for request: FinderActionRequest) {
         guard let scriptID = request.scriptID,

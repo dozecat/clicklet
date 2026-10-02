@@ -159,13 +159,7 @@ final class FinderSync: FIFinderSync {
         dispatch(FinderCommand(kind: .runScript, identifier: scriptID))
     }
 
-    @IBAction func compress(_ sender: AnyObject?) {
-        dispatch(FinderCommand(kind: .compress))
-    }
 
-    @IBAction func decompress(_ sender: AnyObject?) {
-        dispatch(FinderCommand(kind: .decompress))
-    }
 
     // Archive commands need the main app: only it may run the archive tool.
     // These name their operation up front instead of letting the tool ask.

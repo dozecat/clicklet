@@ -286,19 +286,12 @@ struct ScriptJobResult: Codable, Equatable {
     let errorMessage: String?
 }
 
-enum CompressionOperation: String, Codable {
-    case compress
-    case decompress
-}
-
+/// 压缩器能读的归档扩展名，用于展示能力列表。
+///
+/// 和 `ArchiveFormats.extensions` 不是一回事：那个判断「用户选中的东西算不算
+/// 压缩包」（更宽，含 zst / lz4 之类），这个是「这个压缩器能解哪些格式」。
 enum CompressionSupport {
     static let archiveExtensions: Set<String> = [
         "zip", "7z", "rar", "tar", "gz", "bz2", "xz", "tgz", "tbz2", "lz", "lzma"
     ]
-
-    static func canDecompress(_ urls: [URL]) -> Bool {
-        !urls.isEmpty && urls.contains {
-            archiveExtensions.contains($0.pathExtension.lowercased())
-        }
-    }
 }

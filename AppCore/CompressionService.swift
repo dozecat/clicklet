@@ -43,7 +43,6 @@ protocol CompressorAdapter {
     var isInstalled: Bool { get }
     var capabilities: CompressorCapabilities { get }
 
-    func perform(operation: CompressionOperation, urls: [URL]) async throws
 }
 
 /// macOS's own archive tools (`ditto`, `zip`, `tar`), used when nothing else is
@@ -69,11 +68,6 @@ struct SystemArchiveAdapter: CompressorAdapter {
         )
     }
 
-    /// Archive work is done by `ArchiveService` with the system command-line
-    /// tools; there is no application to hand anything to.
-    func perform(operation: CompressionOperation, urls: [URL]) async throws {
-        throw CompressionError.unsupportedOperation
-    }
 }
 
 struct KekaAdapter: CompressorAdapter {
@@ -96,37 +90,6 @@ struct KekaAdapter: CompressorAdapter {
         )
     }
 
-    func perform(operation: CompressionOperation, urls: [URL]) async throws {
-        guard isInstalled else {
-            throw CompressionError.compressorUnavailable
-        }
-        guard operation == .compress || capabilities.supportsDecompression else {
-            throw CompressionError.unsupportedOperation
-        }
-        guard let applicationURL else {
-            throw CompressionError.compressorUnavailable
-        }
-
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-
-        try await withCheckedThrowingContinuation {
-            (continuation: CheckedContinuation<Void, Error>) in
-            NSWorkspace.shared.open(
-                urls,
-                withApplicationAt: applicationURL,
-                configuration: configuration
-            ) { _, error in
-                if let error {
-                    continuation.resume(
-                        throwing: CompressionError.launchFailed(error.localizedDescription)
-                    )
-                } else {
-                    continuation.resume()
-                }
-            }
-        }
-    }
 
     private var applicationURL: URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier)
@@ -160,25 +123,5 @@ final class CompressionService {
             ?? adapters[0]
     }
 
-    func canDecompress(_ urls: [URL]) -> Bool {
-        CompressionSupport.canDecompress(urls)
-    }
 
-    func perform(operation: CompressionOperation, urls: [URL]) async throws {
-        guard !urls.isEmpty else {
-            throw CompressionError.unsupportedSelection
-        }
-        if operation == .decompress, !canDecompress(urls) {
-            throw CompressionError.unsupportedSelection
-        }
-
-        let preferredIdentifier = AppGroupStore.loadPreferences().compressorIdentifier
-        guard let adapter = adapters.first(where: {
-            $0.identifier == preferredIdentifier
-        }) ?? adapters.first(where: \.isInstalled) else {
-            throw CompressionError.compressorUnavailable
-        }
-
-        try await adapter.perform(operation: operation, urls: urls)
-    }
 }
