@@ -106,8 +106,8 @@ struct GeneralPane: View {
             Button(role: .destructive) { store.resetToDefaults() } label: { L.t("恢复") }
             Button(role: .cancel) {} label: { L.t("取消") }
         } message: {
-            Text("所有启用开关与排序会回到默认，压缩软件恢复为默认选择。"
-                 + "脚本包、图标与模板文件不会被删除。")
+            L.t("所有启用开关与排序会回到默认，压缩软件恢复为默认选择。")
+                 + L.t("脚本包、图标与模板文件不会被删除。")
         }
     }
 
