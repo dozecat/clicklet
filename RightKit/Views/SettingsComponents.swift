@@ -169,12 +169,11 @@ struct SettingsPane<Content: View>: View {
 struct SettingsGroupSeparator: View {
     var body: some View {
         Divider()
-            // 右边距与行一致（18pt），分割线正好覆盖一行的内容宽度。
+            // 左右等距：分割线只从标签列开始、却一直跑到右边，看着是歪的。
             //
-            // 原来右侧也是 150，比行的内容窄 132pt。「可解压格式」列出 11 种格式时
-            // 文字会跨过分割线末端 69pt，看着像溢出了分组。
-            .padding(.leading, settingsLeadingInset)
-            .padding(.trailing, settingsTrailingInset)
+            // 长文本（「可解压格式」列出 11 种的时候）会跨过分割线末端——这个问题
+            // 由那一行自己折叠解决，而不是把分割线拉宽。
+            .padding(.horizontal, settingsLeadingInset)
             .padding(.vertical, 12)
     }
 }
@@ -184,8 +183,16 @@ struct SettingsGroupSeparator: View {
 /// inset the text hugs the left edge and the whole pane reads as cramped.
 let settingsLeadingInset: CGFloat = 150
 
-/// 行的右边距。分割线也要用同一个值，否则长文本会跨过分割线末端。
+/// 行的右边距。
 let settingsTrailingInset: CGFloat = 18
+
+/// 设置窗口宽度，与 `SettingsWindowView` 的 frame 一致。
+let settingsWindowWidth: CGFloat = 700
+
+/// 落在分割线之内的值列宽度：窗口 − 左右各 150 的分割线内边距 − 标签列 − 间距。
+/// 超过这个宽度的文本会跨过分割线末端，看着像溢出了分组。
+let settingsValueWidthWithinSeparator: CGFloat =
+    settingsWindowWidth - settingsLeadingInset * 2 - settingsLabelWidth - settingsLabelGap
 let settingsLabelWidth: CGFloat = 140
 
 /// Table panes start further left than the label/control panes: their first
