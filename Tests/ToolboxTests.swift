@@ -79,10 +79,14 @@ final class ToolboxCatalogTests: XCTestCase {
             XCTAssertTrue(id.requiresSelection)
         }
 
-        for id in [ToolboxItemID.copyPath, .copyFileName, .openInTerminal] {
+        for id in [ToolboxItemID.copyPath, .copyFileName] {
             XCTAssertTrue(id.isHandledByExtension)
             XCTAssertFalse(id.usesCompressorIcon)
         }
+
+        // Opening Terminal needs the main app: a sandboxed extension cannot hand
+        // an arbitrary directory to another application.
+        XCTAssertFalse(ToolboxItemID.openInTerminal.isHandledByExtension)
     }
 
     /// The empty-space menu only carries what makes sense without a selection.

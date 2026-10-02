@@ -19,9 +19,9 @@ extension ToolboxItemID {
     /// which is the only place allowed to run the archive tool.
     var isHandledByExtension: Bool {
         switch self {
-        case .copyPath, .copyFileName, .openInTerminal:
+        case .copyPath, .copyFileName:
             return true
-        case .newFile, .scripts, .compressZip, .compressSevenZip,
+        case .newFile, .scripts, .openInTerminal, .compressZip, .compressSevenZip,
              .decompressHere, .decompressIntoFolder:
             return false
         }

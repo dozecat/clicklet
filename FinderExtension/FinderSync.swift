@@ -123,34 +123,10 @@ final class FinderSync: FIFinderSync {
     }
 
     @IBAction func openInTerminal(_ sender: AnyObject?) {
-        let controller = FIFinderSyncController.default()
-        let selectedURLs = controller.selectedItemURLs() ?? []
-        guard let directory = controller.targetedURL()
-            ?? selectedURLs.first?.deletingLastPathComponent() else {
-            DiagnosticsLog.log("openInTerminal: no directory to open")
-            return
-        }
-
-        guard let terminal = NSWorkspace.shared.urlForApplication(
-            withBundleIdentifier: ToolboxCatalog.terminalBundleIdentifier
-        ) else {
-            DiagnosticsLog.log("openInTerminal: Terminal.app not found")
-            return
-        }
-
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-
-        DiagnosticsLog.log("openInTerminal: \(directory.path)")
-        NSWorkspace.shared.open(
-            [directory],
-            withApplicationAt: terminal,
-            configuration: configuration
-        ) { _, error in
-            if let error {
-                DiagnosticsLog.log("openInTerminal failed: \(error.localizedDescription)")
-            }
-        }
+        // Handed to the main app. Doing it here looked plausible but never
+        // worked: the sandbox refuses to pass a directory this extension has no
+        // access to over to Terminal, which fails with a miscellaneous error.
+        dispatch(FinderCommand(kind: .openInTerminal))
     }
 
     // MARK: - Menu actions

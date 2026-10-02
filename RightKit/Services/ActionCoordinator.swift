@@ -121,6 +121,8 @@ final class ActionCoordinator {
             runScript(for: request)
         case .compressZip, .compressSevenZip, .decompressHere, .decompressIntoFolder:
             performArchive(request.kind, for: request)
+        case .openInTerminal:
+            openInTerminal(for: request)
         }
     }
 
@@ -279,6 +281,35 @@ final class ActionCoordinator {
                 }
             } catch {
                 showError(error)
+            }
+        }
+    }
+
+    /// Opens Terminal at the folder the action came from. Only the main app can
+    /// do this: the extension is sandboxed.
+    private func openInTerminal(for request: FinderActionRequest) {
+        let directory = request.selectedPaths.first
+            .map { URL(fileURLWithPath: $0).deletingLastPathComponent() }
+            ?? URL(fileURLWithPath: request.directoryPath, isDirectory: true)
+
+        guard let terminal = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: ToolboxCatalog.terminalBundleIdentifier
+        ) else {
+            DiagnosticsLog.log("openInTerminal: Terminal.app not found")
+            return
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+
+        DiagnosticsLog.log("openInTerminal: \(directory.path)")
+        NSWorkspace.shared.open(
+            [directory],
+            withApplicationAt: terminal,
+            configuration: configuration
+        ) { _, error in
+            if let error {
+                DiagnosticsLog.log("openInTerminal failed: \(error.localizedDescription)")
             }
         }
     }

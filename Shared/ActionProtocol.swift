@@ -5,6 +5,9 @@ enum FinderActionKind: String, Codable {
     case compress
     case decompress
     case runScript
+    /// Opening Terminal is done by the main app: the extension is sandboxed and
+    /// cannot hand an arbitrary directory to another application.
+    case openInTerminal
     /// Toolbox archive commands that name their operation up front instead of
     /// letting the archive tool ask.
     case compressZip
