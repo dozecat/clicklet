@@ -54,6 +54,12 @@ targets:
         # 这个项目一个都没用到——图标走 CFBundleIconFile，颜色走 SwiftUI 内置的
         # Color.accentColor——而这一步正是报 "Failed to write Swift generated
         # asset symbols" 的地方，所以直接关掉，让构建不再依赖它。
+        # 关掉资产符号生成。actool 的实际开关是 --generate-swift-asset-symbols，
+        # 由下面这个设置控制（名字取自 Xcode 自己的 AssetCatalogCompiler.xcspec）；
+        # 带 _EXTENSIONS 的那个只管 Swift 侧的扩展方法，关不掉生成本身。
+        # 本项目一个符号都没用到：图标走 CFBundleIconFile，颜色走 SwiftUI 内置的
+        # Color.accentColor。
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
         ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
         ENABLE_APP_SANDBOX: NO
     dependencies:
