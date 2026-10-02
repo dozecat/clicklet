@@ -47,8 +47,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             return "doc.zipper"
         case .scripts:
             // Not "terminal": that symbol is the same rounded box with ">_" as
-            // Terminal.app's own icon, which the 工具箱 tab already shows for
-            // 在终端中打开.
+            // Terminal.app's own icon, which the Toolbox tab already shows for
+            // Open in Terminal.
             return "chevron.left.forwardslash.chevron.right"
         case .about:
             return "info.circle"
@@ -169,10 +169,12 @@ struct SettingsPane<Content: View>: View {
 struct SettingsGroupSeparator: View {
     var body: some View {
         Divider()
-            // 左右等距：分割线只从标签列开始、却一直跑到右边，看着是歪的。
+            // Equal spacing on both sides: the separator starts at the label column
+            // yet runs all the way to the right, which looks crooked.
             //
-            // 长文本（「可解压格式」列出 11 种的时候）会跨过分割线末端——这个问题
-            // 由那一行自己折叠解决，而不是把分割线拉宽。
+            // Long text (when "Extractable Formats" lists 11 of them) runs past
+            // the end of the separator — that problem is solved by that row folding
+            // on its own, not by widening the separator.
             .padding(.horizontal, settingsLeadingInset)
             .padding(.vertical, 12)
     }
@@ -183,14 +185,16 @@ struct SettingsGroupSeparator: View {
 /// inset the text hugs the left edge and the whole pane reads as cramped.
 let settingsLeadingInset: CGFloat = 150
 
-/// 行的右边距。
+/// The trailing inset of a row.
 let settingsTrailingInset: CGFloat = 18
 
-/// 设置窗口宽度，与 `SettingsWindowView` 的 frame 一致。
+/// The settings window width, matching `SettingsWindowView`'s frame.
 let settingsWindowWidth: CGFloat = 700
 
-/// 落在分割线之内的值列宽度：窗口 − 左右各 150 的分割线内边距 − 标签列 − 间距。
-/// 超过这个宽度的文本会跨过分割线末端，看着像溢出了分组。
+/// Width of the value column that stays inside the separator: window − 150 of
+/// separator padding on each side − label column − spacing.
+/// Text wider than this runs past the end of the separator and looks like it
+/// overflows the group.
 let settingsValueWidthWithinSeparator: CGFloat =
     settingsWindowWidth - settingsLeadingInset * 2 - settingsLabelWidth - settingsLabelGap
 let settingsLabelWidth: CGFloat = 140
@@ -206,7 +210,7 @@ let settingsLabelWidth: CGFloat = 140
 /// right; 72 evens them up.
 let settingsTableLeadingInset: CGFloat = 72
 
-/// Optical nudge for the 启用 column header so the word sits directly above the
+/// Optical nudge for the Enabled column header so the word sits directly above the
 /// checkboxes rather than above their column. The value is calibrated against a
 /// rendered pane (`+2.5` puts both left edges at the same pixel); it depends on
 /// the row's trailing structure, so re-measure it if that changes.
@@ -229,11 +233,14 @@ struct SettingsRow<Control: View>: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: settingsLabelGap) {
-            // label 是运行时 String，直接 Text(label + "：") 会被当成原文，
-            // 于是只有按钮跟着语言变、标签永远停在源语言。
-            // 先把 label 转成键，再拼本地化的全角冒号（英文里用半角）。
-            // 括号必需：不加的话 .frame 只作用于第二个 Text，
-            // 于是加号左边是 Text、右边是 some View，类型对不上。
+            // label is a runtime String, so `Text(label + "：")` directly would be
+            // treated as verbatim text, and then only the buttons would follow the
+            // language while the labels stayed in the source language.
+            // Turn label into a key first, then append the localized full-width
+            // colon (half-width in English).
+            // The parentheses are required: without them .frame would apply only to
+            // the second Text, so the plus would have a Text on the left and a
+            // some View on the right, and the types would not match.
             (L.t(label) + L.t("："))
                 .frame(width: settingsLabelWidth, alignment: .trailing)
 
@@ -255,8 +262,9 @@ struct SettingsValue: View {
     var body: some View {
         L.t(text)
             .foregroundStyle(.secondary)
-            // 换行时行距稍大一点。默认行距在多行值（例如「可解压格式」列出 11 种）
-            // 上显得拥挤。单行的值不受影响。
+            // Slightly larger line spacing when it wraps. The default looks cramped
+            // on multi-line values (for example when "Extractable Formats" lists
+            // 11 of them). Single-line values are unaffected.
             .lineSpacing(4)
             .textSelection(.enabled)
             .fixedSize(horizontal: false, vertical: true)
@@ -271,7 +279,8 @@ struct SettingsCheckbox: View {
     var isEnabled: Bool = true
 
     var body: some View {
-        // 传 String 会选中 Toggle 的 StringProtocol 重载，那样不会查 catalog。
+        // Passing a String would pick Toggle's StringProtocol overload, which does
+        // not consult the catalog.
         Toggle(isOn: $isOn) { L.t(title) }
             .toggleStyle(.checkbox)
             .disabled(!isEnabled)

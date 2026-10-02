@@ -82,10 +82,12 @@ struct CompressionPane: View {
 }
 
 
-/// 压缩格式列表。
+/// The list of compression formats.
 ///
-/// 条目多的时候（Keka 可解压 11 种）整行会跨过分割线末端，所以把宽度限制在
-/// 分割线之内，让它换行——而不是折叠起来，也不是把分割线拉宽。
+/// With many entries (Keka can decompress 11 of them) the whole row runs past the
+/// end of the separator, so the width is capped inside the separator and the text
+/// is left to wrap — rather than collapsing the list, and rather than widening the
+/// separator.
 struct FormatList: View {
     let formats: [String]
 

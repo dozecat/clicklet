@@ -137,29 +137,35 @@ extension ScriptPackage {
     }
 }
 
-/// 界面语言。`system` 表示跟随系统；其余是对应的 lproj 代码。
+/// The UI language. `system` means follow the system; the rest are the matching
+/// lproj codes.
 ///
-/// 两种界面要用**两套机制**，不能混：
-/// - 主 App：进程级 `AppleLanguages`，改完要重启
-/// - 访达扩展：跑在 Finder 进程里，用进程级偏好会把**访达**的语言也改掉，
-///   所以只能按偏好显式挑 lproj 查表（见 LocalizedText）
+/// The two UIs need **two different mechanisms**, and they must not be mixed:
+/// - Main app: the process-level `AppleLanguages`, which needs a relaunch after a
+///   change
+/// - Finder extension: it runs inside Finder's process, and a process-level
+///   preference would change **Finder's** language too, so it can only pick an
+///   lproj explicitly from the preference and look the string up (see
+///   LocalizedText)
 enum AppLanguage: String, Codable, CaseIterable, Identifiable {
     case simplifiedChinese = "zh-Hans"
     case english = "en"
 
     var id: String { rawValue }
 
-    /// lproj 代码。
+    /// The lproj code.
     var lprojCode: String { rawValue }
 
-    /// 偏好里还没有语言时，按系统偏好挑一个具体语言。
-    /// 用户明确要求不要「跟随系统」这一项，所以这里给的是一个确定的语言。
+    /// When the preference holds no language yet, pick a concrete one from the
+    /// system preference.
+    /// The user explicitly asked for no "Follow System" entry, so what is returned
+    /// here is one definite language.
     static var defaultFromSystem: AppLanguage {
         let preferred = (Locale.preferredLanguages.first ?? "en").lowercased()
         return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
     }
 
-    /// 重开自己：新进程会在启动时读到刚写入的语言。
+    /// Relaunch itself: the new process reads the freshly written language at launch.
     @MainActor
     static func relaunchApp() {
         let configuration = NSWorkspace.OpenConfiguration()
@@ -172,7 +178,8 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// 界面上显示的名字，用各自语言的原生写法，两者都不翻译。
+    /// The name shown in the UI, each written natively in its own language; neither
+    /// is translated.
     var displayName: String {
         switch self {
         case .simplifiedChinese: return "简体中文"
@@ -191,10 +198,11 @@ struct AppPreferences: Codable, Equatable {
     var templates: [String: TemplatePreference]
     var toolbox: [String: ToolboxPreference]
     var compressorIdentifier: String?
-    /// 可选：老配置里没有这个键，缺省即跟随系统。
+    /// Optional: older configurations have no such key, and the default is to follow
+    /// the system.
     var language: AppLanguage?
 
-    /// 实际生效的语言。
+    /// The language actually in effect.
     var resolvedLanguage: AppLanguage { language ?? .defaultFromSystem }
 
     init(
@@ -243,11 +251,14 @@ struct AppPreferences: Codable, Equatable {
             String.self,
             forKey: .compressorIdentifier
         )
-        // 新增字段必须同时加在这里：这是手写的逐字段解码，
-        // 只加进结构体与 CodingKeys 是不够的——漏了这里，每次读盘都会把
-        // 该字段丢掉，界面看起来就像"设置完又自己变回去了"。
-        // 用 try?：老文件里可能存着已删除的语言值（例如 "system"），
-        // 严格解码会抛错，而调用方一旦失败就整体退回默认值，把别的设置也一起丢掉。
+        // A new field has to be added here as well: this is a hand-written
+        // field-by-field decoder, and adding it to the struct and CodingKeys alone
+        // is not enough — miss it here and every read from disk drops that field,
+        // so the UI looks like "the setting changed itself back".
+        // `try?` on purpose: an old file may hold a language value that has since
+        // been removed (for example "system"), and strict decoding would throw,
+        // while a caller that fails falls back to the defaults as a whole and loses
+        // the other settings along with it.
         language = (try? container.decodeIfPresent(
             AppLanguage.self,
             forKey: .language
@@ -348,10 +359,12 @@ struct ScriptJobResult: Codable, Equatable {
     let errorMessage: String?
 }
 
-/// 压缩器能读的归档扩展名，用于展示能力列表。
+/// The archive extensions the compressor can read, used to show the capabilities
+/// list.
 ///
-/// 和 `ArchiveFormats.extensions` 不是一回事：那个判断「用户选中的东西算不算
-/// 压缩包」（更宽，含 zst / lz4 之类），这个是「这个压缩器能解哪些格式」。
+/// Not the same thing as `ArchiveFormats.extensions`: that one decides "does what
+/// the user selected count as an archive" (broader, including things like zst /
+/// lz4), while this one is "which formats this compressor can decompress".
 enum CompressionSupport {
     static let archiveExtensions: Set<String> = [
         "zip", "7z", "rar", "tar", "gz", "bz2", "xz", "tgz", "tbz2", "lz", "lzma"

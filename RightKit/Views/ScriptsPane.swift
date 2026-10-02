@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Script packages as a striped table: `图标 · 脚本名称 · 路径 · 启用`,
+/// Script packages as a striped table: `Icon · Script Name · Path · Enabled`,
 /// with `−` / `+` on the right of the column header to remove or import one.
 ///
 /// The scripts directory stays the source of truth: importing copies a `.sh` in
@@ -107,7 +107,7 @@ struct ScriptsPane: View {
     }
 
     /// Trailing row of the list: the add/remove pair sits right after the last
-    /// entry and lines up with the 启用 column, so it reads as the end of the
+    /// entry and lines up with the Enabled column, so it reads as the end of the
     /// list rather than window chrome.
     private var addRemoveRow: some View {
         HStack(spacing: 0) {
@@ -132,7 +132,7 @@ struct ScriptsPane: View {
                 .help(L.t("删除选中的脚本"))
             }
             .buttonStyle(.borderless)
-            // Same width as the 启用 column, so the two line up.
+            // Same width as the Enabled column, so the two line up.
             .frame(width: 52, alignment: .leading)
         }
         .padding(.trailing, 30)

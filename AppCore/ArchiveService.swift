@@ -63,12 +63,14 @@ enum ArchiveService {
             return try await compress(urls, in: directory, format: .sevenZip)
         case .decompressHere:
             try await decompress(urls, into: directory)
-            // 返回 nil = 调用方不去"显示结果"。
+            // Returning nil = the caller does not "reveal the result".
             //
-            // 这里原来返回 directory（就是这个文件夹本身），调用方随后
-            // activateFileViewerSelecting 它会**把访达抢到前台并选中该文件夹**——
-            // 用户本来就在这个文件夹里，看上去就像"解压却打开了访达"。
-            // 新建独立文件夹那条返回的是新目录，显示它才有意义，所以只有这里改为 nil。
+            // This used to return directory (the folder itself), and the caller
+            // would then activateFileViewerSelecting it, which **steals Finder to
+            // the front and selects that folder** — the user is already in this
+            // folder, so it looked like "extraction opened Finder".
+            // The separate-folder path returns a new directory, where revealing
+            // does make sense, so only this case was changed to nil.
             return nil
         case .decompressIntoFolder:
             return try await decompressIntoOwnFolders(urls, in: directory)
@@ -93,8 +95,9 @@ enum ArchiveService {
         )
         let names = urls.map(\.lastPathComponent)
 
-        // 失败时把半成品删掉：压缩工具常常先建出一个 0 文件的包再报错，
-        // 留着它会让人以为压缩成功了。
+        // Delete the half-finished output on failure: archivers often create an
+        // empty archive first and only then report the error, and leaving it
+        // behind makes people think the compression succeeded.
         func discardOutputOnFailure(_ body: () async throws -> Void) async throws {
             do {
                 try await body()
@@ -236,14 +239,16 @@ enum ArchiveService {
             .appendingPathComponent("Keka")
     }
 
-    /// 在 `directory` 里执行 `executable`。
+    /// Runs `executable` inside `directory`.
     ///
-    /// cwd 用 `/bin/sh -c 'cd …; exec …'` 强制设置，而不是只依赖
-    /// `Process.currentDirectoryURL`：Keka 的 `--cli` 是个包装器，它会再 exec
-    /// 真正的 7zz，而实测（用户日志）那条路径下 7zz 找不到同一目录里的输入文件
-    /// （errno=2），说明它没有继承我们设的工作目录。
+    /// The cwd is forced with `/bin/sh -c 'cd …; exec …'` instead of relying only
+    /// on `Process.currentDirectoryURL`: Keka's `--cli` is a wrapper that execs
+    /// the real 7zz, and in practice (user logs) 7zz could not find the input file
+    /// sitting in the same directory (errno=2), which shows it did not inherit the
+    /// working directory we set.
     ///
-    /// 参数走 argv 传给 sh，不做字符串拼接，所以文件名里的空格、中文都安全。
+    /// The arguments reach sh through argv with no string concatenation, so spaces
+    /// and Chinese characters in file names are safe.
     private static func run(
         _ executable: URL,
         _ arguments: [String],

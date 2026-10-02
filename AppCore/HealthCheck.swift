@@ -1,15 +1,17 @@
 import Foundation
 
-/// 自检的输入。
+/// The input to the self-check.
 ///
-/// 刻意做成一个纯数据结构：所有检查逻辑因此可以完全脱离真实系统来测试，
-/// 不用去改权限、启停扩展。真正的状态由 `SettingsStore` / `AppGroupStore` 填进来。
+/// Deliberately a plain data structure: all the check logic can therefore be
+/// tested completely independently of the real system, without changing
+/// permissions or enabling/disabling the extension. The real state is filled in
+/// by `SettingsStore` / `AppGroupStore`.
 struct HealthCheckInput {
     var extensionEnabled: Bool
     var accessibilityGranted: Bool
     var notificationsGranted: Bool
     var appGroupAvailable: Bool
-    /// 菜单快照的最后写入时间；nil 表示从未写过。
+    /// When the menu snapshot was last written; nil means it was never written.
     var snapshotAge: TimeInterval?
     var compressorInstalled: Bool
     var scriptsDirectoryWritable: Bool
@@ -33,7 +35,7 @@ struct HealthCheckInput {
     }
 }
 
-/// 一项自检的结果。
+/// The result of one self-check item.
 struct HealthCheckResult: Identifiable, Equatable {
     enum Level: Equatable {
         case ok
@@ -41,7 +43,7 @@ struct HealthCheckResult: Identifiable, Equatable {
         case failed
     }
 
-    /// 能一键解决时给出的动作。
+    /// The action offered when the problem can be fixed in one click.
     enum Fix: Equatable {
         case openExtensionSettings
         case requestAccessibility
@@ -58,7 +60,8 @@ struct HealthCheckResult: Identifiable, Equatable {
 }
 
 enum HealthCheck {
-    /// 快照超过这个时长就提示一次——菜单没更新是真实发生过的故障。
+    /// Warn once the snapshot is older than this — a menu that stopped updating is
+    /// a failure that has really happened.
     static let snapshotStaleAfter: TimeInterval = 24 * 60 * 60
 
     static func run(_ input: HealthCheckInput) -> [HealthCheckResult] {
@@ -73,7 +76,7 @@ enum HealthCheck {
         ]
     }
 
-    // MARK: - 逐项
+    // MARK: - Individual checks
 
     private static func extensionCheck(_ input: HealthCheckInput) -> HealthCheckResult {
         HealthCheckResult(
@@ -181,7 +184,7 @@ enum HealthCheck {
         )
     }
 
-    /// 有失败项时给一句话总结，供界面顶部使用。
+    /// A one-line summary when something failed, used at the top of the UI.
     static func summary(_ results: [HealthCheckResult]) -> String {
         let failed = results.filter { $0.level == .failed }.count
         let warnings = results.filter { $0.level == .warning }.count

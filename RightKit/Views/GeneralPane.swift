@@ -26,8 +26,9 @@ struct GeneralPane: View {
                         set: { store.setLanguage($0) }
                     )) {
                         ForEach(AppLanguage.allCases) { language in
-                            // 「跟随系统」要翻译；「简体中文」「English」用各自语言的
-                            // 原生写法，catalog 里没有它们，于是原样显示。
+                            // "Follow System" needs translating; "Simplified Chinese"
+                            // and "English" are written natively in their own languages
+                            // and are not in the catalog, so they display as-is.
                             Text(LocalizedStringKey(language.displayName)).tag(language)
                         }
                     }

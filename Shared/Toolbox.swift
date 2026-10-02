@@ -96,14 +96,16 @@ struct ToolboxItem: Codable, Equatable, Identifiable {
     }
 }
 
-/// 选中项的类型，决定哪些归档操作该出现在菜单里。
+/// The type of what is selected, which decides which archive actions should appear
+/// in the menu.
 ///
-/// 之前只区分「选中 / 空白」，于是选中文件夹也显示「解压到当前文件夹」，
-/// 选中 zip 也显示「压缩为 ZIP」——两者都讲不通。
+/// It used to distinguish only "selection / empty space", so selecting a folder
+/// still showed "Extract Here" and selecting a zip still showed "Compress to ZIP" —
+/// neither of which makes sense.
 struct SelectionContext {
     var isEmpty: Bool
     var containsArchive: Bool
-    /// 非空，且全部都是压缩包。
+    /// Non-empty, and every item is an archive.
     var allAreArchives: Bool
 
     init(urls: [URL]) {
@@ -115,10 +117,10 @@ struct SelectionContext {
 }
 
 enum ArchiveFormats {
-    /// 判断「这是不是一个压缩包」。
+    /// Decides "is this an archive".
     ///
-    /// 刻意不跟着用户选的压缩器变：一个 .rar 是不是压缩包，和 RightKit 用哪个
-    /// 工具去处理它无关。
+    /// Deliberately does not follow the compressor the user picked: whether a .rar
+    /// is an archive has nothing to do with which tool RightKit uses to handle it.
     static let extensions: Set<String> = [
         "zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz2", "tbz",
         "xz", "txz", "lz", "lzma", "zst", "lz4", "br", "cab"
@@ -149,8 +151,9 @@ enum ToolboxCatalog {
         ToolboxItem(
             id: .copyPath,
             title: "拷贝路径",
-            // 空白处右键也用同一个标题。原来叫「拷贝当前文件夹路径」，
-            // 在菜单里过长，而且和选中态下的叫法不一致。
+            // Right-clicking empty space uses the same title too. It used to be
+            // called "Copy Current Folder Path", which is too long for a menu and
+            // did not match what the selection case was called.
             backgroundTitle: nil,
             icon: "doc.on.clipboard",
             appliesToSelection: true,
@@ -170,7 +173,7 @@ enum ToolboxCatalog {
         ),
         ToolboxItem(
             id: .openInTerminal,
-            // "在终端中打开" reads as "open the selected item with Terminal".
+            // The former title read as "open the selected item with Terminal".
             // The action opens a terminal *at* the folder, so say that.
             title: "在此处打开终端",
             backgroundTitle: nil,
@@ -269,17 +272,19 @@ enum ToolboxCatalog {
 
     /// 7z compression is only offered while the chosen archive tool can produce
     /// 7z archives at all; the built-in tools cannot.
-    /// 这个条目在给定的选中状态下该不该出现。
+    /// Whether this item should appear for the given selection state.
     ///
-    /// 只用于**菜单构建**。设置界面的工具箱列表必须列出全部条目，否则用户
-    /// 根本看不到、也就无法打开「解压」这一项——所以那个路径不走这里。
+    /// Used for **menu building** only. The toolbox list in the settings window has
+    /// to list every item, otherwise the user cannot see it at all and therefore
+    /// cannot turn the "Extract" item on — so that path does not go through here.
     static func applies(_ id: ToolboxItemID, to selection: SelectionContext) -> Bool {
         switch id {
         case .compressZip, .compressSevenZip:
-            // 已经是压缩包了，再压一次没有意义。
+            // It is already an archive, so compressing it again is pointless.
             return !selection.allAreArchives
         case .decompressHere, .decompressIntoFolder:
-            // 选中里至少要有一个压缩包，否则无从解起。
+            // The selection needs at least one archive, otherwise there is nothing
+            // to extract.
             return selection.containsArchive
         default:
             return true

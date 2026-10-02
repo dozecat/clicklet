@@ -75,7 +75,7 @@ enum SettingsOpener {
     }
 }
 
-/// Puts a working "设置…" item in the app menu.
+/// Puts a working "Settings…" item in the app menu.
 ///
 /// `SettingsLink` is what SwiftUI supports for opening a `Settings` scene, and
 /// it has to be a view — which a menu item can be.

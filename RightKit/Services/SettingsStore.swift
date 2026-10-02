@@ -21,21 +21,25 @@ final class SettingsStore: ObservableObject {
     @Published private(set) var notificationsAuthorized = false
     @Published private(set) var launchAtLogin = LaunchAtLoginService.state == .enabled
 
-    /// 自检以 sheet 形式出现，不占页签：设置是"配置"，自检是"排查"，
-    /// 而且自检的常态是"一切正常"——一个永远说废话的页签不值得占位置。
+    /// The self-check appears as a sheet and does not take a tab: settings are
+    /// "configuration" and the self-check is "troubleshooting", and on top of that
+    /// the self-check is normally "everything is fine" — a tab that always states
+    /// the obvious is not worth a slot.
     @Published private(set) var showsHealthCheck = false
 
     func showHealthCheck() { showsHealthCheck = true }
     func dismissHealthCheck() { showsHealthCheck = false }
 
-    /// 打开「登录项与扩展」的系统设置页。Ventura 之后扩展搬到了这里，
-    /// 旧的面板标识留作回退。通用页与自检页共用。
+    /// Opens the system settings page for Login Items & Extensions. Extensions moved
+    /// there after Ventura, and the old pane identifier is kept as a fallback. Both
+    /// the General page and the self-check page use it.
     func setLanguage(_ language: AppLanguage) {
         let previous = preferences.resolvedLanguage
         var updated = preferences
         updated.language = language
         preferences = updated
-        // 查询缓存必须立刻失效，否则界面最多会慢半秒才跟着变
+        // The lookup cache must be invalidated immediately, otherwise the UI can
+        // take up to half a second to follow the change.
         LocalizedText.languageOverride = language
         LocalizedText.invalidate()
         do {

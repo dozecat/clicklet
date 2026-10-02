@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 
-/// 「解压到当前文件夹」不该让调用方去"显示结果"。
+/// "Extract Here" should not make the caller "reveal the result".
 final class DecompressHereRevealTests: XCTestCase {
     func testDecompressHereReturnsNothingToReveal() async throws {
         let root = FileManager.default.temporaryDirectory
@@ -10,7 +10,7 @@ final class DecompressHereRevealTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        // 造一个真的 zip
+        // Build a real zip
         let payload = root.appendingPathComponent("payload.txt")
         try Data("hello\n".utf8).write(to: payload)
 

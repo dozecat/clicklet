@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Basic right-click actions as a striped table:
-/// `图标 · 显示名称 · 启用`, reordered by dragging a row.
+/// `Icon · Display Name · Enabled`, reordered by dragging a row.
 ///
 /// Everything here is real: the checkboxes and the order are written to the App
 /// Group and republished in the menu snapshot, so the Finder menu — order
@@ -36,7 +36,7 @@ struct ToolboxPane: View {
                 .padding(.leading, settingsCheckboxHeaderNudge)
                 .frame(width: 52, alignment: .leading)
 
-            // Matches the row below. Without it the 启用 column sits 12pt
+            // Matches the row below. Without it the Enabled column sits 12pt
             // further right here than on the scripts tab.
             Spacer(minLength: 12)
         }
@@ -58,7 +58,8 @@ struct ToolboxPane: View {
             icon(for: item)
                 .frame(width: 52, alignment: .leading)
 
-            // item.title 是运行时的 String，Text 会当成 verbatim，所以要显式转成键
+            // item.title is a runtime String, which Text would treat as verbatim, so
+            // it has to be turned into a key explicitly.
             Text(LocalizedStringKey(item.title))
                 .opacity(isEnabled ? 1 : 0.5)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -186,11 +186,13 @@ final class TemplateCatalogServiceTests: XCTestCase {
     }
 }
 
-/// 偏好里**每个字段都必须能往返**。
+/// **Every field in the preferences must survive a round trip.**
 ///
-/// AppPreferences 用的是手写的逐字段解码（为了老/新版本的文件都不会整体加载失败），
-/// 所以新增字段要改三个地方：属性、CodingKeys、以及那个解码器。漏掉第三个时，
-/// 存进去的值读回来就没了，界面看起来像"设置完又自己变回去"。
+/// AppPreferences uses a hand-written field-by-field decoder (so that files from an
+/// older or newer build never fail to load as a whole), so a new field has to be
+/// added in three places: the property, CodingKeys, and that decoder. Miss the
+/// third and the value that was stored is gone when it is read back, so the UI
+/// looks like "the setting changed itself back".
 final class AppPreferencesRoundTripTests: XCTestCase {
     func testLanguageSurvivesARoundTrip() throws {
         let original = AppPreferences(language: .english)
@@ -200,7 +202,8 @@ final class AppPreferencesRoundTripTests: XCTestCase {
         XCTAssertEqual(decoded.resolvedLanguage, .english)
     }
 
-    /// 老文件没有 language 这个键，必须能正常加载，并按系统挑一个具体语言。
+    /// An old file has no language key, so it must load normally and pick a concrete
+    /// language from the system.
     func testMissingLanguageDecodesToAConcreteLanguage() throws {
         let legacy = Data(#"{"version":2,"scripts":{},"templates":{},"toolbox":{}}"#.utf8)
         let decoded = try JSONDecoder().decode(AppPreferences.self, from: legacy)
@@ -208,8 +211,9 @@ final class AppPreferencesRoundTripTests: XCTestCase {
         XCTAssertEqual(decoded.resolvedLanguage, AppLanguage.defaultFromSystem)
     }
 
-    /// 老文件里可能存着已经删掉的 system 值。
-    /// 严格解码会抛错，而调用方一旦失败就整体退回默认值，别的设置也会一起丢。
+    /// An old file may hold a system value that has since been removed.
+    /// Strict decoding would throw, and a caller that fails falls back to the
+    /// defaults as a whole, losing the other settings along with it.
     func testUnknownLanguageValueDoesNotBreakLoading() throws {
         let legacy = Data(#"{"version":2,"scripts":{},"templates":{},"toolbox":{},"language":"system"}"#.utf8)
         let decoded = try JSONDecoder().decode(AppPreferences.self, from: legacy)
@@ -217,7 +221,7 @@ final class AppPreferencesRoundTripTests: XCTestCase {
         XCTAssertEqual(decoded.resolvedLanguage, AppLanguage.defaultFromSystem)
     }
 
-    /// 其它字段也不能在往返中丢失。
+    /// The other fields must not be lost in a round trip either.
     func testEveryFieldSurvivesARoundTrip() throws {
         let original = AppPreferences(
             scripts: ["a": ScriptPreference(isEnabled: true, order: 1)],

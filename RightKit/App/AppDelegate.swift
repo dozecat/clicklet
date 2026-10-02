@@ -6,11 +6,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             "app launched; version=\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") "
                 + "appGroup=\(AppGroup.identifier) container=\(AppGroup.containerURL?.path ?? "UNAVAILABLE")"
         )
-        // 首次运行：把设置窗口开在自检页——那一页就是首次设置引导，
-        // 缺什么当场有按钮，不用再单独做一个向导。
+        // First run: open the settings window on the self-check page — that page is
+        // the first-run setup guide, since whatever is missing has a button right
+        // there and there is no need for a separate wizard.
         //
-        // 但被右键动作唤起时不要弹窗：那种启动只该安静做完活然后退回后台，
-        // 弹窗会正好挡在用户面前。
+        // But do not pop a window when the launch came from a Finder action: that
+        // kind of launch should just do the work quietly and drop back into the
+        // background, while a window would land right in front of the user.
         if !AppGroupStore.hasCompletedFirstRun {
             AppGroupStore.markFirstRunCompleted()
             if AppGroupStore.pendingActionRequestIDs().isEmpty {

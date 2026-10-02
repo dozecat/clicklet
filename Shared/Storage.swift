@@ -56,8 +56,10 @@ enum AppGroupStore {
         return decoder
     }()
 
-    /// 首次运行标记。放在用户的支持目录里（不是共享容器——那是扩展用的），
-    /// 所以删掉容器或重装扩展都不会又走一遍引导。
+    /// The first-run marker. It lives in the user's support directory (not the
+    /// shared container — that one is for the extension), so deleting the container
+    /// or reinstalling the extension does not send the user through onboarding
+    /// again.
     static var firstRunMarker: URL {
         AppPaths.supportDirectory.appendingPathComponent("first-run-done")
     }

@@ -27,7 +27,8 @@ struct SettingsWindowView: View {
         // the title bar comes back with a title in it. The tab strip is meant to
         // be the title bar, so hide the text and let the content run up into it.
         .onAppear { hideWindowTitle() }
-        // 自检以 sheet 出现：首次运行会自动弹一次，之后从「帮助」菜单叫出来。
+        // The self-check appears as a sheet: it pops up automatically on first run,
+        // and afterwards is summoned from the Help menu.
         .sheet(
             isPresented: Binding(
                 get: { store.showsHealthCheck },
@@ -36,8 +37,9 @@ struct SettingsWindowView: View {
         ) {
             SelfCheckSheet()
         }
-        // SwiftUI 之后可能又把标题写回来。窗口每次成为 key 时再抹一遍，
-        // 这样不依赖"onAppear 那一刻窗口已经存在且是 main-capable"这个假设。
+        // SwiftUI may write the title back again later. Blank it once more every
+        // time the window becomes key, so this does not depend on the assumption
+        // that "at onAppear the window already exists and is main-capable".
         .onReceive(
             NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)
         ) { _ in
@@ -51,8 +53,10 @@ struct SettingsWindowView: View {
     /// the title bar returns with a title in it. The tab strip is meant to be the
     /// title bar, so blank the text and let the content run up into that space.
     private func hideWindowTitle() {
-        // 不再用 canBecomeMain 过滤：SwiftUI 刚建好的设置窗口在 onAppear 那一刻
-        // 可能还不是 main-capable，会被整个漏掉——这很可能就是标题一直还在的原因。
+        // No longer filtering on canBecomeMain: the settings window SwiftUI has just
+        // created may not be main-capable yet at the moment onAppear runs, so it
+        // would be missed entirely — which is very likely why the title kept coming
+        // back.
         for window in NSApp.windows {
             window.title = ""
             window.titleVisibility = .hidden
@@ -63,9 +67,12 @@ struct SettingsWindowView: View {
 
     @ViewBuilder
     private var pane: some View {
-        // 身份跟着语言走：SwiftUI 只会比较 Text 的键，键没变就认为无需重绘，
-        // 于是同样的键 + 不同的 bundle 不会触发刷新（表现为"要点一下才变"）。
-        // 用 .id 让这一支在语言变化时整体重建，文案就会重新解析。
+        // Identity follows the language: SwiftUI only compares the Text keys, and
+        // when the key has not changed it sees no reason to redraw, so the same key
+        // with a different bundle does not trigger a refresh (it shows up as "you
+        // have to click once before it changes").
+        // The .id makes this branch rebuild as a whole when the language changes, and
+        // the strings are then resolved again.
         switch selection {
         case .general:
             GeneralPane().id(store.preferences.resolvedLanguage)

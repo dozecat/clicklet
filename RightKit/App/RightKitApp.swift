@@ -6,8 +6,10 @@ struct RightKitApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // 状态栏图标：Dock 图标没了（LSUIElement），设置与自检从这里进。
-        // 图标会跟着访达扩展的状态变——扩展被关掉时换成警示样式。
+        // Status bar icon: the Dock icon is gone (LSUIElement), so settings and the
+        // self-check are reached from here.
+        // The icon follows the Finder extension's state — it switches to the warning
+        // style when the extension is turned off.
         MenuBarExtra {
             StatusItemMenu()
         } label: {
@@ -36,14 +38,16 @@ struct RightKitApp: App {
                 }
             }
 
-            // 删掉 SwiftUI 自动生成的样板菜单。
+            // Remove the boilerplate menus SwiftUI generates automatically.
             //
-            // 这个 App 没有文档概念、只有一个固定尺寸的设置窗口，所以「文件」
-            // 「显示」「窗口缩放」里的条目全是死的——留着只会让人以为是坏的。
+            // This app has no notion of documents and has only one fixed-size
+            // settings window, so every item under "File", "View" and "Window Size"
+            // is dead — keeping them only makes people think something is broken.
             //
-            // 刻意**保留**的：App 菜单（关于 / 设置 / 退出）、编辑菜单的剪切
-            // 拷贝粘贴（路径那类可选文本要用）、帮助菜单。⌘Q 与 ⌘, 都在 App
-            // 菜单里，删菜单时不能把它们一起删掉。
+            // Deliberately **kept**: the App menu (About / Settings / Quit), the
+            // Edit menu's Cut/Copy/Paste (needed for selectable text such as paths)
+            // and the Help menu. Both ⌘Q and ⌘, live in the App menu, so removing
+            // menus must not take them out along with it.
             CommandGroup(replacing: .newItem) {}
             CommandGroup(replacing: .saveItem) {}
             CommandGroup(replacing: .importExport) {}
@@ -54,7 +58,8 @@ struct RightKitApp: App {
             CommandGroup(replacing: .windowSize) {}
             CommandGroup(replacing: .windowList) {}
 
-            // 自检不占页签，从「帮助」菜单进——出问题时才需要，平时不可见。
+            // The self-check does not take a tab; it is reached from the Help menu —
+            // only needed when something goes wrong, invisible the rest of the time.
             CommandGroup(after: .help) {
                 Button("检查运行状态…") {
                     SettingsStore.shared.showHealthCheck()

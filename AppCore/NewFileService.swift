@@ -22,8 +22,8 @@ enum NewFileError: LocalizedError {
 
 enum NewFileService {
     /// Base name used when a template is picked, mirroring Finder's own
-    /// "untitled folder" / 「未命名文件夹」 behaviour: the item is created right
-    /// away and the user renames it in place.
+    /// "untitled folder" behaviour (and its Chinese counterpart): the item is
+    /// created right away and the user renames it in place.
     static func defaultBaseName(
         preferredLanguage: String? = Locale.preferredLanguages.first
     ) -> String {

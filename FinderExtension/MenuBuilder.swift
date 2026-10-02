@@ -26,12 +26,13 @@ enum MenuBuilder {
         let toolbox = (snapshot?.toolbox ?? ToolboxCatalog.defaultItems).filter(\.isEnabled)
         let icons = snapshot?.icons ?? [:]
 
-        // 归档操作要按选中的文件类型区分：选中文件夹不该出现「解压」，
-        // 选中压缩包不该出现「压缩」。
+        // Archive actions depend on the type of what is selected: selecting a
+        // folder should not offer "Decompress", and selecting an archive should
+        // not offer "Compress".
         let selection = SelectionContext(urls: selectedURLs)
 
-        // Everything is driven by the toolbox list and its order; 新建文件 and
-        // 脚本 render as submenus at their position in that list.
+        // Everything is driven by the toolbox list and its order; New File and
+        // Scripts render as submenus at their position in that list.
         switch menuKind {
         case .contextualMenuForItems:
             for item in toolbox
@@ -153,7 +154,7 @@ enum MenuBuilder {
     }
 
     /// The enabled scripts that match the current selection context, gathered
-    /// under one 脚本 submenu instead of filling the top level.
+    /// under one Scripts submenu instead of filling the top level.
     private static func addScriptsSubmenu(
         _ scripts: [ScriptPackage],
         icons: [String: Data],
@@ -251,9 +252,11 @@ enum MenuBuilder {
         target: FinderSync,
         to menu: NSMenu
     ) {
-        // 标题来自数据（工具箱目录、模板名、脚本名），不会自动本地化，
-        // 而这里是所有菜单项的必经之处，所以在这一处统一查表。
-        // 用用户选的语言而不是进程语言：扩展跑在 Finder 进程里。
+        // Titles come from data (the toolbox catalog, template names, script
+        // names) and are not localized automatically, and this is the one place
+        // every menu item must pass through, so the catalog lookup happens here.
+        // Use the language the user picked rather than the process language: the
+        // extension runs inside the Finder process.
         let language = AppGroupStore.loadPreferences().resolvedLanguage
         let localizedTitle = LocalizedText.string(title, language: language)
         let item = NSMenuItem(title: localizedTitle, action: action, keyEquivalent: "")
@@ -264,9 +267,11 @@ enum MenuBuilder {
             // symbols and full-colour application icons. Letting AppKit template
             // them would flatten the application icons to a single colour.
             image.isTemplate = false
-            // 必须在这里标：图标是渲染成 PNG 存盘、再由这里 NSImage(data:)
-            // 读回来的，而 isTemplate 不会存进 PNG。不标的话 AppKit 会把它
-            // 当普通图片画成原色，悬停高亮时就和背景同色 —— 图标直接消失。
+            // This has to be set here: the icon was rendered to a PNG on disk and
+            // is read back here with NSImage(data:), and isTemplate is not stored
+            // in the PNG. Without this flag AppKit draws it as an ordinary image
+            // in its original colours, so when hovering the icon ends up the same
+            // colour as the background — and simply disappears.
             image.isTemplate = true
             item.image = image
         }

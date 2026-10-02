@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// The templates offered by Finder's "新建文件" submenu, as a striped table:
-/// `图标 · 文件名 · 启用`, reordered by dragging a row.
+/// The templates offered by Finder's "New File" submenu, as a striped table:
+/// `Icon · File Name · Enabled`, reordered by dragging a row.
 ///
 /// The list shows **every** template including the switched-off ones, so a
 /// template can always be switched back on. Templates come from the built-in
 /// catalog plus whatever sits in the templates folder; there is no in-app
-/// add/remove, so that folder stays the single source of truth. 「通用」页有
-/// 「模板目录：显示」可以跳到它。
+/// add/remove, so that folder stays the single source of truth. The General page
+/// has "Templates Folder: Show" to jump to it.
 struct NewFilePane: View {
     @EnvironmentObject private var store: SettingsStore
 
@@ -38,7 +38,7 @@ struct NewFilePane: View {
                 .padding(.leading, settingsCheckboxHeaderNudge)
                 .frame(width: 52, alignment: .leading)
 
-            // Matches the row below. Without it the 启用 column sits 12pt
+            // Matches the row below. Without it the Enabled column sits 12pt
             // further right here than on the scripts tab.
             Spacer(minLength: 12)
         }

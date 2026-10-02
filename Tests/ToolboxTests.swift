@@ -55,8 +55,9 @@ final class ToolboxCatalogTests: XCTestCase {
         XCTAssertEqual(items.first?.id, .openInTerminal)
     }
 
-    /// 空白处右键时不再换一套更长的说法：「拷贝当前文件夹路径」在菜单里过长，
-    /// 而且和选中态下的叫法不一致。两个上下文现在用同一个标题。
+    /// Right-clicking empty space no longer switches to a longer wording: "Copy
+    /// Current Folder Path" is too long for a menu and did not match what the
+    /// selection case was called. Both contexts now use the same title.
     func testCopyPathUsesTheSameTitleInBothContexts() {
         let copyPath = ToolboxCatalog.all.first { $0.id == .copyPath }
         let copyName = ToolboxCatalog.all.first { $0.id == .copyFileName }
@@ -99,7 +100,7 @@ final class ToolboxCatalogTests: XCTestCase {
         )
     }
 
-    /// 新建文件 and 脚本 are rendered as submenus, so the extension must not try
+    /// New File and Scripts are rendered as submenus, so the extension must not try
     /// to perform them itself.
     func testSubmenuEntriesAreHandledByTheApp() {
         for id in [ToolboxItemID.newFile, .scripts] {
@@ -111,7 +112,7 @@ final class ToolboxCatalogTests: XCTestCase {
             ToolboxCatalog.all.first { $0.id == id }
         }
 
-        // 新建文件 only makes sense on empty space; 脚本 is useful either way.
+        // New File only makes sense on empty space; Scripts is useful either way.
         XCTAssertFalse(item(.newFile)?.appliesToSelection == true)
         XCTAssertTrue(item(.newFile)?.appliesToBackground == true)
         XCTAssertTrue(item(.scripts)?.appliesToSelection == true)
@@ -358,7 +359,7 @@ final class MenuIconTests: XCTestCase {
     }
 }
 
-/// 归档操作要按选中的文件类型区分。
+/// Archive actions are distinguished by the type of the selected files.
 final class SelectionContextTests: XCTestCase {
     private func urls(_ paths: String...) -> [URL] {
         paths.map { URL(fileURLWithPath: $0) }
@@ -371,7 +372,7 @@ final class SelectionContextTests: XCTestCase {
         XCTAssertFalse(context.allAreArchives)
     }
 
-    /// 选中文件夹：不该出现任何解压操作，压缩照常。
+    /// Selecting a folder: no extraction action should appear; compression still does.
     func testFolderOffersCompressButNotDecompress() {
         let context = SelectionContext(urls: urls("/tmp/Some Folder"))
         XCTAssertFalse(context.containsArchive)
@@ -381,7 +382,7 @@ final class SelectionContextTests: XCTestCase {
         XCTAssertTrue(ToolboxCatalog.applies(.compressSevenZip, to: context))
     }
 
-    /// 选中压缩包：可以解压，但不再提供压缩。
+    /// Selecting an archive: extraction is offered, but compression is not.
     func testArchiveOffersDecompressButNotCompress() {
         let context = SelectionContext(urls: urls("/tmp/a.zip"))
         XCTAssertTrue(context.containsArchive)
@@ -392,7 +393,7 @@ final class SelectionContextTests: XCTestCase {
         XCTAssertFalse(ToolboxCatalog.applies(.compressSevenZip, to: context))
     }
 
-    /// 普通文件：压缩可以，解压不行。
+    /// An ordinary file: compression yes, extraction no.
     func testPlainFileOffersCompressOnly() {
         let context = SelectionContext(urls: urls("/tmp/notes.txt"))
         XCTAssertFalse(context.containsArchive)
@@ -400,7 +401,8 @@ final class SelectionContextTests: XCTestCase {
         XCTAssertTrue(ToolboxCatalog.applies(.compressZip, to: context))
     }
 
-    /// 混合选中：有压缩包就能解压；但并非"全是压缩包"，所以压缩也保留。
+    /// A mixed selection: an archive is present, so extraction works; but it is not
+    /// "all archives", so compression stays as well.
     func testMixedSelectionOffersBoth() {
         let context = SelectionContext(urls: urls("/tmp/a.zip", "/tmp/notes.txt"))
         XCTAssertTrue(context.containsArchive)
@@ -409,14 +411,14 @@ final class SelectionContextTests: XCTestCase {
         XCTAssertTrue(ToolboxCatalog.applies(.compressZip, to: context))
     }
 
-    /// 大小写与双扩展名。
+    /// Case and double extensions.
     func testExtensionMatching() {
         XCTAssertTrue(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/A.ZIP")))
         XCTAssertTrue(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/backup.tar.gz")))
         XCTAssertFalse(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/report.pdf")))
     }
 
-    /// 其他条目不受影响。
+    /// Other items are unaffected.
     func testOtherItemsAreUnaffected() {
         let context = SelectionContext(urls: urls("/tmp/a.zip"))
         for id in [ToolboxItemID.copyPath, .copyFileName, .openInTerminal, .newFile] {

@@ -1,11 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// 自检面板（sheet）。
+/// The self-check panel (a sheet).
 ///
-/// 不占页签：设置是"配置"，自检是"排查"，两者心智不同；而且自检的常态是
-/// "一切正常"，一个永远说废话的页签不值得占位置。
-/// 首次运行时自动弹一次，之后从「帮助 → 检查运行状态…」叫出来。
+/// It does not take a tab: settings are "configuration" and the self-check is
+/// "troubleshooting", two different mindsets; and on top of that the self-check is
+/// normally "everything is fine", so a tab that always states the obvious is not
+/// worth a slot.
+/// It pops up automatically on first run, and afterwards is summoned from
+/// "Help → Check Status…".
 struct SelfCheckSheet: View {
     @EnvironmentObject private var store: SettingsStore
 
@@ -60,7 +63,8 @@ struct SelfCheckSheet: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        // 高度按内容给足：辅助功能那行说明会换两行，440 时最后一项会被裁掉。
+        // Give the height enough room for the content: the accessibility
+        // explanation wraps onto two lines, and at 440 the last item gets clipped.
         .frame(width: 620, height: 520)
         .onAppear { refresh() }
         .onReceive(store.$finderMenuState) { _ in refresh() }
@@ -68,7 +72,8 @@ struct SelfCheckSheet: View {
         .onReceive(store.$notificationsAuthorized) { _ in refresh() }
     }
 
-    /// 把真实状态灌进纯数据结构；检查逻辑本身不碰系统。
+    /// Feeds the real state into the plain data structure; the check logic itself
+    /// never touches the system.
     private func refresh() {
         let snapshotAge = AppGroupStore.menuSnapshotModificationDate()
             .map { Date().timeIntervalSince($0) }
@@ -99,7 +104,8 @@ struct SelfCheckSheet: View {
         case .revealLogs:
             NSWorkspace.shared.open(AppPaths.logsDirectory)
         }
-        // 授权类动作要跳系统设置，回来时状态会变，靠 onReceive 自动重查。
+        // Permission actions have to jump to System Settings, and the state changes
+        // by the time the user comes back; onReceive re-checks automatically.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { refresh() }
     }
 
