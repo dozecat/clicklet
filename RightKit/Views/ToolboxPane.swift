@@ -26,7 +26,6 @@ struct ToolboxPane: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .environment(\.defaultMinListRowHeight, 0)
         }
     }
 

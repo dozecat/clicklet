@@ -34,13 +34,15 @@ struct ScriptsPane: View {
                             .listRowInsets(EdgeInsets())
                             .listRowSeparator(.hidden)
                     }
+                    .onMove { source, destination in
+                        store.moveScripts(from: source, to: destination)
+                    }
                 }
 
                 addRemoveRow
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .environment(\.defaultMinListRowHeight, 0)
             // Delete key removes the selected row, the way a Mac list does.
             .onDeleteCommand {
                 if let script = selectedScript {

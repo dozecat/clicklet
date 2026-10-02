@@ -98,7 +98,7 @@ final class ScriptRunner: NSObject, ScriptXPCProtocol {
                 timedOut: timedOut,
                 logPath: logURL.path,
                 errorMessage: timedOut
-                    ? "The script exceeded the 300 second timeout."
+                    ? "脚本超过 300 秒超时。"
                     : nil
             )
         } catch {

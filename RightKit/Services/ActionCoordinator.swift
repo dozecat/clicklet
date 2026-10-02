@@ -267,12 +267,14 @@ final class ActionCoordinator {
                 if result.succeeded {
                     NotificationService.shared.post(
                         title: script.name,
-                        body: "The script completed successfully."
+                        body: logTail(result.logPath) ?? "脚本执行完成。"
                     )
                 } else {
                     NotificationService.shared.post(
-                        title: "\(script.name) failed",
-                        body: result.errorMessage ?? "Exit code: \(result.exitCode ?? -1)"
+                        title: "\(script.name) 执行失败",
+                        body: result.errorMessage
+                            ?? logTail(result.logPath)
+                            ?? "退出码 \(result.exitCode ?? -1)"
                     )
                 }
             } catch {
@@ -283,12 +285,31 @@ final class ActionCoordinator {
 
     private func confirmScriptExecution(_ script: ScriptPackage) -> Bool {
         let alert = NSAlert()
-        alert.messageText = "Run \(script.name)?"
-        alert.informativeText = "This script can modify the selected files."
-        alert.addButton(withTitle: "Run")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = "要运行「\(script.name)」吗？"
+        alert.informativeText = "脚本可以修改选中的文件，请确认来源可信。"
+        alert.addButton(withTitle: "运行")
+        alert.addButton(withTitle: "取消")
         NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    /// Last non-empty line of a script's log, so the notification says what
+    /// happened instead of only that something did.
+    private func logTail(_ path: String?, limit: Int = 180) -> String? {
+        guard let path,
+              let contents = try? String(contentsOfFile: path, encoding: .utf8) else {
+            return nil
+        }
+
+        let lines = contents
+            .split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+
+        guard let last = lines.last else {
+            return nil
+        }
+        return last.count > limit ? "…" + last.suffix(limit) : last
     }
 
     private func showError(_ error: Error) {

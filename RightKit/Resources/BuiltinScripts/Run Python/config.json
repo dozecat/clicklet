@@ -1,0 +1,9 @@
+{
+  "name": "用 Python 运行",
+  "context": "files",
+  "extensions": ["py"],
+  "multiple": true,
+  "confirm": true,
+  "order": 20,
+  "applicationBundleIdentifier": "com.apple.python3"
+}

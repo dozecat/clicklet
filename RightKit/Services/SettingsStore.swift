@@ -191,6 +191,19 @@ final class SettingsStore: ObservableObject {
         persist()
     }
 
+    /// Applies a drag in the scripts list.
+    func moveScripts(from source: IndexSet, to destination: Int) {
+        var ordered = scripts
+        ordered.move(fromOffsets: source, toOffset: destination)
+
+        for (position, script) in ordered.enumerated() {
+            var preference = preferences.scripts[script.id] ?? ScriptPreference()
+            preference.order = (position + 1) * 10
+            preferences.scripts[script.id] = preference
+        }
+        persist()
+    }
+
     /// Applies a drag in the template list.
     func moveTemplates(from source: IndexSet, to destination: Int) {
         var ordered = templates
