@@ -15,19 +15,14 @@ struct NewFilePane: View {
         VStack(spacing: 0) {
             header
 
-            List {
-                ForEach(Array(store.templates.enumerated()), id: \.element.id) { index, template in
-                    row(for: template)
-                        .listRowInsets(EdgeInsets())
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(SettingsStripe(index: index))
-                }
-                .onMove { source, destination in
-                    store.moveTemplates(from: source, to: destination)
-                }
+            ReorderableRows(
+                items: store.templates,
+                onMove: { from, to in store.moveTemplates(from: from, to: to) },
+                stripe: { SettingsStripe(index: $0) },
+                footer: { EmptyView() }
+            ) { template, _ in
+                row(for: template)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
         }
     }
 

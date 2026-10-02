@@ -13,19 +13,14 @@ struct ToolboxPane: View {
         VStack(spacing: 0) {
             header
 
-            List {
-                ForEach(Array(store.orderedToolbox.enumerated()), id: \.element.id) { index, item in
-                    row(for: item)
-                        .listRowInsets(EdgeInsets())
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(SettingsStripe(index: index))
-                }
-                .onMove { source, destination in
-                    store.moveToolbox(from: source, to: destination)
-                }
+            ReorderableRows(
+                items: store.orderedToolbox,
+                onMove: { from, to in store.moveToolbox(from: from, to: to) },
+                stripe: { SettingsStripe(index: $0) },
+                footer: { EmptyView() }
+            ) { item, _ in
+                row(for: item)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
         }
     }
 

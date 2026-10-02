@@ -16,42 +16,37 @@ struct ScriptsPane: View {
         VStack(spacing: 0) {
             header
 
-            List(selection: $selection) {
-                if store.scripts.isEmpty {
-                    SettingsEmptyState(
-                        systemImage: "chevron.left.forwardslash.chevron.right",
-                        title: "还没有脚本",
-                        message: "把脚本包文件夹放进脚本目录即可出现在这里；每个包需要可执行的 script.sh。",
-                        actionTitle: "打开脚本目录",
-                        action: { store.revealScriptsDirectory() }
-                    )
-                    .contentShape(Rectangle())
-                    .simultaneousGesture(
-                        TapGesture(count: 2).onEnded { store.revealScriptsDirectory() }
-                    )
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                } else {
-                    ForEach(store.scripts) { script in
-                        row(for: script)
-                            .tag(script.id)
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-                    }
-                    .onMove { source, destination in
-                        store.moveScripts(from: source, to: destination)
-                    }
+            if store.scripts.isEmpty {
+                SettingsEmptyState(
+                    systemImage: "chevron.left.forwardslash.chevron.right",
+                    title: "还没有脚本",
+                    message: "把脚本包文件夹放进脚本目录即可出现在这里；每个包需要可执行的 script.sh。",
+                    actionTitle: "打开脚本目录",
+                    action: { store.revealScriptsDirectory() }
+                )
+                .contentShape(Rectangle())
+                .simultaneousGesture(
+                    TapGesture(count: 2).onEnded { store.revealScriptsDirectory() }
+                )
+            } else {
+                ReorderableRows(
+                    items: store.scripts,
+                    onMove: { from, to in store.moveScripts(from: from, to: to) },
+                    stripe: { SettingsStripe(index: $0) },
+                    isSelected: { $0.id == selection },
+                    footer: { addRemoveRow }
+                ) { script, _ in
+                    row(for: script)
+                        .simultaneousGesture(
+                            TapGesture(count: 2).onEnded { reveal(script) }
+                        )
+                        .onTapGesture { selection = script.id }
                 }
-
-                addRemoveRow
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            // Delete key removes the selected row, the way a Mac list does.
-            .onDeleteCommand {
-                if let script = selectedScript {
-                    scriptPendingRemoval = script
-                }
+        }
+        .onDeleteCommand {
+            if let script = selectedScript {
+                scriptPendingRemoval = script
             }
         }
         .alert(
@@ -142,8 +137,6 @@ struct ScriptsPane: View {
         }
         .padding(.trailing, 30)
         .padding(.vertical, 7)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     private func row(for script: ScriptPackage) -> some View {
@@ -181,11 +174,6 @@ struct ScriptsPane: View {
         .padding(.trailing, 18)
         .padding(.vertical, 9)
         .contentShape(Rectangle())
-        // Double-click opens the package, the way a Finder list would. A
-        // simultaneous gesture keeps single-click selection working.
-        .simultaneousGesture(
-            TapGesture(count: 2).onEnded { reveal(script) }
-        )
         .contextMenu {
             Button("在 Finder 中显示") { reveal(script) }
             Divider()

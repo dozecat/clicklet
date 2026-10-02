@@ -179,9 +179,12 @@ final class SettingsStore: ObservableObject {
 
     /// Applies a drag in the toolbox list. The whole list is re-numbered so the
     /// order stays stable when entries are added or removed later.
-    func moveToolbox(from source: IndexSet, to destination: Int) {
+    func moveToolbox(from source: Int, to destination: Int) {
         var ordered = orderedToolbox
-        ordered.move(fromOffsets: source, toOffset: destination)
+        guard ordered.indices.contains(source), ordered.indices.contains(destination) else {
+            return
+        }
+        ordered.insert(ordered.remove(at: source), at: destination)
 
         for (position, item) in ordered.enumerated() {
             var preference = preferences.toolbox[item.id.rawValue] ?? ToolboxPreference()
@@ -192,9 +195,12 @@ final class SettingsStore: ObservableObject {
     }
 
     /// Applies a drag in the scripts list.
-    func moveScripts(from source: IndexSet, to destination: Int) {
+    func moveScripts(from source: Int, to destination: Int) {
         var ordered = scripts
-        ordered.move(fromOffsets: source, toOffset: destination)
+        guard ordered.indices.contains(source), ordered.indices.contains(destination) else {
+            return
+        }
+        ordered.insert(ordered.remove(at: source), at: destination)
 
         for (position, script) in ordered.enumerated() {
             var preference = preferences.scripts[script.id] ?? ScriptPreference()
@@ -205,9 +211,12 @@ final class SettingsStore: ObservableObject {
     }
 
     /// Applies a drag in the template list.
-    func moveTemplates(from source: IndexSet, to destination: Int) {
+    func moveTemplates(from source: Int, to destination: Int) {
         var ordered = templates
-        ordered.move(fromOffsets: source, toOffset: destination)
+        guard ordered.indices.contains(source), ordered.indices.contains(destination) else {
+            return
+        }
+        ordered.insert(ordered.remove(at: source), at: destination)
 
         for (position, template) in ordered.enumerated() {
             var preference = preferences.templates[template.id] ?? TemplatePreference()
