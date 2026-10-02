@@ -16,6 +16,11 @@ struct SettingsWindowView: View {
             pane
         }
         .frame(width: 700, height: 540)
+        // Hands the one supported way of opening this scene back to AppKit
+        // callers. Publishing on appear is enough: the Dock path is only
+        // reachable once the app is running, and by then the menu item (which
+        // works on its own) has opened this window at least once.
+        .background(SettingsActionExporter())
         .background(Color(nsColor: .windowBackgroundColor))
         .environmentObject(store)
     }

@@ -27,6 +27,12 @@ struct RightKitApp: App {
                 }
             }
 
+            // Replaced on purpose this time: `SettingsLink` is the only route
+            // SwiftUI supports for the Settings scene on macOS 14 and later.
+            CommandGroup(replacing: .appSettings) {
+                SettingsMenuButton()
+            }
+
             // .appSettings is deliberately NOT replaced: SwiftUI's own item is
             // what opens the Settings scene, complete with ⌘, . Replacing it
             // with a hand-rolled button meant nothing could open the window.
@@ -45,19 +51,4 @@ struct RightKitApp: App {
         )
     }
 
-    /// Opens the settings window from somewhere other than the app menu, such as
-    /// a click on the Dock icon.
-    ///
-    /// The selector rename happened in Ventura, so both spellings are tried.
-    static func showSettingsWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-
-        for name in ["showSettingsWindow:", "showPreferencesWindow:"] {
-            if NSApp.sendAction(Selector(name), to: nil, from: nil) {
-                return
-            }
-        }
-
-        NSApp.windows.first { $0.canBecomeMain }?.makeKeyAndOrderFront(nil)
-    }
 }
