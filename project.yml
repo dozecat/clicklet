@@ -5,6 +5,10 @@ options:
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "13.0"
+  # Info.plist 里的 CFBundleDevelopmentRegion 用的是 $(DEVELOPMENT_LANGUAGE)，
+  # 而这个变量由工程的 developmentRegion 决定。不设的话它会是 en，
+  # 于是缺 lproj 时会回退到英文——中文界面反而变英文。
+  developmentLanguage: zh-Hans
 
 settings:
   base:
