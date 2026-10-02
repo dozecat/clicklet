@@ -28,33 +28,40 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
     @State private var dragTranslation: CGSize = .zero
     @State private var rowHeight: CGFloat = 38
 
-    private let cornerRadius: CGFloat = 9
+    /// Corner radius of every row card; the drag lift keeps the same shape
+    /// rather than switching to a different one.
+    private let cornerRadius: CGFloat = 7
+    /// Gap between the cards and the window edges.
+    private let cardInset: CGFloat = 8
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     row(item, index)
-                        .background(isSelected(item) ? Color.accentColor.opacity(0.14) : stripe(index))
-                        .clipShape(
-                            RoundedRectangle(
-                                cornerRadius: dragging ? cornerRadius : 0,
-                                style: .continuous
-                            )
-                        )
-                        .shadow(
-                            color: .black.opacity(dragging ? 0.24 : 0),
-                            radius: dragging ? 10 : 0,
-                            y: dragging ? 4 : 0
-                        )
-                        .scaleEffect(dragging ? 1.012 : 1)
+                        // The stripe is an inset rounded card rather than a
+                        // full-bleed band: it reads as one item, keeps clear of
+                        // the window edges (which also gives the horizontal drag
+                        // somewhere to go), and the shadow is cast by the card
+                        // alone instead of by the text as well.
+                        .background {
+                            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                                .fill(isSelected(item) ? Color.accentColor.opacity(0.14) : stripe(index))
+                                .shadow(
+                                    color: .black.opacity(isDragging(index) ? 0.24 : 0),
+                                    radius: isDragging(index) ? 10 : 0,
+                                    y: isDragging(index) ? 4 : 0
+                                )
+                                .padding(.horizontal, cardInset)
+                        }
+                        .scaleEffect(isDragging(index) ? 1.012 : 1)
                         .offset(
                             x: index == draggedIndex
                                 ? ReorderMotion.horizontal(dragTranslation.width)
                                 : 0,
                             y: visualOffset(for: index)
                         )
-                        .zIndex(dragging ? 1 : 0)
+                        .zIndex(isDragging(index) ? 1 : 0)
                         .background(
                             GeometryReader { proxy in
                                 Color.clear.preference(
@@ -81,8 +88,8 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
         .scrollContentBackground(.hidden)
     }
 
-    private var dragging: Bool {
-        draggedIndex != nil
+    private func isDragging(_ index: Int) -> Bool {
+        draggedIndex == index
     }
 
     /// Where the dragged row currently belongs.
