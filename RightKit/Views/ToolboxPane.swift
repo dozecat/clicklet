@@ -58,7 +58,8 @@ struct ToolboxPane: View {
             icon(for: item)
                 .frame(width: 52, alignment: .leading)
 
-            Text(item.title)
+            // item.title 是运行时的 String，Text 会当成 verbatim，所以要显式转成键
+            Text(LocalizedStringKey(item.title))
                 .opacity(isEnabled ? 1 : 0.5)
                 .frame(maxWidth: .infinity, alignment: .leading)
 

@@ -165,7 +165,7 @@ enum MenuBuilder {
             return
         }
 
-        let item = NSMenuItem(title: "脚本", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: String(localized: "脚本"), action: nil, keyEquivalent: "")
         item.image = image(MenuIconKey.toolbox(.scripts), in: icons)
         let submenu = NSMenu(title: "脚本")
         for script in scripts {
@@ -194,7 +194,7 @@ enum MenuBuilder {
             return
         }
 
-        let item = NSMenuItem(title: "新建文件", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: String(localized: "新建文件"), action: nil, keyEquivalent: "")
         item.image = image(MenuIconKey.toolbox(.newFile), in: icons)
         let submenu = NSMenu(title: "新建文件")
         for template in templates {
@@ -251,11 +251,14 @@ enum MenuBuilder {
         target: FinderSync,
         to menu: NSMenu
     ) {
-        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        // 标题来自数据（工具箱目录、模板名、脚本名），不会自动本地化，
+        // 而这里是所有菜单项的必经之处，所以在这一处统一转成可本地化的键。
+        let localizedTitle = String(localized: String.LocalizationValue(title))
+        let item = NSMenuItem(title: localizedTitle, action: action, keyEquivalent: "")
         item.target = target
         item.tag = tag
         if let icon, let image = NSImage(data: icon) {
-            // Not a template: the snapshot ships finished pixels — accent-tinted
+            // Snapshot icons ship as finished pixels
             // symbols and full-colour application icons. Letting AppKit template
             // them would flatten the application icons to a single colour.
             image.isTemplate = false

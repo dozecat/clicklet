@@ -64,6 +64,11 @@ targets:
           - "Info.plist"
           - "*.entitlements"
       - path: Shared
+    sources:
+      - path: RightKit
+        includes:
+          - "Resources/Localizable.xcstrings"
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.FinderExtension
