@@ -9,7 +9,7 @@ struct SettingsWindowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SettingsTabStrip(selection: $selection)
+            SettingsTabStrip(selection: $selection).id(store.preferences.resolvedLanguage)
 
             Divider()
 
@@ -63,19 +63,22 @@ struct SettingsWindowView: View {
 
     @ViewBuilder
     private var pane: some View {
+        // 身份跟着语言走：SwiftUI 只会比较 Text 的键，键没变就认为无需重绘，
+        // 于是同样的键 + 不同的 bundle 不会触发刷新（表现为"要点一下才变"）。
+        // 用 .id 让这一支在语言变化时整体重建，文案就会重新解析。
         switch selection {
         case .general:
-            GeneralPane()
+            GeneralPane().id(store.preferences.resolvedLanguage)
         case .toolbox:
-            ToolboxPane()
+            ToolboxPane().id(store.preferences.resolvedLanguage)
         case .newFile:
-            NewFilePane()
+            NewFilePane().id(store.preferences.resolvedLanguage)
         case .compression:
-            CompressionPane()
+            CompressionPane().id(store.preferences.resolvedLanguage)
         case .scripts:
-            ScriptsPane()
+            ScriptsPane().id(store.preferences.resolvedLanguage)
         case .about:
-            AboutPane()
+            AboutPane().id(store.preferences.resolvedLanguage)
         }
     }
 }
