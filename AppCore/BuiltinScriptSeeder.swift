@@ -124,7 +124,11 @@ enum BuiltinScriptSeeder {
                     continue
                 }
                 guard disk != bundled else {
-                    // Already current; just make sure the fingerprint is real.
+                    // Already current. The icon is generated on this machine and
+                    // is not part of the bundle, so a package that was seeded
+                    // before icons existed still needs one — check every launch
+                    // rather than only when the shipped files change.
+                    materialiseIcon(for: destination, fileManager: fileManager)
                     record.seeded[name] = bundled
                     continue
                 }

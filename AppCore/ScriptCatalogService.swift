@@ -83,17 +83,14 @@ enum ScriptScanner {
             config = ScriptConfig()
         }
 
-        let iconPath: String?
-        if let icon = config.icon {
-            let candidate = packageURL.appendingPathComponent(icon)
-            iconPath = fileManager.fileExists(atPath: candidate.path) ? candidate.path : nil
-        } else {
-            // Convenience: an icon.png dropped straight into the package works
-            // without touching config.json, which is what makes the icon easy to
-            // manage — replace one file.
-            let implicit = packageURL.appendingPathComponent("icon.png")
-            iconPath = fileManager.fileExists(atPath: implicit.path) ? implicit.path : nil
-        }
+        // The declared name first, then the conventional icon.png, so dropping a
+        // file in is enough. Missing means "no icon file", and the caller falls
+        // back to the application's own icon.
+        let iconPath = [config.icon, "icon.png"]
+            .compactMap { $0 }
+            .map { packageURL.appendingPathComponent($0) }
+            .first { fileManager.fileExists(atPath: $0.path) }?
+            .path
 
         return ScriptPackage(
             id: identifier,

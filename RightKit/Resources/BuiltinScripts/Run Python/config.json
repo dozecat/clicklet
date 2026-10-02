@@ -4,6 +4,7 @@
   "extensions": ["py"],
   "multiple": true,
   "confirm": true,
+  "icon": "icon.png",
   "order": 20,
   "applicationBundleIdentifier": "com.apple.python3"
 }

@@ -3,6 +3,7 @@
   "context": "all",
   "multiple": true,
   "confirm": false,
+  "icon": "icon.png",
   "order": 10,
   "applicationBundleIdentifier": "com.microsoft.VSCode"
 }

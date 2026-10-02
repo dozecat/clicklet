@@ -88,6 +88,32 @@ final class BuiltinScriptAssetsTests: XCTestCase {
         }
     }
 
+    /// The icon is declared in config.json so it is discoverable, but the file
+    /// itself is generated on the user's machine — shipping it would mean
+    /// redistributing another application's artwork.
+    func testIconsAreDeclaredButNotShipped() throws {
+        for package in packages {
+            let data = try Data(contentsOf: package.appendingPathComponent("config.json"))
+            let config = try JSONDecoder().decode(ScriptConfig.self, from: data)
+
+            guard config.applicationBundleIdentifier != nil else {
+                continue
+            }
+
+            XCTAssertEqual(
+                config.icon,
+                "icon.png",
+                "\(package.lastPathComponent) should point at the icon it generates"
+            )
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: package.appendingPathComponent("icon.png").path
+                ),
+                "\(package.lastPathComponent) must not ship another app's icon"
+            )
+        }
+    }
+
     /// Built-in names are what the user sees in the Finder submenu.
     func testNamesAreLocalised() throws {
         for package in packages {
