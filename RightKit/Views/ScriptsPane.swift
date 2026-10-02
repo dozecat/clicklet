@@ -57,7 +57,7 @@ struct ScriptsPane: View {
             ),
             presenting: errorMessage
         ) { _ in
-            Button("好", role: .cancel) { errorMessage = nil }
+            Button(role: .cancel) { errorMessage = nil } label: { L.t("好") }
         } message: { message in
             Text(message)
         }
@@ -69,25 +69,25 @@ struct ScriptsPane: View {
             ),
             presenting: scriptPendingRemoval
         ) { script in
-            Button("删除「\(script.name)」", role: .destructive) {
+            Button(role: .destructive) {
                 remove(script)
-            }
-            Button("取消", role: .cancel) {}
+            } label: { L.t("删除「\(script.name)」") }
+            Button(role: .cancel) {} label: { L.t("取消") }
         } message: { _ in
-            Text("整个脚本包文件夹会从脚本目录中删除，无法撤销。")
+            L.t("整个脚本包文件夹会从脚本目录中删除，无法撤销。")
         }
     }
 
     private var header: some View {
         HStack(spacing: 0) {
-            Text("图标")
+            L.t("图标")
                 .frame(width: 52, alignment: .leading)
-            Text("脚本名称")
+            L.t("脚本名称")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .help("双击一行可在 Finder 中打开该脚本的文件夹")
-            Text("路径")
+                .help(L.t("双击一行可在 Finder 中打开该脚本的文件夹"))
+            L.t("路径")
                 .frame(width: 170, alignment: .leading)
-            Text("启用")
+            L.t("启用")
                 // Sits directly above the checkboxes rather than above their
                 // column, which the control insets to the left.
                 .padding(.leading, settingsCheckboxHeaderNudge)
@@ -119,7 +119,7 @@ struct ScriptsPane: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .help("打开脚本目录，把脚本包放进去（双击某一行则打开该脚本自己的文件夹）")
+                .help(L.t("打开脚本目录，把脚本包放进去（双击某一行则打开该脚本自己的文件夹）"))
 
                 Button {
                     if let script = selectedScript {
@@ -129,7 +129,7 @@ struct ScriptsPane: View {
                     Image(systemName: "minus")
                 }
                 .disabled(selectedScript == nil)
-                .help("删除选中的脚本")
+                .help(L.t("删除选中的脚本"))
             }
             .buttonStyle(.borderless)
             // Same width as the 启用 column, so the two line up.
@@ -175,9 +175,9 @@ struct ScriptsPane: View {
         .padding(.vertical, 9)
         .contentShape(Rectangle())
         .contextMenu {
-            Button("在 Finder 中显示") { reveal(script) }
+            Button { reveal(script) } label: { L.t("在 Finder 中显示") }
             Divider()
-            Button("删除脚本…", role: .destructive) { scriptPendingRemoval = script }
+            Button(role: .destructive) { scriptPendingRemoval = script } label: { L.t("删除脚本…") }
         }
     }
 

@@ -1,13 +1,6 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    /// 界面语言必须在**任何** SwiftUI 文案被解析之前写进去，所以放在
-    /// willFinishLaunching 而不是 didFinishLaunching——后者往往已经太晚，
-    /// 那就得重启才看得到效果。
-    func applicationWillFinishLaunching(_ notification: Notification) {
-        AppLanguage.applyToProcess(AppGroupStore.loadPreferences().resolvedLanguage)
-    }
-
     func applicationDidFinishLaunching(_ notification: Notification) {
         DiagnosticsLog.log(
             "app launched; version=\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") "

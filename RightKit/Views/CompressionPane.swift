@@ -25,9 +25,9 @@ struct CompressionPane: View {
                     } else {
                         SettingsValue(text: "未安装")
                         if let url = downloadURL(for: selectedCompressor) {
-                            Button("下载…") {
+                            Button {
                                 NSWorkspace.shared.open(url)
-                            }
+                            } label: { L.t("下载…") }
                         }
                     }
                 }

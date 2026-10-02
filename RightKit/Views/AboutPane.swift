@@ -15,13 +15,13 @@ struct AboutPane: View {
             }
 
             SettingsRow("项目主页") {
-                Button("打开 GitHub") { NSWorkspace.shared.open(repository) }
+                Button { NSWorkspace.shared.open(repository) } label: { L.t("打开 GitHub") }
                     .help(repository.absoluteString)
             }
 
             SettingsRow("版本更新") {
-                Button("查看 Releases") { NSWorkspace.shared.open(releases) }
-                    .help("在浏览器中打开 GitHub Releases 页面")
+                Button { NSWorkspace.shared.open(releases) } label: { L.t("查看 Releases") }
+                    .help(L.t("在浏览器中打开 GitHub Releases 页面"))
             }
 
             SettingsGroupSeparator()
@@ -35,7 +35,7 @@ struct AboutPane: View {
             }
 
             SettingsRow("关于面板") {
-                Button("打开…") { showAboutPanel() }
+                Button { showAboutPanel() } label: { L.t("打开…") }
             }
         }
     }

@@ -16,7 +16,7 @@ struct GeneralPane: View {
                         set: { store.setLaunchAtLogin($0) }
                     )
                 )
-                .help("开机后自动运行，右键菜单无需手动启动")
+                .help(L.t("开机后自动运行，右键菜单无需手动启动"))
             }
 
             SettingsRow("语言") {
@@ -40,7 +40,7 @@ struct GeneralPane: View {
 
             SettingsRow("访达拓展") {
                 if store.finderMenuState == .unknown {
-                    Button("打开系统设置…") { store.openExtensionSettings() }
+                    Button { store.openExtensionSettings() } label: { L.t("打开系统设置…") }
                 } else {
                     SettingsCheckbox(
                         title: store.finderMenuState == .enabled ? "打开" : "关闭",
@@ -49,7 +49,7 @@ struct GeneralPane: View {
                             set: { store.setFinderMenuEnabled($0) }
                         )
                     )
-                    .help("关闭后 Finder 中不再出现 RightKit 菜单")
+                    .help(L.t("关闭后 Finder 中不再出现 RightKit 菜单"))
                 }
             }
 
@@ -64,7 +64,7 @@ struct GeneralPane: View {
                 .labelsHidden()
                 .toggleStyle(.checkbox)
                 .disabled(store.canAutoRename)
-                .help("授权后新建文件会自动进入重命名状态")
+                .help(L.t("授权后新建文件会自动进入重命名状态"))
             }
 
             SettingsRow("通知") {
@@ -82,13 +82,13 @@ struct GeneralPane: View {
             SettingsGroupSeparator()
 
             SettingsRow("脚本目录") {
-                Button("显示") { store.revealScriptsDirectory() }
+                Button { store.revealScriptsDirectory() } label: { L.t("显示") }
                     .help(shortenedPath(store.scriptsDirectory.path))
             }
 
             if let templatesDirectory = store.userTemplatesDirectory, store.hasUserTemplates {
                 SettingsRow("模板目录") {
-                    Button("显示") { store.revealTemplatesDirectory() }
+                    Button { store.revealTemplatesDirectory() } label: { L.t("显示") }
                         .help(shortenedPath(templatesDirectory.path))
                 }
             }
@@ -96,15 +96,15 @@ struct GeneralPane: View {
             SettingsGroupSeparator()
 
             SettingsRow("重置设置") {
-                Button("恢复出厂设置…") { isConfirmingReset = true }
+                Button { isConfirmingReset = true } label: { L.t("恢复出厂设置…") }
             }
         }
         .confirmationDialog(
             "恢复出厂设置？",
             isPresented: $isConfirmingReset
         ) {
-            Button("恢复", role: .destructive) { store.resetToDefaults() }
-            Button("取消", role: .cancel) {}
+            Button(role: .destructive) { store.resetToDefaults() } label: { L.t("恢复") }
+            Button(role: .cancel) {} label: { L.t("取消") }
         } message: {
             Text("所有启用开关与排序会回到默认，压缩软件恢复为默认选择。"
                  + "脚本包、图标与模板文件不会被删除。")

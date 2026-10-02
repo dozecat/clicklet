@@ -28,11 +28,11 @@ struct NewFilePane: View {
 
     private var header: some View {
         HStack(spacing: 0) {
-            Text("图标")
+            L.t("图标")
                 .frame(width: 52, alignment: .leading)
-            Text("文件名")
+            L.t("文件名")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("启用")
+            L.t("启用")
                 // Sits directly above the checkboxes rather than above their
                 // column, which the control insets to the left.
                 .padding(.leading, settingsCheckboxHeaderNudge)

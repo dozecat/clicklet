@@ -18,6 +18,44 @@ enum LocalizedText {
         return bundle
     }
 
+    // MARK: - 当前语言（渲染时查询用）
+
+    /// App 侧把它设成内存里的偏好，省掉一次重绘读上百次盘。
+    /// 访达扩展不设它，继续按磁盘上的偏好走。
+    static var languageOverride: AppLanguage?
+
+    private static var cachedLanguage: AppLanguage?
+    private static var cachedAt = Date.distantPast
+
+    /// 当前生效的语言。带一个很短的缓存：一次界面重绘会查上百次，
+    /// 每次都读盘 + 解析 JSON 太浪费。切换语言时调用 invalidate()。
+    static var currentLanguage: AppLanguage {
+        if let override = languageOverride { return override }
+        if let cached = cachedLanguage, Date().timeIntervalSince(cachedAt) < 0.5 {
+            return cached
+        }
+        let value = AppGroupStore.loadPreferences().resolvedLanguage
+        cachedLanguage = value
+        cachedAt = Date()
+        return value
+    }
+
+    static func invalidate() {
+        cachedLanguage = nil
+        cachedAt = .distantPast
+    }
+
+    /// 当前语言对应的 bundle。
+    ///
+    /// 返回 nil 表示"键本身就是文案"——简体中文是源语言，没有 zh-Hans.lproj，
+    /// 所以不能交给 bundle: nil（那会走进程语言，反而变英文）。
+    static var currentBundle: Bundle? {
+        switch currentLanguage {
+        case .simplifiedChinese: return nil
+        case .english: return bundle(for: "en")
+        }
+    }
+
     static func string(_ key: String, language: AppLanguage) -> String {
         switch language {
         case .simplifiedChinese:

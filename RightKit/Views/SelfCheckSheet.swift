@@ -14,7 +14,7 @@ struct SelfCheckSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("检查运行状态")
+                L.t("检查运行状态")
                     .font(.headline)
                 Spacer()
             }
@@ -46,15 +46,15 @@ struct SelfCheckSheet: View {
                 SettingsGroupSeparator()
 
                 SettingsRow("重新检查") {
-                    Button("检查") { refresh() }
-                        .help("改完系统设置后回来点一下")
+                    Button { refresh() } label: { L.t("检查") }
+                        .help(L.t("改完系统设置后回来点一下"))
                 }
             }
             Divider()
 
             HStack {
                 Spacer()
-                Button("完成") { store.dismissHealthCheck() }
+                Button { store.dismissHealthCheck() } label: { L.t("完成") }
                     .keyboardShortcut(.defaultAction)
             }
             .padding(.horizontal, 20)

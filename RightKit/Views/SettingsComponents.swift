@@ -108,7 +108,7 @@ struct SettingsTabStrip: View {
                     .animation(SettingsTabMotion.select, value: isSelected)
                     .frame(width: 26, height: 26)
 
-                Text(LocalizedStringKey(tab.title))
+                L.t(tab.title)
                     .font(.system(size: 11))
             }
             .foregroundStyle(isSelected ? Color.accentColor : Color.primary.opacity(0.85))
@@ -135,7 +135,7 @@ struct SettingsTabStrip: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(LocalizedStringKey(tab.title))
+        .help(L.t(tab.title))
     }
 }
 
@@ -234,7 +234,7 @@ struct SettingsRow<Control: View>: View {
             // 先把 label 转成键，再拼本地化的全角冒号（英文里用半角）。
             // 括号必需：不加的话 .frame 只作用于第二个 Text，
             // 于是加号左边是 Text、右边是 some View，类型对不上。
-            (Text(LocalizedStringKey(label)) + Text("："))
+            (L.t(label) + L.t("："))
                 .frame(width: settingsLabelWidth, alignment: .trailing)
 
             control
@@ -253,7 +253,7 @@ struct SettingsValue: View {
     let text: String
 
     var body: some View {
-        Text(LocalizedStringKey(text))
+        L.t(text)
             .foregroundStyle(.secondary)
             // 换行时行距稍大一点。默认行距在多行值（例如「可解压格式」列出 11 种）
             // 上显得拥挤。单行的值不受影响。
@@ -272,7 +272,7 @@ struct SettingsCheckbox: View {
 
     var body: some View {
         // 传 String 会选中 Toggle 的 StringProtocol 重载，那样不会查 catalog。
-        Toggle(LocalizedStringKey(title), isOn: $isOn)
+        Toggle(isOn: $isOn) { L.t(title) }
             .toggleStyle(.checkbox)
             .disabled(!isEnabled)
     }

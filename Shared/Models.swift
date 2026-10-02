@@ -159,12 +159,6 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
         return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
     }
 
-    /// 写进 App 自己的偏好域。SwiftUI 与 Bundle 在**进程启动时**读它，
-    /// 所以写完必须重开才生效——这也是为什么需要 relaunchApp()。
-    static func applyToProcess(_ language: AppLanguage) {
-        UserDefaults.standard.set([language.lprojCode], forKey: "AppleLanguages")
-    }
-
     /// 重开自己：新进程会在启动时读到刚写入的语言。
     @MainActor
     static func relaunchApp() {
