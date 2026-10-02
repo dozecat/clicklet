@@ -64,11 +64,10 @@ targets:
           - "Info.plist"
           - "*.entitlements"
       - path: Shared
-    sources:
-      - path: RightKit
-        includes:
-          - "Resources/Localizable.xcstrings"
-        buildPhase: resources
+      # 菜单在扩展进程里构建，本地化表必须也进这个 bundle，
+      # 否则右键菜单永远是源语言。加在**已有的** sources 数组里——
+      # 再起一个 sources: 键会让目标丢掉上面这些源文件。
+      - path: RightKit/Resources/Localizable.xcstrings
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.FinderExtension
