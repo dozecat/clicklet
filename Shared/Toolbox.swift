@@ -116,7 +116,9 @@ enum ToolboxCatalog {
         ToolboxItem(
             id: .copyPath,
             title: "拷贝路径",
-            backgroundTitle: "拷贝当前文件夹路径",
+            // 空白处右键也用同一个标题。原来叫「拷贝当前文件夹路径」，
+            // 在菜单里过长，而且和选中态下的叫法不一致。
+            backgroundTitle: nil,
             icon: "doc.on.clipboard",
             appliesToSelection: true,
             appliesToBackground: true,

@@ -54,7 +54,15 @@ struct GeneralPane: View {
             }
 
             SettingsRow("通知") {
-                SettingsValue(text: store.notificationsAuthorized ? "已授权" : "未授权")
+                if store.notificationsAuthorized {
+                    HStack(spacing: 6) {
+                        SettingsValue(text: "已授权")
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                } else {
+                    SettingsValue(text: "未授权")
+                }
             }
 
             SettingsGroupSeparator()

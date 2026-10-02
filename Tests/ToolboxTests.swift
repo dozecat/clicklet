@@ -55,14 +55,14 @@ final class ToolboxCatalogTests: XCTestCase {
         XCTAssertEqual(items.first?.id, .openInTerminal)
     }
 
-    /// The label differs when right-clicking empty space, where "copy path" means
-    /// the folder being browsed rather than a selection.
-    func testBackgroundTitleOnlyWhereItDiffers() {
+    /// 空白处右键时不再换一套更长的说法：「拷贝当前文件夹路径」在菜单里过长，
+    /// 而且和选中态下的叫法不一致。两个上下文现在用同一个标题。
+    func testCopyPathUsesTheSameTitleInBothContexts() {
         let copyPath = ToolboxCatalog.all.first { $0.id == .copyPath }
         let copyName = ToolboxCatalog.all.first { $0.id == .copyFileName }
 
         XCTAssertEqual(copyPath?.title(forBackground: false), "拷贝路径")
-        XCTAssertEqual(copyPath?.title(forBackground: true), "拷贝当前文件夹路径")
+        XCTAssertEqual(copyPath?.title(forBackground: true), "拷贝路径")
         XCTAssertEqual(copyName?.title(forBackground: true), "拷贝文件名")
     }
 
