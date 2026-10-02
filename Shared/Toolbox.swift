@@ -96,6 +96,39 @@ struct ToolboxItem: Codable, Equatable, Identifiable {
     }
 }
 
+/// 选中项的类型，决定哪些归档操作该出现在菜单里。
+///
+/// 之前只区分「选中 / 空白」，于是选中文件夹也显示「解压到当前文件夹」，
+/// 选中 zip 也显示「压缩为 ZIP」——两者都讲不通。
+struct SelectionContext {
+    var isEmpty: Bool
+    var containsArchive: Bool
+    /// 非空，且全部都是压缩包。
+    var allAreArchives: Bool
+
+    init(urls: [URL]) {
+        isEmpty = urls.isEmpty
+        let flags = urls.map(ArchiveFormats.isArchive)
+        containsArchive = flags.contains(true)
+        allAreArchives = !urls.isEmpty && flags.allSatisfy { $0 }
+    }
+}
+
+enum ArchiveFormats {
+    /// 判断「这是不是一个压缩包」。
+    ///
+    /// 刻意不跟着用户选的压缩器变：一个 .rar 是不是压缩包，和 RightKit 用哪个
+    /// 工具去处理它无关。
+    static let extensions: Set<String> = [
+        "zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz2", "tbz",
+        "xz", "txz", "lz", "lzma", "zst", "lz4", "br", "cab"
+    ]
+
+    static func isArchive(_ url: URL) -> Bool {
+        extensions.contains(url.pathExtension.lowercased())
+    }
+}
+
 enum ToolboxCatalog {
     /// Application the "open in terminal" item launches.
     static let terminalBundleIdentifier = "com.apple.Terminal"
@@ -236,6 +269,23 @@ enum ToolboxCatalog {
 
     /// 7z compression is only offered while the chosen archive tool can produce
     /// 7z archives at all; the built-in tools cannot.
+    /// 这个条目在给定的选中状态下该不该出现。
+    ///
+    /// 只用于**菜单构建**。设置界面的工具箱列表必须列出全部条目，否则用户
+    /// 根本看不到、也就无法打开「解压」这一项——所以那个路径不走这里。
+    static func applies(_ id: ToolboxItemID, to selection: SelectionContext) -> Bool {
+        switch id {
+        case .compressZip, .compressSevenZip:
+            // 已经是压缩包了，再压一次没有意义。
+            return !selection.allAreArchives
+        case .decompressHere, .decompressIntoFolder:
+            // 选中里至少要有一个压缩包，否则无从解起。
+            return selection.containsArchive
+        default:
+            return true
+        }
+    }
+
     private static func supports(
         _ id: ToolboxItemID,
         creatableFormats: Set<String>

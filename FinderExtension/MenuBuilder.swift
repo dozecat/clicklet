@@ -26,11 +26,16 @@ enum MenuBuilder {
         let toolbox = (snapshot?.toolbox ?? ToolboxCatalog.defaultItems).filter(\.isEnabled)
         let icons = snapshot?.icons ?? [:]
 
+        // 归档操作要按选中的文件类型区分：选中文件夹不该出现「解压」，
+        // 选中压缩包不该出现「压缩」。
+        let selection = SelectionContext(urls: selectedURLs)
+
         // Everything is driven by the toolbox list and its order; 新建文件 and
         // 脚本 render as submenus at their position in that list.
         switch menuKind {
         case .contextualMenuForItems:
-            for item in toolbox where item.appliesToSelection {
+            for item in toolbox
+            where item.appliesToSelection && ToolboxCatalog.applies(item.id, to: selection) {
                 addToolboxEntry(
                     item,
                     background: false,

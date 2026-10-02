@@ -357,3 +357,70 @@ final class MenuIconTests: XCTestCase {
         XCTAssertEqual(decoded.icons[MenuIconKey.toolbox(.openInTerminal)], png)
     }
 }
+
+/// 归档操作要按选中的文件类型区分。
+final class SelectionContextTests: XCTestCase {
+    private func urls(_ paths: String...) -> [URL] {
+        paths.map { URL(fileURLWithPath: $0) }
+    }
+
+    func testEmptySelection() {
+        let context = SelectionContext(urls: [])
+        XCTAssertTrue(context.isEmpty)
+        XCTAssertFalse(context.containsArchive)
+        XCTAssertFalse(context.allAreArchives)
+    }
+
+    /// 选中文件夹：不该出现任何解压操作，压缩照常。
+    func testFolderOffersCompressButNotDecompress() {
+        let context = SelectionContext(urls: urls("/tmp/Some Folder"))
+        XCTAssertFalse(context.containsArchive)
+        XCTAssertFalse(ToolboxCatalog.applies(.decompressHere, to: context))
+        XCTAssertFalse(ToolboxCatalog.applies(.decompressIntoFolder, to: context))
+        XCTAssertTrue(ToolboxCatalog.applies(.compressZip, to: context))
+        XCTAssertTrue(ToolboxCatalog.applies(.compressSevenZip, to: context))
+    }
+
+    /// 选中压缩包：可以解压，但不再提供压缩。
+    func testArchiveOffersDecompressButNotCompress() {
+        let context = SelectionContext(urls: urls("/tmp/a.zip"))
+        XCTAssertTrue(context.containsArchive)
+        XCTAssertTrue(context.allAreArchives)
+        XCTAssertTrue(ToolboxCatalog.applies(.decompressHere, to: context))
+        XCTAssertTrue(ToolboxCatalog.applies(.decompressIntoFolder, to: context))
+        XCTAssertFalse(ToolboxCatalog.applies(.compressZip, to: context))
+        XCTAssertFalse(ToolboxCatalog.applies(.compressSevenZip, to: context))
+    }
+
+    /// 普通文件：压缩可以，解压不行。
+    func testPlainFileOffersCompressOnly() {
+        let context = SelectionContext(urls: urls("/tmp/notes.txt"))
+        XCTAssertFalse(context.containsArchive)
+        XCTAssertFalse(ToolboxCatalog.applies(.decompressHere, to: context))
+        XCTAssertTrue(ToolboxCatalog.applies(.compressZip, to: context))
+    }
+
+    /// 混合选中：有压缩包就能解压；但并非"全是压缩包"，所以压缩也保留。
+    func testMixedSelectionOffersBoth() {
+        let context = SelectionContext(urls: urls("/tmp/a.zip", "/tmp/notes.txt"))
+        XCTAssertTrue(context.containsArchive)
+        XCTAssertFalse(context.allAreArchives)
+        XCTAssertTrue(ToolboxCatalog.applies(.decompressHere, to: context))
+        XCTAssertTrue(ToolboxCatalog.applies(.compressZip, to: context))
+    }
+
+    /// 大小写与双扩展名。
+    func testExtensionMatching() {
+        XCTAssertTrue(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/A.ZIP")))
+        XCTAssertTrue(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/backup.tar.gz")))
+        XCTAssertFalse(ArchiveFormats.isArchive(URL(fileURLWithPath: "/tmp/report.pdf")))
+    }
+
+    /// 其他条目不受影响。
+    func testOtherItemsAreUnaffected() {
+        let context = SelectionContext(urls: urls("/tmp/a.zip"))
+        for id in [ToolboxItemID.copyPath, .copyFileName, .openInTerminal, .newFile] {
+            XCTAssertTrue(ToolboxCatalog.applies(id, to: context), "\(id) 不该被过滤")
+        }
+    }
+}
