@@ -63,7 +63,13 @@ enum ArchiveService {
             return try await compress(urls, in: directory, format: .sevenZip)
         case .decompressHere:
             try await decompress(urls, into: directory)
-            return directory
+            // 返回 nil = 调用方不去"显示结果"。
+            //
+            // 这里原来返回 directory（就是这个文件夹本身），调用方随后
+            // activateFileViewerSelecting 它会**把访达抢到前台并选中该文件夹**——
+            // 用户本来就在这个文件夹里，看上去就像"解压却打开了访达"。
+            // 新建独立文件夹那条返回的是新目录，显示它才有意义，所以只有这里改为 nil。
+            return nil
         case .decompressIntoFolder:
             return try await decompressIntoOwnFolders(urls, in: directory)
         default:
