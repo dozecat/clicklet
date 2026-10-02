@@ -25,6 +25,10 @@ struct ScriptsPane: View {
                         actionTitle: "打开脚本目录",
                         action: { store.revealScriptsDirectory() }
                     )
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(
+                        TapGesture(count: 2).onEnded { store.revealScriptsDirectory() }
+                    )
                     .listRowInsets(EdgeInsets())
                     .listRowSeparator(.hidden)
                 } else {
@@ -85,6 +89,7 @@ struct ScriptsPane: View {
                 .frame(width: 52, alignment: .leading)
             Text("脚本名称")
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .help("双击一行可在 Finder 中打开该脚本的文件夹")
             Text("路径")
                 .frame(width: 170, alignment: .leading)
             Text("启用")
@@ -119,7 +124,7 @@ struct ScriptsPane: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .help("打开脚本目录，把脚本包放进去")
+                .help("打开脚本目录，把脚本包放进去（双击某一行则打开该脚本自己的文件夹）")
 
                 Button {
                     if let script = selectedScript {
@@ -176,6 +181,11 @@ struct ScriptsPane: View {
         .padding(.trailing, 18)
         .padding(.vertical, 9)
         .contentShape(Rectangle())
+        // Double-click opens the package, the way a Finder list would. A
+        // simultaneous gesture keeps single-click selection working.
+        .simultaneousGesture(
+            TapGesture(count: 2).onEnded { reveal(script) }
+        )
         .contextMenu {
             Button("在 Finder 中显示") { reveal(script) }
             Divider()

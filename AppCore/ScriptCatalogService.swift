@@ -88,7 +88,11 @@ enum ScriptScanner {
             let candidate = packageURL.appendingPathComponent(icon)
             iconPath = fileManager.fileExists(atPath: candidate.path) ? candidate.path : nil
         } else {
-            iconPath = nil
+            // Convenience: an icon.png dropped straight into the package works
+            // without touching config.json, which is what makes the icon easy to
+            // manage — replace one file.
+            let implicit = packageURL.appendingPathComponent("icon.png")
+            iconPath = fileManager.fileExists(atPath: implicit.path) ? implicit.path : nil
         }
 
         return ScriptPackage(

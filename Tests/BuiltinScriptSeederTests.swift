@@ -23,12 +23,21 @@ final class BuiltinScriptSeederTests: XCTestCase {
         try? FileManager.default.removeItem(at: root)
     }
 
-    private func makePackage(named name: String, body: String) throws {
+    private func makePackage(
+        named name: String,
+        body: String,
+        bundleIdentifier: String? = nil
+    ) throws {
         let package = source.appendingPathComponent(name, isDirectory: true)
         try FileManager.default.createDirectory(at: package, withIntermediateDirectories: true)
         try Data(body.utf8).write(to: package.appendingPathComponent("script.sh"))
-        try Data(#"{"name":"\#(name)"}"#.utf8)
-            .write(to: package.appendingPathComponent("config.json"))
+
+        var config = #"{"name":"\#(name)""#
+        if let bundleIdentifier {
+            config += #","applicationBundleIdentifier":"\#(bundleIdentifier)""#
+        }
+        config += "}"
+        try Data(config.utf8).write(to: package.appendingPathComponent("config.json"))
     }
 
     private func rewriteBundled(named name: String, body: String) throws {
@@ -168,6 +177,68 @@ final class BuiltinScriptSeederTests: XCTestCase {
             saved.contains(#""Open in VS Code":"""#),
             "the record should now hold a real fingerprint"
         )
+    }
+
+    // MARK: - Icons
+
+    /// The icon ends up as a real file in the package, generated here rather than
+    /// shipped, so the user can see and replace it.
+    func testGeneratesTheApplicationIconIntoThePackage() throws {
+        try makePackage(
+            named: "Open in Terminal",
+            body: "#!/bin/zsh\nexit 0\n",
+            bundleIdentifier: "com.apple.Terminal"
+        )
+
+        _ = seed()
+
+        let icon = scripts.appendingPathComponent("Open in Terminal/icon.png")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: icon.path))
+        XCTAssertGreaterThan(
+            (try? Data(contentsOf: icon).count) ?? 0,
+            0,
+            "the generated icon should not be empty"
+        )
+    }
+
+    /// The generated icon must not look like a shipped change, or every launch
+    /// would rewrite the package.
+    func testGeneratedIconDoesNotTriggerRewrites() throws {
+        try makePackage(
+            named: "Open in Terminal",
+            body: "#!/bin/zsh\nexit 0\n",
+            bundleIdentifier: "com.apple.Terminal"
+        )
+        _ = seed()
+
+        XCTAssertTrue(seed().isEmpty)
+    }
+
+    func testNoIconFileWithoutAnApplication() {
+        _ = seed()
+
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: scripts.appendingPathComponent("Open in VS Code/icon.png").path
+            )
+        )
+    }
+
+    // MARK: - User files
+
+    /// Updating replaces the shipped files only; anything the user added stays put
+    /// and does not freeze future updates.
+    func testKeepsUserFilesAndStillUpdates() throws {
+        _ = seed()
+        let note = scripts.appendingPathComponent("Open in VS Code/NOTES.md")
+        try Data("my notes".utf8).write(to: note)
+        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
+
+        let seeded = seed()
+
+        XCTAssertEqual(seeded, ["Open in VS Code"], "an added file must not block updates")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: note.path), "the note should survive")
+        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("v2"))
     }
 
     func testMissingSourceIsHarmless() {

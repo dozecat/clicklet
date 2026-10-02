@@ -1,3 +1,4 @@
+import AppKit
 import CryptoKit
 import Foundation
 
@@ -98,8 +99,8 @@ enum BuiltinScriptSeeder {
 
             let destination = scriptsDirectory.appendingPathComponent(name, isDirectory: true)
             let recorded = record.seeded[name]
-            let disk = fingerprint(of: destination, fileManager: fileManager)
-            let bundled = fingerprint(of: package, fileManager: fileManager)
+            let disk = fingerprint(of: destination, matching: package, fileManager: fileManager)
+            let bundled = fingerprint(of: package, matching: package, fileManager: fileManager)
 
             switch (recorded, disk) {
             case (nil, nil):
@@ -149,18 +150,18 @@ enum BuiltinScriptSeeder {
         fileManager: FileManager
     ) -> Bool {
         do {
-            try fileManager.createDirectory(
-                at: destination.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            if fileManager.fileExists(atPath: destination.path) {
-                try fileManager.removeItem(at: destination)
-            }
-            try fileManager.copyItem(at: package, to: destination)
+            // Create the package folder itself: copyContents writes into it
+            // rather than replacing it, so it must exist first.
+            try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+            // Copy the shipped files over the top instead of replacing the whole
+            // folder: anything the user or a previous run added (their own icon,
+            // notes, extra scripts) survives an update.
+            try copyContents(of: package, into: destination, fileManager: fileManager)
             makeExecutable(
                 destination.appendingPathComponent("script.sh"),
                 fileManager: fileManager
             )
+            materialiseIcon(for: destination, fileManager: fileManager)
             DiagnosticsLog.log("builtin script written: \(destination.lastPathComponent)")
             return true
         } catch {
@@ -172,6 +173,69 @@ enum BuiltinScriptSeeder {
         }
     }
 
+    private static func copyContents(
+        of package: URL,
+        into destination: URL,
+        fileManager: FileManager
+    ) throws {
+        let items = try fileManager.contentsOfDirectory(
+            at: package,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        )
+
+        for item in items {
+            let target = destination.appendingPathComponent(item.lastPathComponent)
+            if fileManager.fileExists(atPath: target.path) {
+                try fileManager.removeItem(at: target)
+            }
+            try fileManager.copyItem(at: item, to: target)
+        }
+    }
+
+    /// Renders the icon of the application named by the package's config into
+    /// `icon.png` inside the package.
+    ///
+    /// Done here, on the user's machine, rather than shipping the file: the
+    /// artwork belongs to the app it came from, and keeping it out of the
+    /// repository avoids redistributing someone else's trademark. It also means
+    /// the icon stays put if that application is later removed.
+    private static func materialiseIcon(for package: URL, fileManager: FileManager) {
+        let iconURL = package.appendingPathComponent("icon.png")
+        guard !fileManager.fileExists(atPath: iconURL.path) else {
+            return
+        }
+
+        guard let data = try? Data(contentsOf: package.appendingPathComponent("config.json")),
+              let config = try? JSONDecoder().decode(ScriptConfig.self, from: data),
+              let identifier = config.applicationBundleIdentifier,
+              let application = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: identifier
+              ) else {
+            return
+        }
+
+        let icon = NSWorkspace.shared.icon(forFile: application.path)
+        let side: CGFloat = 64
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        icon.draw(in: NSRect(x: 0, y: 0, width: side, height: side))
+        image.unlockFocus()
+
+        guard let tiff = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiff),
+              let png = bitmap.representation(using: .png, properties: [:]) else {
+            return
+        }
+
+        do {
+            try png.write(to: iconURL)
+            DiagnosticsLog.log("builtin script icon written: \(package.lastPathComponent)")
+        } catch {
+            DiagnosticsLog.log("builtin script icon failed: \(error.localizedDescription)")
+        }
+    }
+
     private static func makeExecutable(_ url: URL, fileManager: FileManager) {
         guard fileManager.fileExists(atPath: url.path) else {
             return
@@ -179,54 +243,67 @@ enum BuiltinScriptSeeder {
         try? fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
     }
 
-    /// Stable fingerprint of a package's regular files: relative path plus a
-    /// SHA-256 of the contents. Swift's `hashValue` is salted per process, so it
-    /// cannot be persisted.
-    private static func fingerprint(of directory: URL, fileManager: FileManager) -> String? {
+    /// Fingerprint of `directory`, covering exactly the files `package` ships.
+    ///
+    /// Anything present only in `directory` — an icon this app generated, a note
+    /// the user dropped in — is ignored. Counting it would make a package look
+    /// user-edited the moment they add a file, freezing every future update.
+    private static func fingerprint(
+        of directory: URL,
+        matching package: URL,
+        fileManager: FileManager
+    ) -> String? {
         guard fileManager.fileExists(atPath: directory.path) else {
-            return nil
-        }
-
-        // Resolve symlinks before comparing prefixes. macOS reports
-        // `temporaryDirectory` as /var/... while directory enumeration returns
-        // /private/var/..., and a mismatch there would leave the absolute path in
-        // the fingerprint — making an untouched package look user-edited and
-        // silently disabling every future update.
-        let base = directory.resolvingSymlinksInPath().path
-
-        let keys: [URLResourceKey] = [.isRegularFileKey]
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: keys,
-            options: [.skipsHiddenFiles]
-        ) else {
             return nil
         }
 
         var entries: [String] = []
 
+        for relative in relativeFiles(in: package, fileManager: fileManager) {
+            let url = directory.appendingPathComponent(relative)
+            let value = (try? Data(contentsOf: url)).map(digest) ?? "missing"
+            entries.append("\(relative):\(value)")
+        }
+
+        return entries.sorted().joined(separator: "|")
+    }
+
+    /// Regular files inside a package, as paths relative to it.
+    private static func relativeFiles(in package: URL, fileManager: FileManager) -> [String] {
+        // Resolve symlinks first. macOS reports `temporaryDirectory` as /var/...
+        // while enumeration returns /private/var/..., and a prefix mismatch there
+        // would leave absolute paths in the fingerprint — making an untouched
+        // package look user-edited and silently disabling every future update.
+        let base = package.resolvingSymlinksInPath().path
+        let keys: [URLResourceKey] = [.isRegularFileKey]
+
+        guard let enumerator = fileManager.enumerator(
+            at: package,
+            includingPropertiesForKeys: keys,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+
+        var files: [String] = []
+
         for case let url as URL in enumerator {
             guard (try? url.resourceValues(forKeys: Set(keys)).isRegularFile) == true else {
                 continue
             }
-
             let path = url.resolvingSymlinksInPath().path
-            let relative: String
             if path.hasPrefix(base + "/") {
-                relative = String(path.dropFirst(base.count + 1))
+                files.append(String(path.dropFirst(base.count + 1)))
             } else {
-                // Should not happen; the name still detects content changes.
-                relative = url.lastPathComponent
+                files.append(url.lastPathComponent)
             }
-
-            let data = (try? Data(contentsOf: url)) ?? Data()
-            let digest = SHA256.hash(data: data)
-                .map { String(format: "%02x", $0) }
-                .joined()
-            entries.append("\(relative):\(digest)")
         }
 
-        return entries.sorted().joined(separator: "|")
+        return files
+    }
+
+    private static func digest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     private static func loadRecord(at url: URL, fileManager: FileManager) -> Record {
