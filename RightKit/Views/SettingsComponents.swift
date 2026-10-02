@@ -169,9 +169,12 @@ struct SettingsPane<Content: View>: View {
 struct SettingsGroupSeparator: View {
     var body: some View {
         Divider()
-            // Equal insets on both sides: a separator that runs to the right
-            // edge while starting at the label column reads as lopsided.
-            .padding(.horizontal, settingsLeadingInset)
+            // 右边距与行一致（18pt），分割线正好覆盖一行的内容宽度。
+            //
+            // 原来右侧也是 150，比行的内容窄 132pt。「可解压格式」列出 11 种格式时
+            // 文字会跨过分割线末端 69pt，看着像溢出了分组。
+            .padding(.leading, settingsLeadingInset)
+            .padding(.trailing, settingsTrailingInset)
             .padding(.vertical, 12)
     }
 }
@@ -180,6 +183,9 @@ struct SettingsGroupSeparator: View {
 /// The label column is right-aligned and inset from the window edge; without the
 /// inset the text hugs the left edge and the whole pane reads as cramped.
 let settingsLeadingInset: CGFloat = 150
+
+/// 行的右边距。分割线也要用同一个值，否则长文本会跨过分割线末端。
+let settingsTrailingInset: CGFloat = 18
 let settingsLabelWidth: CGFloat = 140
 
 /// Table panes start further left than the label/control panes: their first
@@ -225,7 +231,7 @@ struct SettingsRow<Control: View>: View {
             Spacer(minLength: 0)
         }
         .padding(.leading, settingsLeadingInset)
-        .padding(.trailing, 18)
+        .padding(.trailing, settingsTrailingInset)
         .padding(.vertical, 10)
     }
 }
