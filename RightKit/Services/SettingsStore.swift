@@ -291,6 +291,21 @@ final class SettingsStore: ObservableObject {
         persist()
     }
 
+    /// Whether the templates folder holds anything the user put there.
+    ///
+    /// The row is hidden while it is empty: it is an entry point for a feature
+    /// the user may never use, and an empty folder behind it just raises the
+    /// question of what it is for. Drop a template in and the row appears.
+    var hasUserTemplates: Bool {
+        guard let directory = userTemplatesDirectory else {
+            return false
+        }
+        let contents = (try? FileManager.default.contentsOfDirectory(
+            atPath: directory.path
+        )) ?? []
+        return contents.contains { !$0.hasPrefix(".") }
+    }
+
     func revealScriptsDirectory() {
         let directory = scriptsDirectory
         try? FileManager.default.createDirectory(

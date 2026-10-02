@@ -79,17 +79,22 @@ struct SettingsTabStrip: View {
             selection = tab
         } label: {
             VStack(spacing: 3) {
+                // The selection sits behind the glyph alone, as a rounded square,
+                // the way the system's own tab strips draw it. Wrapping icon and
+                // label together made it a tall rectangle.
                 Image(systemName: tab.systemImage)
                     .font(.system(size: 17))
+                    .frame(width: 28, height: 28)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(isSelected ? Color.primary.opacity(0.09) : Color.clear)
+                    )
+
                 Text(tab.title)
                     .font(.system(size: 11))
             }
             .foregroundStyle(isSelected ? Color.accentColor : Color.primary.opacity(0.85))
-            .frame(width: 76, height: 48)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isSelected ? Color.primary.opacity(0.07) : Color.clear)
-            )
+            .frame(width: 76, height: 46)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

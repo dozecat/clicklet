@@ -64,7 +64,7 @@ struct GeneralPane: View {
                     .help(shortenedPath(store.scriptsDirectory.path))
             }
 
-            if let templatesDirectory = store.userTemplatesDirectory {
+            if let templatesDirectory = store.userTemplatesDirectory, store.hasUserTemplates {
                 SettingsRow("模板目录") {
                     Button("显示") { store.revealTemplatesDirectory() }
                         .help(shortenedPath(templatesDirectory.path))
