@@ -31,3 +31,6 @@ RightKit/Resources/BuiltinScripts/**/icon.png
 # 本地签名与脚本
 *.p12
 *.mobileprovision
+
+# App 图标候选稿：仅供挑选，选定后再做成 AppIcon.appiconset 入库
+icon-candidates/
