@@ -25,7 +25,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
     @ViewBuilder let row: (Item, Int) -> Row
 
     @State private var draggedIndex: Int?
-    @State private var dragOffset: CGFloat = 0
+    @State private var dragTranslation: CGSize = .zero
     @State private var rowHeight: CGFloat = 38
 
     private let cornerRadius: CGFloat = 9
@@ -48,7 +48,12 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
                             y: dragging ? 4 : 0
                         )
                         .scaleEffect(dragging ? 1.012 : 1)
-                        .offset(y: visualOffset(for: index))
+                        .offset(
+                            x: index == draggedIndex
+                                ? ReorderMotion.horizontal(dragTranslation.width)
+                                : 0,
+                            y: visualOffset(for: index)
+                        )
                         .zIndex(dragging ? 1 : 0)
                         .background(
                             GeometryReader { proxy in
@@ -85,7 +90,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
         guard let draggedIndex else {
             return nil
         }
-        let steps = Int((dragOffset / rowHeight).rounded())
+        let steps = Int((dragTranslation.height / rowHeight).rounded())
         return min(max(draggedIndex + steps, 0), items.count - 1)
     }
 
@@ -94,7 +99,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
             return 0
         }
         if index == draggedIndex {
-            return dragOffset
+            return dragTranslation.height
         }
         if draggedIndex < targetIndex, index > draggedIndex, index <= targetIndex {
             return -rowHeight
@@ -115,7 +120,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
                         draggedIndex = index
                     }
                 }
-                dragOffset = value.translation.height
+                dragTranslation = value.translation
             }
             .onEnded { _ in
                 if let from = draggedIndex, let to = targetIndex, from != to {
@@ -123,7 +128,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
                 }
                 withAnimation(ReorderMotion.settle) {
                     draggedIndex = nil
-                    dragOffset = 0
+                    dragTranslation = .zero
                 }
             }
     }

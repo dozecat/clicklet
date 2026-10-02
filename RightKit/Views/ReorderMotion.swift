@@ -14,6 +14,22 @@ enum ReorderMotion {
         isDragged ? nil : push
     }
 
+    /// How much of the pointer's horizontal travel the dragged row follows.
+    ///
+    /// Order is one-dimensional, so sideways movement means nothing. Following
+    /// the pointer one-to-one would slide the row off its columns and break the
+    /// alignment it shares with the header; a damped fraction is enough to read
+    /// as "held by the pointer" without pretending the row can go sideways.
+    static let horizontalDamping: CGFloat = 0.22
+
+    /// The furthest the row may drift from its column.
+    static let maxHorizontalOffset: CGFloat = 26
+
+    /// Damped, clamped horizontal follow for the row under the pointer.
+    static func horizontal(_ translation: CGFloat) -> CGFloat {
+        min(max(translation * horizontalDamping, -maxHorizontalOffset), maxHorizontalOffset)
+    }
+
     /// Rows sliding out of the way and back.
     static let push = Animation.spring(response: 0.28, dampingFraction: 0.8)
     /// The dragged row rising off the table.

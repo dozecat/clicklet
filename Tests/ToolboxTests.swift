@@ -278,6 +278,22 @@ final class ReorderMotionTests: XCTestCase {
         )
     }
 
+    /// Sideways travel carries no meaning in a one-dimensional list, so the row
+    /// only follows a fraction of it, and never far enough to leave its column.
+    func testHorizontalFollowIsDamped() {
+        XCTAssertEqual(ReorderMotion.horizontal(100), 100 * ReorderMotion.horizontalDamping, accuracy: 0.001)
+        XCTAssertLessThan(ReorderMotion.horizontal(100), 100)
+    }
+
+    func testHorizontalFollowIsCapped() {
+        XCTAssertEqual(ReorderMotion.horizontal(10_000), ReorderMotion.maxHorizontalOffset)
+        XCTAssertEqual(ReorderMotion.horizontal(-10_000), -ReorderMotion.maxHorizontalOffset)
+    }
+
+    func testHorizontalFollowIsSymmetric() {
+        XCTAssertEqual(ReorderMotion.horizontal(-50), -ReorderMotion.horizontal(50), accuracy: 0.001)
+    }
+
     /// Whatever the curves are, the push has to be quick enough to feel like a
     /// response and not a transition.
     func testMotionCurvesAreDistinct() {
