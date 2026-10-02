@@ -51,8 +51,15 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     }
 }
 
+/// Motion for the settings tab strip.
+enum SettingsTabMotion {
+    /// The selected icon easing up to its slightly larger size.
+    static let select = Animation.spring(response: 0.24, dampingFraction: 0.7)
+}
+
 struct SettingsTabStrip: View {
     @Binding var selection: SettingsTab
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 0) {
@@ -60,7 +67,7 @@ struct SettingsTabStrip: View {
             // the window's close/minimise/zoom buttons.
             Spacer(minLength: 88)
 
-            HStack(spacing: 2) {
+            HStack(spacing: 4) {
                 ForEach(SettingsTab.allCases) { tab in
                     tabItem(tab)
                 }
@@ -72,6 +79,15 @@ struct SettingsTabStrip: View {
         .padding(.bottom, 6)
     }
 
+    /// White card in light mode, a faint lift in dark mode — in both cases
+    /// something that reads as raised above the window rather than tinted.
+    private func cardFill(_ isSelected: Bool) -> Color {
+        guard isSelected else {
+            return .clear
+        }
+        return colorScheme == .dark ? Color.white.opacity(0.10) : Color.white
+    }
+
     private func tabItem(_ tab: SettingsTab) -> some View {
         let isSelected = selection == tab
 
@@ -79,22 +95,38 @@ struct SettingsTabStrip: View {
             selection = tab
         } label: {
             VStack(spacing: 3) {
-                // The selection sits behind the glyph alone, as a rounded square,
-                // the way the system's own tab strips draw it. Wrapping icon and
-                // label together made it a tall rectangle.
                 Image(systemName: tab.systemImage)
                     .font(.system(size: 17))
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(isSelected ? Color.primary.opacity(0.09) : Color.clear)
-                    )
+                    // Grows a little when picked; the frame keeps the row from
+                    // shifting as it does.
+                    .scaleEffect(isSelected ? 1.14 : 1)
+                    .animation(SettingsTabMotion.select, value: isSelected)
+                    .frame(width: 26, height: 26)
 
                 Text(tab.title)
                     .font(.system(size: 11))
             }
             .foregroundStyle(isSelected ? Color.accentColor : Color.primary.opacity(0.85))
             .frame(width: 76, height: 46)
+            // A raised card rather than a flat tint: the selection reads as
+            // lifted off the tab strip, which is what makes it legible without
+            // the label needing to shout.
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(cardFill(isSelected))
+                    .shadow(
+                        color: .black.opacity(isSelected ? 0.12 : 0),
+                        radius: 3,
+                        y: 1
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .strokeBorder(
+                                Color.primary.opacity(isSelected ? 0.07 : 0),
+                                lineWidth: 0.5
+                            )
+                    )
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
