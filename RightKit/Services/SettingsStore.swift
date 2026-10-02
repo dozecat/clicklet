@@ -279,6 +279,18 @@ final class SettingsStore: ObservableObject {
         persist()
     }
 
+    /// Puts every switch, order and choice back to its default.
+    ///
+    /// Files are deliberately left alone: the script packages, their generated
+    /// icons and any user templates are the user's own content, and losing them
+    /// to something labelled "reset" would be unforgivable. The built-in script
+    /// record is kept too, so a package the user deleted is not resurrected.
+    func resetToDefaults() {
+        preferences = AppPreferences()
+        DiagnosticsLog.log("preferences reset to defaults")
+        persist()
+    }
+
     func revealScriptsDirectory() {
         let directory = scriptsDirectory
         try? FileManager.default.createDirectory(

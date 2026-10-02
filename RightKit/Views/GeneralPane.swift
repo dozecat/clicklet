@@ -3,6 +3,7 @@ import SwiftUI
 
 struct GeneralPane: View {
     @EnvironmentObject private var store: SettingsStore
+    @State private var isConfirmingReset = false
 
     var body: some View {
         SettingsPane {
@@ -69,6 +70,22 @@ struct GeneralPane: View {
                         .help(shortenedPath(templatesDirectory.path))
                 }
             }
+
+            SettingsGroupSeparator()
+
+            SettingsRow("重置设置") {
+                Button("恢复出厂设置…") { isConfirmingReset = true }
+            }
+        }
+        .confirmationDialog(
+            "恢复出厂设置？",
+            isPresented: $isConfirmingReset
+        ) {
+            Button("恢复", role: .destructive) { store.resetToDefaults() }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("所有启用开关与排序会回到默认，压缩软件恢复为默认选择。"
+                 + "脚本包、图标与模板文件不会被删除。")
         }
     }
 
