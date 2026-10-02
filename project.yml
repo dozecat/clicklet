@@ -5,7 +5,6 @@ options:
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "13.0"
-  developmentLanguage: zh-Hans
 
 settings:
   base:
@@ -47,6 +46,11 @@ targets:
         INFOPLIST_FILE: RightKit/Info.plist
         CODE_SIGN_ENTITLEMENTS: RightKit/RightKit.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Xcode 15+ 默认会生成 Swift 资产符号（GeneratedAssetSymbols.swift）。
+        # 这个项目一个都没用到——图标走 CFBundleIconFile，颜色走 SwiftUI 内置的
+        # Color.accentColor——而这一步正是报 "Failed to write Swift generated
+        # asset symbols" 的地方，所以直接关掉，让构建不再依赖它。
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
         ENABLE_APP_SANDBOX: NO
     dependencies:
       - target: FinderExtension
