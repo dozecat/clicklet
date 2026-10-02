@@ -98,6 +98,9 @@ targets:
       - path: Tests
       - path: Shared
       - path: AppCore
+      # Only for its motion constants, which the reorder tests pin down. It has
+      # no dependency beyond SwiftUI.
+      - path: RightKit/Views/ReorderMotion.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKitTests

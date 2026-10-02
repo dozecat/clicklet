@@ -59,9 +59,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
                             }
                         )
                         .animation(
-                            // The dragged row must track the pointer exactly, so
-                            // it is left out of the spring.
-                            dragging ? nil : .spring(response: 0.3, dampingFraction: 0.86),
+                            ReorderMotion.position(isDragged: index == draggedIndex),
                             value: targetIndex
                         )
                         .gesture(dragGesture(for: index))
@@ -111,7 +109,11 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
         DragGesture(minimumDistance: 4)
             .onChanged { value in
                 if draggedIndex == nil {
-                    draggedIndex = index
+                    // Animate the lift itself: the rounding, shadow and scale
+                    // should ease in rather than appear in one frame.
+                    withAnimation(ReorderMotion.lift) {
+                        draggedIndex = index
+                    }
                 }
                 dragOffset = value.translation.height
             }
@@ -119,7 +121,7 @@ struct ReorderableRows<Item: Identifiable, Row: View, Footer: View>: View where 
                 if let from = draggedIndex, let to = targetIndex, from != to {
                     onMove(from, to)
                 }
-                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                withAnimation(ReorderMotion.settle) {
                     draggedIndex = nil
                     dragOffset = 0
                 }

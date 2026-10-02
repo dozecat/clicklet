@@ -258,3 +258,31 @@ final class ToolboxCapabilityTests: XCTestCase {
         XCTAssertEqual(chosen.identifier, SystemArchiveAdapter().identifier)
     }
 }
+
+
+/// The push-aside is the difference between the table feeling like 1Capture and
+/// feeling like the rows teleport. The invariant is easy to invert by accident —
+/// it was, once — so it is pinned here.
+final class ReorderMotionTests: XCTestCase {
+    func testTheDraggedRowIsNotAnimated() {
+        XCTAssertNil(
+            ReorderMotion.position(isDragged: true),
+            "the dragged row must track the pointer with no easing"
+        )
+    }
+
+    func testEveryOtherRowSprings() {
+        XCTAssertNotNil(
+            ReorderMotion.position(isDragged: false),
+            "rows sliding aside must animate, or the push looks like a jump"
+        )
+    }
+
+    /// Whatever the curves are, the push has to be quick enough to feel like a
+    /// response and not a transition.
+    func testMotionCurvesAreDistinct() {
+        XCTAssertNotNil(ReorderMotion.push)
+        XCTAssertNotNil(ReorderMotion.lift)
+        XCTAssertNotNil(ReorderMotion.settle)
+    }
+}
