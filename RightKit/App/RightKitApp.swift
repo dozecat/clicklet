@@ -6,6 +6,15 @@ struct RightKitApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
+        // 状态栏图标：Dock 图标没了（LSUIElement），设置与自检从这里进。
+        // 图标会跟着访达扩展的状态变——扩展被关掉时换成警示样式。
+        MenuBarExtra {
+            StatusItemMenu()
+        } label: {
+            StatusItemLabel()
+        }
+        .menuBarExtraStyle(.menu)
+
         // A Settings scene, not a Window: macOS creates it only when the user
         // asks for it. A Window scene opens at launch, so every Finder action
         // that woke the app showed this window for a frame before the action

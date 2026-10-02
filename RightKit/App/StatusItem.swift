@@ -1,0 +1,40 @@
+import AppKit
+import SwiftUI
+
+/// 状态栏图标。
+///
+/// Dock 图标没有了（`LSUIElement`），设置从这里进——点一下就能开，
+/// 不用去访达右键菜单里翻。
+struct StatusItemLabel: View {
+    @ObservedObject private var store = SettingsStore.shared
+
+    var body: some View {
+        // 图标本身反映状态。访达扩展被系统关掉时右键菜单会整个消失，
+        // 那是最要命的故障，所以图标得能立刻告诉用户"有事"，而不是永远长一样。
+        Image(
+            systemName: store.finderMenuState == .enabled
+                ? "cursorarrow.click"
+                : "exclamationmark.triangle"
+        )
+    }
+}
+
+/// 状态栏下拉菜单。刻意只放三件事：开设置、看自检、退出。
+struct StatusItemMenu: View {
+    @ObservedObject private var store = SettingsStore.shared
+
+    var body: some View {
+        Button("打开设置…") { SettingsOpener.show() }
+            .keyboardShortcut(",", modifiers: .command)
+
+        Button("检查运行状态…") {
+            store.showHealthCheck()
+            SettingsOpener.show()
+        }
+
+        Divider()
+
+        Button("退出 RightKit") { NSApp.terminate(nil) }
+            .keyboardShortcut("q", modifiers: .command)
+    }
+}
