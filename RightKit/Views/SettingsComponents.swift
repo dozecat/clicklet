@@ -250,6 +250,9 @@ struct SettingsValue: View {
     var body: some View {
         Text(text)
             .foregroundStyle(.secondary)
+            // 换行时行距稍大一点。默认行距在多行值（例如「可解压格式」列出 11 种）
+            // 上显得拥挤。单行的值不受影响。
+            .lineSpacing(4)
             .textSelection(.enabled)
             .fixedSize(horizontal: false, vertical: true)
     }
