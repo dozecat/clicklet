@@ -24,8 +24,19 @@ struct StatusItemMenu: View {
     @ObservedObject private var store = SettingsStore.shared
 
     var body: some View {
-        Button("打开设置…") { SettingsOpener.show() }
+        // Uses SettingsLink rather than SettingsOpener.show(): this is the route
+        // SwiftUI actually supports, and it needs no AppKit plumbing, so it
+        // cannot be affected by LSUIElement. That matters because this is now the
+        // only guaranteed way into the app.
+        if #available(macOS 14.0, *) {
+            SettingsLink {
+                Text("打开设置…")
+            }
             .keyboardShortcut(",", modifiers: .command)
+        } else {
+            Button("打开设置…") { SettingsOpener.show() }
+                .keyboardShortcut(",", modifiers: .command)
+        }
 
         Button("检查运行状态…") {
             store.showHealthCheck()
