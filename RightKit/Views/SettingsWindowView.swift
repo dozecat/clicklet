@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 /// Root of the settings window: a Safari-style tab strip above a single pane.
@@ -26,6 +27,13 @@ struct SettingsWindowView: View {
         // the title bar comes back with a title in it. The tab strip is meant to
         // be the title bar, so hide the text and let the content run up into it.
         .onAppear { hideWindowTitle() }
+        // SwiftUI 之后可能又把标题写回来。窗口每次成为 key 时再抹一遍，
+        // 这样不依赖"onAppear 那一刻窗口已经存在且是 main-capable"这个假设。
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)
+        ) { _ in
+            hideWindowTitle()
+        }
         .background(Color(nsColor: .windowBackgroundColor))
         .environmentObject(store)
     }
@@ -34,7 +42,9 @@ struct SettingsWindowView: View {
     /// the title bar returns with a title in it. The tab strip is meant to be the
     /// title bar, so blank the text and let the content run up into that space.
     private func hideWindowTitle() {
-        for window in NSApp.windows where window.canBecomeMain {
+        // 不再用 canBecomeMain 过滤：SwiftUI 刚建好的设置窗口在 onAppear 那一刻
+        // 可能还不是 main-capable，会被整个漏掉——这很可能就是标题一直还在的原因。
+        for window in NSApp.windows {
             window.title = ""
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
