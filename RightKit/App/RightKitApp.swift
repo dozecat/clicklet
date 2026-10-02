@@ -6,11 +6,15 @@ struct RightKitApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Window("RightKit 设置", id: "rightkit-main") {
+        // A Settings scene, not a Window: macOS creates it only when the user
+        // asks for it. A Window scene opens at launch, so every Finder action
+        // that woke the app showed this window for a frame before the action
+        // hid the app again — the flash.
+        //
+        // URLs arrive through `AppDelegate.application(_:open:)`, which does not
+        // need a window to exist.
+        Settings {
             SettingsWindowView()
-                .onOpenURL { url in
-                    ActionCoordinator.shared.handle(url: url)
-                }
         }
         // A small fixed window with the tab strip acting as the title bar, the
         // way Safari's settings window is built.
@@ -44,10 +48,15 @@ struct RightKitApp: App {
         )
     }
 
-    /// Brings the single settings window forward; the app has no other window,
-    /// so the first main-capable one is it.
+    /// Opens the settings window on demand.
     private func showSettingsWindow() {
         NSApp.activate(ignoringOtherApps: true)
+
+        // The Settings scene is opened by this selector; the window lookup is a
+        // fallback for a build where it is not answered.
+        if NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) {
+            return
+        }
         NSApp.windows.first { $0.canBecomeMain }?.makeKeyAndOrderFront(nil)
     }
 }

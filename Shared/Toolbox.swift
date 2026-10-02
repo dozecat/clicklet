@@ -135,7 +135,9 @@ enum ToolboxCatalog {
         ),
         ToolboxItem(
             id: .openInTerminal,
-            title: "在终端中打开",
+            // "在终端中打开" reads as "open the selected item with Terminal".
+            // The action opens a terminal *at* the folder, so say that.
+            title: "在此处打开终端",
             backgroundTitle: nil,
             icon: "terminal",
             appliesToSelection: true,

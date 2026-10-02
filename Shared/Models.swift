@@ -193,6 +193,25 @@ struct AppPreferences: Codable, Equatable {
     }
 }
 
+/// Keys under which `MenuSnapshot` stores menu icons.
+///
+/// The keys live in Shared because the extension looks them up; rendering them
+/// lives in AppCore because only the main app can resolve application and
+/// document icons.
+enum MenuIconKey {
+    static func toolbox(_ id: ToolboxItemID) -> String {
+        "toolbox:\(id.rawValue)"
+    }
+
+    static func template(_ id: String) -> String {
+        "template:\(id)"
+    }
+
+    static func script(_ id: String) -> String {
+        "script:\(id)"
+    }
+}
+
 struct MenuSnapshot: Codable, Equatable {
     static let currentSchemaVersion = 2
 
@@ -201,19 +220,25 @@ struct MenuSnapshot: Codable, Equatable {
     let scripts: [ScriptPackage]
     let templates: [FileTemplate]
     let toolbox: [ToolboxItem]
+    /// Small PNGs for the menu items, keyed by `MenuIconRenderer` — see there
+    /// for why the extension cannot resolve them itself. Absent in snapshots
+    /// written before this field existed.
+    let icons: [String: Data]
 
     init(
         schemaVersion: Int = MenuSnapshot.currentSchemaVersion,
         generatedAt: Date = Date(),
         scripts: [ScriptPackage],
         templates: [FileTemplate],
-        toolbox: [ToolboxItem] = ToolboxCatalog.defaultItems
+        toolbox: [ToolboxItem] = ToolboxCatalog.defaultItems,
+        icons: [String: Data] = [:]
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
         self.scripts = scripts
         self.templates = templates
         self.toolbox = toolbox
+        self.icons = icons
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -222,6 +247,7 @@ struct MenuSnapshot: Codable, Equatable {
         case scripts
         case templates
         case toolbox
+        case icons
     }
 
     /// Decoded field by field: a snapshot written by an older build has no
@@ -240,6 +266,7 @@ struct MenuSnapshot: Codable, Equatable {
             [ToolboxItem].self,
             forKey: .toolbox
         ) ?? ToolboxCatalog.defaultItems
+        icons = try container.decodeIfPresent([String: Data].self, forKey: .icons) ?? [:]
     }
 }
 

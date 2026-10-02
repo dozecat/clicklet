@@ -131,7 +131,14 @@ final class ScriptCatalogService {
                 .capabilities
                 .createsFormats
         )
-        let snapshot = MenuSnapshot(scripts: scripts, templates: templates, toolbox: toolbox)
+        let snapshot = MenuSnapshot(
+            scripts: scripts,
+            templates: templates,
+            toolbox: toolbox,
+            icons: menuIcons(toolbox: toolbox, templates: templates, scripts: scripts)
+        )
+
+        let previous = currentSnapshot()
 
         lock.lock()
         self.snapshot = snapshot
@@ -141,6 +148,13 @@ final class ScriptCatalogService {
         // that fails the catalog itself is still perfectly good, so it must not
         // throw: the caller would otherwise show an empty settings window for a
         // problem that only affects the Finder menu.
+        // The icons make this file ~100KB, and the app refreshes the catalog
+        // every time it is activated. Writing it when nothing changed is pure
+        // waste. `generatedAt` is excluded on purpose: it differs every time.
+        guard hasChanged(from: previous, to: snapshot) else {
+            return snapshot
+        }
+
         do {
             try AppGroupStore.saveMenuSnapshot(snapshot)
         } catch {
@@ -150,6 +164,69 @@ final class ScriptCatalogService {
         }
 
         return snapshot
+    }
+
+    /// Whether a newly built snapshot differs from the published one in anything
+    /// the extension actually reads.
+    private func hasChanged(from previous: MenuSnapshot?, to next: MenuSnapshot) -> Bool {
+        guard let previous else {
+            return true
+        }
+        return previous.schemaVersion != next.schemaVersion
+            || previous.scripts != next.scripts
+            || previous.templates != next.templates
+            || previous.toolbox != next.toolbox
+            || previous.icons != next.icons
+    }
+
+    /// Renders the icons the extension cannot resolve for itself, because it is
+    /// sandboxed: application icons, document-type icons, and script icons.
+    private func menuIcons(
+        toolbox: [ToolboxItem],
+        templates: [FileTemplate],
+        scripts: [ScriptPackage]
+    ) -> [String: Data] {
+        var icons: [String: Data] = [:]
+
+        for item in toolbox {
+            let key = MenuIconKey.toolbox(item.id)
+            if item.id.usesCompressorIcon {
+                let identifier = CompressionService.shared.selectedCompressor.identifier
+                if let image = SystemIcon.application(bundleIdentifier: identifier) {
+                    icons[key] = MenuIconRenderer.png(for: image)
+                }
+            } else if item.id == .openInTerminal {
+                if let image = SystemIcon.application(
+                    bundleIdentifier: ToolboxCatalog.terminalBundleIdentifier
+                ) {
+                    icons[key] = MenuIconRenderer.png(for: image)
+                }
+            } else {
+                icons[key] = MenuIconRenderer.png(systemSymbol: item.icon)
+            }
+        }
+
+        for template in templates {
+            if let data = MenuIconRenderer.png(for: SystemIcon.file(for: template)) {
+                icons[MenuIconKey.template(template.id)] = data
+            }
+        }
+
+        for script in scripts {
+            let key = MenuIconKey.script(script.id)
+            if let path = script.iconPath, let data = MenuIconRenderer.png(contentsOfFile: path) {
+                icons[key] = data
+            } else if let identifier = script.applicationBundleIdentifier,
+                      let image = SystemIcon.application(bundleIdentifier: identifier) {
+                icons[key] = MenuIconRenderer.png(for: image)
+            } else {
+                icons[key] = MenuIconRenderer.png(
+                    systemSymbol: "chevron.left.forwardslash.chevron.right"
+                )
+            }
+        }
+
+        return icons.compactMapValues { $0 }
     }
 
     func currentSnapshot() -> MenuSnapshot? {

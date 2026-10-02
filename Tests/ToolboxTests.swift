@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 final class ToolboxCatalogTests: XCTestCase {
@@ -300,5 +301,55 @@ final class ReorderMotionTests: XCTestCase {
         XCTAssertNotNil(ReorderMotion.push)
         XCTAssertNotNil(ReorderMotion.lift)
         XCTAssertNotNil(ReorderMotion.settle)
+    }
+}
+
+/// The menu snapshot now carries the icons, because the sandboxed extension
+/// cannot resolve application or document icons. These pin the parts that are
+/// easy to get wrong.
+final class MenuIconTests: XCTestCase {
+    func testSymbolsRenderToPNG() throws {
+        let data = try XCTUnwrap(MenuIconRenderer.png(systemSymbol: "doc.on.clipboard"))
+
+        XCTAssertGreaterThan(data.count, 0)
+        XCTAssertNotNil(NSImage(data: data), "the payload must decode back into an image")
+    }
+
+    func testKeysAreStableAndNamespaced() {
+        XCTAssertEqual(MenuIconKey.toolbox(.copyPath), "toolbox:copyPath")
+        XCTAssertEqual(MenuIconKey.template("builtin.txt"), "template:builtin.txt")
+        XCTAssertEqual(MenuIconKey.script("Run Python"), "script:Run Python")
+    }
+
+    /// A snapshot written before icons existed must still decode, otherwise the
+    /// extension would show no menu at all until the app ran again.
+    func testSnapshotWithoutIconsDecodes() throws {
+        let json = """
+        {"schemaVersion":2,"generatedAt":"2026-01-01T00:00:00Z","scripts":[],"templates":[]}
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let snapshot = try decoder.decode(MenuSnapshot.self, from: Data(json.utf8))
+
+        XCTAssertTrue(snapshot.icons.isEmpty)
+    }
+
+    func testIconsRoundTrip() throws {
+        let png = try XCTUnwrap(MenuIconRenderer.png(systemSymbol: "terminal"))
+        let snapshot = MenuSnapshot(
+            scripts: [],
+            templates: [],
+            icons: [MenuIconKey.toolbox(.openInTerminal): png]
+        )
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        let decoded = try decoder.decode(MenuSnapshot.self, from: try encoder.encode(snapshot))
+
+        XCTAssertEqual(decoded.icons[MenuIconKey.toolbox(.openInTerminal)], png)
     }
 }

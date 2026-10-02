@@ -24,6 +24,7 @@ enum MenuBuilder {
         // install, before the main app has written its first snapshot.
         let templates = snapshot?.templates ?? BuiltinTemplates.all
         let toolbox = (snapshot?.toolbox ?? ToolboxCatalog.defaultItems).filter(\.isEnabled)
+        let icons = snapshot?.icons ?? [:]
 
         // Everything is driven by the toolbox list and its order; 新建文件 and
         // 脚本 render as submenus at their position in that list.
@@ -35,6 +36,7 @@ enum MenuBuilder {
                     background: false,
                     templates: templates,
                     scripts: scripts,
+                    icons: icons,
                     registry: registry,
                     target: target,
                     to: menu
@@ -47,6 +49,7 @@ enum MenuBuilder {
                     background: true,
                     templates: templates,
                     scripts: scripts,
+                    icons: icons,
                     registry: registry,
                     target: target,
                     to: menu
@@ -57,6 +60,7 @@ enum MenuBuilder {
                 addItem(
                     title: copyPath.title(forBackground: true),
                     action: #selector(FinderSync.copyPath(_:)),
+                    icon: icons[MenuIconKey.toolbox(.copyPath)],
                     target: target,
                     to: menu
                 )
@@ -110,19 +114,33 @@ enum MenuBuilder {
         background: Bool,
         templates: [FileTemplate],
         scripts: [ScriptPackage],
+        icons: [String: Data],
         registry: MenuCommandRegistry,
         target: FinderSync,
         to menu: NSMenu
     ) {
         switch item.id {
         case .newFile:
-            addNewFileSubmenu(templates, registry: registry, target: target, to: menu)
+            addNewFileSubmenu(
+                templates,
+                icons: icons,
+                registry: registry,
+                target: target,
+                to: menu
+            )
         case .scripts:
-            addScriptsSubmenu(scripts, registry: registry, target: target, to: menu)
+            addScriptsSubmenu(
+                scripts,
+                icons: icons,
+                registry: registry,
+                target: target,
+                to: menu
+            )
         default:
             addItem(
                 title: item.title(forBackground: background),
                 action: selector(for: item.id),
+                icon: icons[MenuIconKey.toolbox(item.id)],
                 target: target,
                 to: menu
             )
@@ -133,6 +151,7 @@ enum MenuBuilder {
     /// under one 脚本 submenu instead of filling the top level.
     private static func addScriptsSubmenu(
         _ scripts: [ScriptPackage],
+        icons: [String: Data],
         registry: MenuCommandRegistry,
         target: FinderSync,
         to menu: NSMenu
@@ -142,6 +161,7 @@ enum MenuBuilder {
         }
 
         let item = NSMenuItem(title: "脚本", action: nil, keyEquivalent: "")
+        item.image = image(MenuIconKey.toolbox(.scripts), in: icons)
         let submenu = NSMenu(title: "脚本")
         for script in scripts {
             let tag = registry.registerScript(title: script.name, id: script.id)
@@ -149,6 +169,7 @@ enum MenuBuilder {
                 title: script.name,
                 action: #selector(FinderSync.runScript(_:)),
                 tag: tag,
+                icon: icons[MenuIconKey.script(script.id)],
                 target: target,
                 to: submenu
             )
@@ -159,6 +180,7 @@ enum MenuBuilder {
 
     private static func addNewFileSubmenu(
         _ templates: [FileTemplate],
+        icons: [String: Data],
         registry: MenuCommandRegistry,
         target: FinderSync,
         to menu: NSMenu
@@ -168,6 +190,7 @@ enum MenuBuilder {
         }
 
         let item = NSMenuItem(title: "新建文件", action: nil, keyEquivalent: "")
+        item.image = image(MenuIconKey.toolbox(.newFile), in: icons)
         let submenu = NSMenu(title: "新建文件")
         for template in templates {
             let tag = registry.registerTemplate(title: template.name, id: template.id)
@@ -175,6 +198,7 @@ enum MenuBuilder {
                 title: template.name,
                 action: #selector(FinderSync.newFile(_:)),
                 tag: tag,
+                icon: icons[MenuIconKey.template(template.id)],
                 target: target,
                 to: submenu
             )
@@ -218,12 +242,24 @@ enum MenuBuilder {
         title: String,
         action: Selector,
         tag: Int = 0,
+        icon: Data? = nil,
         target: FinderSync,
         to menu: NSMenu
     ) {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = target
         item.tag = tag
+        if let icon, let image = NSImage(data: icon) {
+            item.image = image
+        }
         menu.addItem(item)
+    }
+
+    /// Builds the menu image for a key, or nil when the snapshot has none.
+    private static func image(_ key: String, in icons: [String: Data]) -> NSImage? {
+        guard let data = icons[key] else {
+            return nil
+        }
+        return NSImage(data: data)
     }
 }
