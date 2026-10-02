@@ -56,6 +56,23 @@ enum AppGroupStore {
         return decoder
     }()
 
+    /// 首次运行标记。放在用户的支持目录里（不是共享容器——那是扩展用的），
+    /// 所以删掉容器或重装扩展都不会又走一遍引导。
+    static var firstRunMarker: URL {
+        AppPaths.supportDirectory.appendingPathComponent("first-run-done")
+    }
+
+    static var hasCompletedFirstRun: Bool {
+        FileManager.default.fileExists(atPath: firstRunMarker.path)
+    }
+
+    static func markFirstRunCompleted() {
+        try? FileManager.default.createDirectory(
+            at: AppPaths.supportDirectory, withIntermediateDirectories: true
+        )
+        try? Data().write(to: firstRunMarker)
+    }
+
     static func loadMenuSnapshot() -> MenuSnapshot? {
         guard let url = menuSnapshotURL,
               let data = try? Data(contentsOf: url) else {

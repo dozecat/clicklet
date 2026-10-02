@@ -21,6 +21,26 @@ final class SettingsStore: ObservableObject {
     @Published private(set) var notificationsAuthorized = false
     @Published private(set) var launchAtLogin = LaunchAtLoginService.state == .enabled
 
+    /// 谁想让设置窗口切到某个页签（首次运行、或从自检页跳过来）。
+    @Published private(set) var requestedTab: SettingsTab?
+
+    func requestTab(_ tab: SettingsTab) { requestedTab = tab }
+    func consumeRequestedTab() { requestedTab = nil }
+
+    /// 打开「登录项与扩展」的系统设置页。Ventura 之后扩展搬到了这里，
+    /// 旧的面板标识留作回退。通用页与自检页共用。
+    func openExtensionSettings() {
+        let candidates = [
+            "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+            "x-apple.systempreferences:com.apple.ExtensionsPreferences"
+        ]
+        for candidate in candidates {
+            if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
+                return
+            }
+        }
+    }
+
     private let catalog = ScriptCatalogService.shared
 
     private init() {

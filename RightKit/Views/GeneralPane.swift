@@ -26,7 +26,7 @@ struct GeneralPane: View {
 
             SettingsRow("访达拓展") {
                 if store.finderMenuState == .unknown {
-                    Button("打开系统设置…") { openExtensionSettings() }
+                    Button("打开系统设置…") { store.openExtensionSettings() }
                 } else {
                     SettingsCheckbox(
                         title: store.finderMenuState == .enabled ? "打开" : "关闭",
@@ -97,21 +97,4 @@ struct GeneralPane: View {
         }
     }
 
-    private func openExtensionSettings() {
-        // Ventura and later moved extensions into "Login Items & Extensions";
-        // the older pane identifier is kept as a fallback.
-        let candidates = [
-            "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
-            "x-apple.systempreferences:com.apple.ExtensionsPreferences"
-        ]
-
-        for candidate in candidates {
-            guard let url = URL(string: candidate) else {
-                continue
-            }
-            if NSWorkspace.shared.open(url) {
-                return
-            }
-        }
-    }
 }

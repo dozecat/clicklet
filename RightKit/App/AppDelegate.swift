@@ -6,6 +6,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             "app launched; version=\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") "
                 + "appGroup=\(AppGroup.identifier) container=\(AppGroup.containerURL?.path ?? "UNAVAILABLE")"
         )
+        // 首次运行：把设置窗口开在自检页——那一页就是首次设置引导，
+        // 缺什么当场有按钮，不用再单独做一个向导。
+        //
+        // 但被右键动作唤起时不要弹窗：那种启动只该安静做完活然后退回后台，
+        // 弹窗会正好挡在用户面前。
+        if !AppGroupStore.hasCompletedFirstRun {
+            AppGroupStore.markFirstRunCompleted()
+            if AppGroupStore.pendingActionRequestIDs().isEmpty {
+                SettingsStore.shared.requestTab(.selfCheck)
+                SettingsOpener.show()
+                DiagnosticsLog.log("first run: opened settings on the self-check tab")
+            }
+        }
+
         let seeded = BuiltinScriptSeeder.seedIfNeeded()
         if !seeded.isEmpty {
             DiagnosticsLog.log("built-in scripts offered: \(seeded)")

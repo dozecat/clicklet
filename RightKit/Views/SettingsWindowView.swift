@@ -27,6 +27,12 @@ struct SettingsWindowView: View {
         // the title bar comes back with a title in it. The tab strip is meant to
         // be the title bar, so hide the text and let the content run up into it.
         .onAppear { hideWindowTitle() }
+        // 首次运行、或从别处请求切页签（例如自检页）
+        .onReceive(store.$requestedTab) { tab in
+            guard let tab else { return }
+            selection = tab
+            store.consumeRequestedTab()
+        }
         // SwiftUI 之后可能又把标题写回来。窗口每次成为 key 时再抹一遍，
         // 这样不依赖"onAppear 那一刻窗口已经存在且是 main-capable"这个假设。
         .onReceive(
@@ -65,6 +71,8 @@ struct SettingsWindowView: View {
             CompressionPane()
         case .scripts:
             ScriptsPane()
+        case .selfCheck:
+            SelfCheckPane()
         case .about:
             AboutPane()
         }
