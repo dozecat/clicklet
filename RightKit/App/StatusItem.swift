@@ -11,11 +11,14 @@ struct StatusItemLabel: View {
     var body: some View {
         // 图标本身反映状态。访达扩展被系统关掉时右键菜单会整个消失，
         // 那是最要命的故障，所以图标得能立刻告诉用户"有事"，而不是永远长一样。
-        Image(
-            systemName: store.finderMenuState == .enabled
-                ? "cursorarrow.click"
-                : "exclamationmark.triangle"
-        )
+        // 正常状态用简化过的 App 图标轮廓（圆角方块 + 光标），
+        // 而不是通用光标符号——后者看不出这是 RightKit。
+        // 扩展被关掉时换成警示三角，因为那时候右键菜单整个消失。
+        if store.finderMenuState == .enabled {
+            Image(nsImage: StatusItemImage.normal)
+        } else {
+            Image(systemName: "exclamationmark.triangle")
+        }
     }
 }
 
