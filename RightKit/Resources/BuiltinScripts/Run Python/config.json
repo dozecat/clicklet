@@ -1,5 +1,5 @@
 {
-  "name": "用 Python 运行",
+  "name": "运行 Python 脚本",
   "context": "files",
   "extensions": ["py"],
   "multiple": true,

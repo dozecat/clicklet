@@ -88,28 +88,49 @@ final class BuiltinScriptAssetsTests: XCTestCase {
         }
     }
 
-    /// The icon is declared in config.json so it is discoverable, but the file
-    /// itself is generated on the user's machine — shipping it would mean
-    /// redistributing another application's artwork.
-    func testIconsAreDeclaredButNotShipped() throws {
+    /// A declared icon has to be there. The settings list and the Finder menu
+    /// both read it, and a typo would only show up as a blank row.
+    func testDeclaredIconsExist() throws {
         for package in packages {
             let data = try Data(contentsOf: package.appendingPathComponent("config.json"))
             let config = try JSONDecoder().decode(ScriptConfig.self, from: data)
 
-            guard config.applicationBundleIdentifier != nil else {
+            guard let icon = config.icon else {
                 continue
             }
 
-            XCTAssertEqual(
-                config.icon,
-                "icon.png",
-                "\(package.lastPathComponent) should point at the icon it generates"
+            // Either shipped with the package, or generated on the user's
+            // machine from the application named alongside it.
+            let shipped = FileManager.default.fileExists(
+                atPath: package.appendingPathComponent(icon).path
             )
-            XCTAssertFalse(
-                FileManager.default.fileExists(
-                    atPath: package.appendingPathComponent("icon.png").path
-                ),
-                "\(package.lastPathComponent) must not ship another app's icon"
+            XCTAssertTrue(
+                shipped || config.applicationBundleIdentifier != nil,
+                "\(package.lastPathComponent) declares \(icon) but neither ships it "
+                    + "nor names an application to generate it from"
+            )
+        }
+    }
+
+    /// Application icons are generated on the user's machine rather than shipped
+    /// — the artwork belongs to the app it came from. The one exception is the
+    /// Python language logo, which marks the language a script runs and has no
+    /// dependable local source. This pins the reasoning so it is not undone by
+    /// accident: any *other* package shipping an icon must be a deliberate
+    /// decision, not a stray generated file.
+    func testOnlyThePythonLogoShipsAnIcon() throws {
+        let allowed: Set<String> = ["Run Python"]
+
+        for package in packages {
+            guard FileManager.default.fileExists(
+                atPath: package.appendingPathComponent("icon.png").path
+            ) else {
+                continue
+            }
+
+            XCTAssertTrue(
+                allowed.contains(package.lastPathComponent),
+                "\(package.lastPathComponent) ships an icon.png that should be generated instead"
             )
         }
     }
