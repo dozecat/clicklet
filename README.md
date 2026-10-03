@@ -54,6 +54,8 @@
 
 **[前往 Releases 下载最新版](https://github.com/dozecat/rightkit/releases)**，打开后把 **RightKit** 拖进「应用程序」文件夹。需要 macOS 13 Ventura 或更高版本。首次启动会弹出一次自检面板，告诉你还缺哪一项，并带你到对应的地方开启。
 
+> **安装包未经 Apple 公证**，macOS 会提示「无法验证开发者」。首次打开请右键点按 RightKit → **打开**，在弹窗里再点一次「打开」；或在「系统设置 → 隐私与安全性」里点「仍要打开」。也可以直接在终端执行 `xattr -dr com.apple.quarantine /Applications/RightKit.app`。
+
 权限列表：
 
 | 项目 | 在哪里开启 |

@@ -1,90 +1,114 @@
 # 发布流程
 
-面向维护者。目标产物是一个已公证、可直接分发的 `RightKit-<版本>.dmg` 及其 `.sha256`。
+面向维护者。目标产物是一个可分发的 `RightKit-<版本>.dmg` 及其 `.sha256`。
 
-## 一次性准备
+## 两种模式
 
-### 1. Developer ID Application 证书
+RightKit 目前走**路径 B**：用本机的 Apple Development 证书签名、**不做公证**。原因是当前 Apple ID 是免费的个人团队（Personal Team），申请不到 Developer ID Application 证书，也无法送公证。
 
-只有 `Apple Development` 证书是不够的：它签出来的包在别人机器上会被 Gatekeeper 拦下，也无法送公证。
+| | 路径 B（当前） | 路径 A（付费会员后） |
+|---|---|---|
+| 签名证书 | Apple Development | Developer ID Application |
+| 公证 | 无 | 有（`notarytool` + `stapler`） |
+| 产物来源 | 直接从 `.xcarchive` 取 app | `xcodebuild -exportArchive` |
+| 用户首次打开 | 需手动放行一次 | 双击即可 |
+| 命令 | `Scripts/package-release.sh --development` | `Scripts/package-release.sh` |
 
-- Apple Developer → Certificates, Identifiers & Profiles → Certificates → **+** → **Developer ID Application**
-- 导出 `.cer` 后双击装入「登录」钥匙串，确认能看到：
+`package-release.sh` 会自动判断：钥匙串里有 Developer ID Application 就走路径 A，否则（或显式传 `--development`）走路径 B。
+
+## 路径 B：不公证发布（当前采用）
+
+### 每次发布
+
+1. 改版本号：`project.yml` 的 `MARKETING_VERSION` 与 `CURRENT_PROJECT_VERSION`，在 `CHANGELOG.md` 补上这一版，提交。
+2. 确认工作区干净：`git status --short`。
+3. 打包：
+
+```bash
+Scripts/package-release.sh --development
+```
+
+产物在 `.build/RightKit-<版本>.dmg`（`.build/` 已忽略，不入库）。
+
+4. 打 tag 并推送：
+
+```bash
+git tag -a v1.0.0 -m "RightKit 1.0.0" && git push origin v1.0.0
+```
+
+5. 建 GitHub Release，上传 `.dmg` 与 `.dmg.sha256`，正文用下面的模板。**正文里必须写明首次打开要手动放行**，README 的下载一节也已写入同样内容。
+6. 发布后核对：README 顶部的版本徽章应从 `no releases or repo not found` 变成版本号——这需要仓库公开且有已发布的 Release。
+
+### 路径 B 必须一起交代/验证的事
+
+- **首次打开被 Gatekeeper 拦下**：这是未公证的必然结果。给用户三条路：右键点按 → 打开；「系统设置 → 隐私与安全性 → 仍要打开」；终端执行 `xattr -dr com.apple.quarantine /Applications/RightKit.app`。README 已写好这段。
+- **必须在另一台 Mac 上实测**：开发签名的构建里，App 与扩展都没有 `embedded.provisionprofile`。主应用不开沙盒，写 `~/Library/Group Containers/` 不成问题；但**扩展是沙盒的**，它的 App Group 访问通常依赖描述文件授权。若扩展拿不到共享容器，右键菜单会根本不出现。自检面板里的 App Group 检查项可直接给出结论。首次对外发布前，请找一台干净的 Mac 走一遍完整流程。
+- **证书有效期**：当前 Apple Development 证书 2027-09-25 到期。到期后需要重新签名并重发，否则新下载的用户会更难打开（已安装的仍可用）。
+- **App 图标与权限**：与路径 A 完全一致，无需改动。
+
+### 什么时候升级到路径 A
+
+加入付费 Apple Developer Program、装好 Developer ID Application 证书后，直接运行 `Scripts/package-release.sh`（不带 `--development`）即可，其余流程不变。
+
+## 路径 A：公证发布
+
+### 一次性准备
+
+1. **Developer ID Application 证书**（需要付费会员，Account Holder 或 Admin 角色）。Xcode → Settings → Accounts → Manage Certificates… → `+` → Developer ID Application；验证：
 
 ```bash
 security find-identity -v -p codesigning | grep "Developer ID Application"
 ```
 
-### 2. 公证凭据
-
-`notarytool` 需要一份存在钥匙串里的凭据（密码是 **App 专用密码**，不是账号密码）：
+2. **公证凭据**（密码是 App 专用密码，不是账号密码）：
 
 ```bash
 xcrun notarytool store-credentials rightkit-notary \
     --apple-id "<你的 Apple ID>" --team-id 6T9RSL7KL6 \
     --password "<App 专用密码>"
 
-xcrun notarytool history --keychain-profile rightkit-notary   # 验证
+xcrun notarytool history --keychain-profile rightkit-notary    # 验证
 ```
 
-### 3. 开发者后台的 App Group
-
-主应用与访达扩展通过 `$(TeamIdentifierPrefix)group.com.dozecat.RightKit` 共享容器，而**扩展是沙盒的**，所以这个 App Group 必须在后台为该 Team 注册，并包含在 Developer ID 的配置文件里。归档后确认：
+3. **开发者后台的 App Group**：扩展是沙盒的，`$(TeamIdentifierPrefix)group.com.dozecat.RightKit` 必须在后台为该 Team 注册，并包含在 Developer ID 配置文件里。归档后确认：
 
 ```bash
 codesign -d --entitlements :- RightKit.app | grep application-groups
 ls RightKit.app/Contents/embedded.provisionprofile
 ```
 
-## 每次发布
+### 每次发布
 
-1. **改版本号**：`project.yml` 里的 `MARKETING_VERSION` 与 `CURRENT_PROJECT_VERSION`，同时在 `CHANGELOG.md` 补上这一版，提交。
-2. **确认工作区干净**：`git status --short`。未提交的改动不会进包，但会让你对不上 tag。
-3. **打包**：
-
-```bash
-Scripts/package-release.sh                   # 完整流程：归档 → 导出 → 公证 → 装订 → DMG
-Scripts/package-release.sh --skip-notarize   # 本地演练，产物不可分发
-```
-
-4. **打 tag 并推送**：
-
-```bash
-git tag -a v1.0.0 -m "RightKit 1.0.0" && git push origin v1.0.0
-```
-
-5. **建 GitHub Release**，上传 `RightKit-1.0.0.dmg` 与 `RightKit-1.0.0.dmg.sha256`，正文用下面的模板。
-6. **发布后核对**：README 顶部的版本徽章应从 `no releases or repo not found` 变成版本号；下载链接可用。徽章依赖公开仓库与已发布的 Release，仓库仍是私有的话这两项对外都不生效。
+1. 改版本号并更新 `CHANGELOG.md`，提交；确认 `git status --short` 干净。
+2. `Scripts/package-release.sh`（自动识别为路径 A）。
+3. 打 tag、建 Release、上传 `.dmg` 与 `.sha256`。
 
 ## 脚本做了什么
 
-前置检查（工具链、Developer ID 证书、公证凭据、`MARKETING_VERSION` 与 `--version` 一致）→ `xcodegen generate` → `xcodebuild archive` → `xcodebuild -exportArchive` → 产物自检 → 用带 `/Applications` 快捷方式的暂存目录做 DMG → `notarytool submit --wait` → `stapler` → `spctl` → SHA-256。中间产物都落在 `.build/`（已被忽略，不会入库）。
+前置检查（工具链、`MARKETING_VERSION` 与 `--version` 一致、按证书选择模式，路径 A 还会校验 `ExportOptions.plist` 与公证凭据）→ `xcodegen generate` → `xcodebuild archive` → 路径 A 走 `-exportArchive`，路径 B 直接从归档取 app → 产物自检 → 用带 `/Applications` 快捷方式的暂存目录做 DMG → 路径 A 送 `notarytool submit --wait` 并 `stapler`，路径 B 打印未公证警告 → SHA-256。中间产物都在 `.build/`。
 
 ## 手动验证清单
 
 ```bash
-APP=.build/export/RightKit.app
+# 路径 B
+APP=.build/RightKit.xcarchive/Products/Applications/RightKit.app
+# 路径 A
+# APP=.build/export/RightKit.app
 
-lipo -archs "$APP/Contents/MacOS/RightKit"                     # 期望 arm64 x86_64
+lipo -archs "$APP/Contents/MacOS/RightKit"                     # 期望 x86_64 arm64
 codesign -d --entitlements :- "$APP" | grep -c get-task-allow  # 期望 0
 codesign --verify --deep --strict "$APP"
 for n in "$APP/Contents/PlugIns/"*.appex "$APP/Contents/XPCServices/"*.xpc; do
     codesign --verify --strict "$n"
 done
+ls "$APP/Contents/Resources/BuiltinTemplates" "$APP/Contents/Resources/BuiltinScripts"
+
+# 仅路径 A
 spctl -a -vvv -t exec "$APP"                                   # source=Notarized Developer ID
 xcrun stapler validate .build/RightKit-1.0.0.dmg
-ls "$APP/Contents/Resources/BuiltinTemplates" "$APP/Contents/Resources/BuiltinScripts"
 ```
 
-**App 图标**：`RightKit/Info.plist` 里**不需要**写图标键。`ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` 会让 actool 产出 `AppIcon.icns`，Xcode 再自动往 Info.plist 注入 `CFBundleIconFile` 与 `CFBundleIconName`。归档实测：
-
-```
-Contents/Resources/AppIcon.icns
-"CFBundleIconFile" => "AppIcon"
-"CFBundleIconName" => "AppIcon"
-```
-
-**Profile 与 App Group**：用 Developer ID 签名后，App 与扩展里应出现 `Contents/embedded.provisionprofile`，它才是 App Group 的授权凭据。本地演练不会有这份 profile，此时沙盒扩展在别人机器上可能拿不到共享容器——`package-release.sh` 会对此给出 warning。
+**App 图标**：`RightKit/Info.plist` 里**不需要**写图标键。`ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` 会让 actool 产出 `AppIcon.icns`，Xcode 再自动往 Info.plist 注入 `CFBundleIconFile` 与 `CFBundleIconName`。
 
 ## 归档产物自检（2026-10-03 实测）
 
@@ -101,30 +125,20 @@ Contents/Resources/AppIcon.icns
 | `get-task-allow` | 不存在 ✓ |
 | 内嵌组件 | `Contents/PlugIns/FinderExtension.appex`、`Contents/XPCServices/ScriptXPCService.xpc` |
 | 内置资源 | `Resources/BuiltinTemplates`（3 个模板）、`Resources/BuiltinScripts`（2 个脚本包） |
-| `-exportArchive -method developer-id` | 失败：`No signing certificate "Developer ID Application" found` —— 这正是发布前必须补上的那一步 |
-
-`package-release.sh` 里的前置检查就是照着这些期望写的。它在**归档之前**就会因为没有 Developer ID 身份而退出——这是有意的：`-exportArchive -method developer-id` 无论如何都需要该证书，跑到一半再失败没有意义。
-
-> **个人团队（Personal Team）发布不了**：免费账号即使已在 Xcode 登录，也申请不到 Developer ID Application 证书，更无法送公证，配置文件还只有 7 天有效期。要出可分发的 Release，必须先把该 Apple ID 加入付费的 Apple Developer Program。用 `defaults read com.apple.dt.Xcode IDEProvisioningTeamByIdentifier` 可以看到当前登录的是哪种团队（`isFreeProvisioningTeam = 1` 即个人团队）。
-
-## 不做公证的退路
-
-没有 Developer ID 证书时只能内部分发，而且第一个用户就会撞上 Gatekeeper。这种情况下：
-
-- 在 README 的下载一节写明「首次打开请右键 → 打开」；
-- 或让用户执行 `xattr -d com.apple.quarantine /Applications/RightKit.app`；
-- **不要**把未公证的包发到公开 Release。
+| 内嵌描述文件 | **无**（开发签名的必然结果，见上文的实测要求） |
+| `-exportArchive -method developer-id` | 失败：`No signing certificate "Developer ID Application" found` —— 路径 A 的前置条件 |
 
 ## 常见失败
 
 | 现象 | 原因与处理 |
 |---|---|
-| `No signing certificate "Developer ID Application" found` | 证书未安装或私钥没导出；见「一次性准备 1」 |
+| 用户反馈「App 已损坏，无法打开」 | 未公证 + 已加隔离属性。让用户右键 → 打开，或 `xattr -dr com.apple.quarantine`；根治办法是走路径 A |
+| 别人机器上右键菜单完全不出现 | 访达扩展未启用；或扩展拿不到 App Group 共享容器（路径 B 的已知风险，用自检面板确认） |
+| `No signing certificate "Developer ID Application" found` | 路径 A 缺少证书；要么申请证书，要么改用 `--development` |
+| `xcodebuild` 报 `sandbox-exec: sandbox_apply: Operation not permitted` | Swift 宏插件服务无法启动（常见于受限沙箱环境）。在正常的本地终端或 Xcode 里构建 |
 | `notarytool` 报 401 / Invalid credentials | 用成了账号密码；重新 `store-credentials` 并改用 App 专用密码 |
 | 公证日志说 `The signature does not include a secure timestamp` | 手工签名漏了 `--timestamp`；用本脚本，`xcodebuild` 会自动加 |
 | 公证日志说某个可执行文件 `not signed` | 扩展或 XPC 没签上；用 `codesign --verify --deep --strict` 定位 |
-| 别人机器上右键菜单不出现 | 访达扩展未启用，或 App 没放进 `/Applications` |
-| 压缩、脚本在别人机器上失败 | 权限未授予，或 Keka 未开启主文件夹访问；见 README 的权限表 |
 | 版本徽章仍是红色 | 仓库私有，或还没有 Release |
 
 ## Release Notes 模板（v1.0.0 草稿）
@@ -144,6 +158,10 @@ Contents/Resources/AppIcon.icns
 - **中英双语**，切换即时生效
 
 **系统要求**：macOS 13 Ventura 或更高版本
+
+**首次打开**：安装包未经 Apple 公证，macOS 会提示「无法验证开发者」。请右键点按
+RightKit → 打开，在弹窗里再点一次「打开」；或在「系统设置 → 隐私与安全性」里点
+「仍要打开」。
 
 下载后把 RightKit 拖进「应用程序」，首次启动会弹出自检面板，逐项告诉你还需要开启
 哪些权限（访达扩展、辅助功能；用 7z 还需要 Keka 的主文件夹访问权限）。
@@ -166,6 +184,10 @@ in Finder's context menu, and only the ones that fit what you selected.
 - **English and Simplified Chinese**, switched instantly
 
 **Requires** macOS 13 Ventura or later.
+
+**First launch**: this build is not notarized, so macOS will say it cannot verify the
+developer. Right-click RightKit, choose Open, then Open again in the dialog — or allow
+it under System Settings → Privacy & Security.
 
 Drag RightKit into your Applications folder; the self-check panel on first launch walks
 through the permissions it still needs (Finder extension, Accessibility, and Keka's home

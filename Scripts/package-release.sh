@@ -1,23 +1,33 @@
 #!/bin/bash
 #
-# Build, sign, notarize and package a RightKit release.
+# Build, sign and package a RightKit release.
 #
-#   Scripts/package-release.sh [--skip-notarize] [--version 1.0.0]
+#   Scripts/package-release.sh [--development] [--skip-notarize] [--version 1.0.0]
+#
+# Two signing modes:
+#
+#   developer-id   Needs a paid Apple Developer Program membership and a
+#                  "Developer ID Application" certificate. The app is exported
+#                  for distribution and notarized, so anyone can open it.
+#                  Chosen automatically when such a certificate is installed.
+#
+#   development    Signs with the local "Apple Development" certificate and
+#                  skips notarization. The build cannot be exported (that needs
+#                  a distribution certificate), so it is taken straight out of
+#                  the archive. Every user has to approve the app once in
+#                  System Settings > Privacy & Security. Forced by
+#                  --development, and used automatically when no Developer ID
+#                  certificate is present.
 #
 # Environment:
 #   TEAM_ID          developer team id             (default: the project's)
 #   NOTARY_PROFILE   notarytool keychain profile  (default: rightkit-notary)
 #   EXPORT_OPTIONS   path to ExportOptions.plist  (default: Scripts/ExportOptions.plist)
 #
-# One-time setup:
-#   1. A "Developer ID Application" certificate in the login keychain.
-#   2. A notarytool credential profile:
-#        xcrun notarytool store-credentials rightkit-notary \
-#            --apple-id <your apple id> --team-id <TEAM_ID> \
-#            --password <app-specific password>
-#
-# The version comes from MARKETING_VERSION in project.yml; --version only
-# exists to assert that a release tag and the project agree.
+# One-time setup for the notarized mode:
+#   xcrun notarytool store-credentials rightkit-notary \
+#       --apple-id <your apple id> --team-id <TEAM_ID> \
+#       --password <app-specific password>
 #
 set -euo pipefail
 
@@ -28,13 +38,15 @@ TEAM_ID="${TEAM_ID:-6T9RSL7KL6}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-rightkit-notary}"
 EXPORT_OPTIONS="${EXPORT_OPTIONS:-Scripts/ExportOptions.plist}"
 
+FORCE_DEVELOPMENT=0
 SKIP_NOTARIZE=0
 REQUESTED_VERSION=""
 while [ $# -gt 0 ]; do
     case "$1" in
+        --development) FORCE_DEVELOPMENT=1 ;;
         --skip-notarize) SKIP_NOTARIZE=1 ;;
         --version) REQUESTED_VERSION="${2:?--version needs a value}"; shift ;;
-        -h|--help) sed -n '3,19p' "$0"; exit 0 ;;
+        -h|--help) sed -n '3,32p' "$0"; exit 0 ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
     shift
@@ -55,29 +67,37 @@ fi
 for tool in xcodegen xcodebuild xcrun hdiutil shasum security; do
     command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 1; }
 done
-[ -f "$EXPORT_OPTIONS" ] || { echo "error: $EXPORT_OPTIONS not found" >&2; exit 1; }
 
-if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
-    echo "error: no 'Developer ID Application' identity in the keychain." >&2
-    echo "       A development identity cannot be notarized. Create the certificate" >&2
-    echo "       in the Apple Developer portal, install it, then run this again." >&2
-    exit 1
+if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
+    HAVE_DEVELOPER_ID=1
+else
+    HAVE_DEVELOPER_ID=0
 fi
 
-if [ "$SKIP_NOTARIZE" = "0" ] && ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
-    echo "error: notarytool profile '$NOTARY_PROFILE' is missing or unusable." >&2
-    echo "       See the setup note at the top of this script." >&2
-    exit 1
+SIGNING="developer-id"
+if [ "$FORCE_DEVELOPMENT" = "1" ] || [ "$HAVE_DEVELOPER_ID" = "0" ]; then
+    SIGNING="development"
+fi
+
+if [ "$SIGNING" = "developer-id" ]; then
+    [ -f "$EXPORT_OPTIONS" ] || { echo "error: $EXPORT_OPTIONS not found" >&2; exit 1; }
+    if [ "$SKIP_NOTARIZE" = "0" ] && ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+        echo "error: notarytool profile '$NOTARY_PROFILE' is missing or unusable." >&2
+        echo "       See the setup note at the top of this script." >&2
+        exit 1
+    fi
+elif [ "$FORCE_DEVELOPMENT" = "0" ]; then
+    echo "note: no 'Developer ID Application' identity in the keychain, so falling" >&2
+    echo "      back to a development-signed, un-notarized build." >&2
 fi
 
 BUILD_DIR="$REPO_ROOT/.build"
 ARCHIVE="$BUILD_DIR/RightKit.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 STAGING="$BUILD_DIR/dmg"
-APP="$EXPORT_DIR/RightKit.app"
 DMG="$BUILD_DIR/RightKit-$VERSION.dmg"
 
-echo "==> RightKit $VERSION  (team $TEAM_ID)"
+echo "==> RightKit $VERSION  (team $TEAM_ID, $SIGNING signing)"
 rm -rf "$ARCHIVE" "$EXPORT_DIR" "$STAGING" "$DMG" "$DMG.sha256"
 
 # ------------------------------------------------------------ build archive
@@ -89,9 +109,17 @@ xcodebuild -project RightKit.xcodeproj -scheme RightKit -configuration Release \
     -derivedDataPath "$BUILD_DIR/dd" -archivePath "$ARCHIVE" \
     archive -allowProvisioningUpdates
 
-echo "==> xcodebuild -exportArchive"
-xcodebuild -exportArchive -archivePath "$ARCHIVE" \
-    -exportOptionsPlist "$EXPORT_OPTIONS" -exportPath "$EXPORT_DIR"
+if [ "$SIGNING" = "developer-id" ]; then
+    echo "==> xcodebuild -exportArchive"
+    xcodebuild -exportArchive -archivePath "$ARCHIVE" \
+        -exportOptionsPlist "$EXPORT_OPTIONS" -exportPath "$EXPORT_DIR"
+    APP="$EXPORT_DIR/RightKit.app"
+else
+    # A development-signed archive cannot be exported for distribution, and it
+    # does not need to be: Products/Applications already holds the signed app.
+    echo "==> taking the app straight out of the archive"
+    APP="$ARCHIVE/Products/Applications/RightKit.app"
+fi
 
 # --------------------------------------------------------- inspect the app
 echo "==> verifying $APP"
@@ -102,10 +130,8 @@ bundle_version="$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/
 
 echo -n "    architectures: "; lipo -archs "$APP/Contents/MacOS/RightKit"
 
-# A release build must not carry the debugging entitlement, or notarization
-# and the resulting Gatekeeper verdict both go wrong.
 if codesign -d --entitlements :- "$APP" 2>/dev/null | grep -q "get-task-allow"; then
-    echo "error: signed with get-task-allow; this is a development build" >&2
+    echo "error: signed with get-task-allow; this is a debug build" >&2
     exit 1
 fi
 
@@ -113,23 +139,20 @@ codesign --verify --deep --strict "$APP"
 codesign -dv --verbose=4 "$APP" 2>&1 | grep -q "TeamIdentifier=$TEAM_ID" || {
     echo "error: app is not signed by team $TEAM_ID" >&2; exit 1; }
 
-# The extension and the XPC service ship inside the app; a broken signature
-# there is what makes the menu silently stop working on someone else's Mac.
 for nested in "$APP/Contents/PlugIns/"*.appex "$APP/Contents/XPCServices/"*.xpc; do
     [ -e "$nested" ] || continue
     codesign --verify --strict "$nested"
     echo "    signed: $(basename "$nested")"
 done
 
-# The sandboxed extension reaches the shared container through an App Group, and
-# on a Developer ID build that group has to be authorised by an embedded
-# profile. Its absence does not fail a local build, but it does break the
-# container on someone else's Mac, so say so loudly.
+# The sandboxed extension reaches the shared container through an App Group,
+# which a distribution build has to authorise with an embedded profile. A local
+# build can get away without one, so this is a warning rather than an error.
 for target in "$APP" "$APP/Contents/PlugIns/"*.appex; do
     [ -e "$target" ] || continue
     if codesign -d --entitlements :- "$target" 2>/dev/null | grep -q "application-groups" &&
        [ ! -f "$target/Contents/embedded.provisionprofile" ]; then
-        echo "warning: $(basename "$target") declares an App Group but has no embedded provisioning profile" >&2
+        echo "    note: $(basename "$target") has an App Group but no embedded profile"
     fi
 done
 
@@ -146,7 +169,18 @@ ln -s /Applications "$STAGING/Applications"
 hdiutil create -volname "RightKit" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
 
 # ------------------------------------------------- notarize and staple
-if [ "$SKIP_NOTARIZE" = "1" ]; then
+if [ "$SIGNING" = "development" ]; then
+    echo
+    echo "!! This DMG is signed with an Apple Development certificate and is NOT"
+    echo "!! notarized. macOS will refuse to open it until each user approves it"
+    echo "!! once: right-click the app, choose Open, then Open again -- or turn it"
+    echo "!! on under System Settings > Privacy & Security."
+    echo "!!"
+    echo "!! The README has to say so, and the DMG must never be presented as a"
+    echo "!! one-click install. Enrolling in the Apple Developer Program and"
+    echo "!! installing a Developer ID certificate removes this step."
+    echo
+elif [ "$SKIP_NOTARIZE" = "1" ]; then
     echo "==> skipping notarization (--skip-notarize): $DMG is NOT distributable"
 else
     echo "==> notarytool submit (this usually takes a few minutes)"
@@ -166,16 +200,17 @@ cat <<EOF
 
 Done.
 
-  1. Create the release on GitHub with the commit this was built from:
+  1. Tag the commit this was built from:
 
        git tag -a v$VERSION -m "RightKit $VERSION"
        git push origin v$VERSION
 
-  2. Upload both assets:
+  2. Upload both assets to the GitHub release:
 
        $DMG
        $DMG.sha256
 
-  3. Paste the release notes for v$VERSION (see docs/RELEASING.md).
+  3. Paste the release notes for v$VERSION (docs/RELEASING.md), and make sure
+     the first-launch instructions still match how this build was signed.
 
 EOF

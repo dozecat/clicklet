@@ -56,6 +56,8 @@ Beyond the list, each item's toggle and order are managed in Settings and reach 
 
 **[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a self-check panel appears once, says what is still missing, and takes you to where each item is switched on.
 
+> **This build is not notarized by Apple**, so macOS will say it cannot verify the developer. To open it the first time, right-click RightKit and choose **Open**, then **Open** again in the dialog — or allow it under **System Settings → Privacy & Security**. You can also run `xattr -dr com.apple.quarantine /Applications/RightKit.app` in Terminal.
+
 What to turn on the first time:
 
 | What | Where |

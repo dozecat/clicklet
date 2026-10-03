@@ -48,6 +48,9 @@ outside the App Store.
 
 - macOS 13 Ventura or later; no macOS 12 support.
 - No automatic updater: install a new build over the old one.
+- The build is signed with an Apple Development certificate and is not
+  notarized, so macOS asks for approval the first time it is opened (see the
+  README). A paid Apple Developer Program membership would remove that step.
 - Finder Sync extensions only apply to registered locations (home, `/Users`,
   `/Volumes`, `/System/Volumes` and iCloud Drive). The Trash, smart folders,
   search results and network volumes are not covered.
