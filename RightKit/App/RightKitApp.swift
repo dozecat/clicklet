@@ -38,25 +38,11 @@ struct RightKitApp: App {
                 }
             }
 
-            // Remove the boilerplate menus SwiftUI generates automatically.
-            //
-            // This app has no notion of documents and has only one fixed-size
-            // settings window, so every item under "File", "View" and "Window Size"
-            // is dead — keeping them only makes people think something is broken.
-            //
-            // Deliberately **kept**: the App menu (About / Settings / Quit), the
-            // Edit menu's Cut/Copy/Paste (needed for selectable text such as paths)
-            // and the Help menu. Both ⌘Q and ⌘, live in the App menu, so removing
-            // menus must not take them out along with it.
-            CommandGroup(replacing: .newItem) {}
-            CommandGroup(replacing: .saveItem) {}
-            CommandGroup(replacing: .importExport) {}
-            CommandGroup(replacing: .printItem) {}
-            CommandGroup(replacing: .undoRedo) {}
-            CommandGroup(replacing: .toolbar) {}
-            CommandGroup(replacing: .sidebar) {}
-            CommandGroup(replacing: .windowSize) {}
-            CommandGroup(replacing: .windowList) {}
+            // Remove the boilerplate menus SwiftUI generates automatically. They
+            // sit in their own Commands type rather than inline: the commands
+            // builder only accepts ten arguments on older SDKs, and this block
+            // had grown past that, so the app no longer compiled with Xcode 16.
+            RemovedMenus()
 
             // The self-check does not take a tab; it is reached from the Help menu —
             // only needed when something goes wrong, invisible the rest of the time.
@@ -87,5 +73,30 @@ struct RightKitApp: App {
             ]
         )
     }
+}
 
+/// The File, Print, Undo and Window menus SwiftUI generates are all dead in an
+/// app with no documents and one fixed-size window: keeping them only makes
+/// people think something is broken.
+///
+/// Deliberately **kept**: the App menu (About / Settings / Quit), the Edit menu's
+/// Cut/Copy/Paste (needed for selectable text such as paths) and the Help menu.
+/// Both ⌘Q and ⌘, live in the App menu, so removing menus must not take them out
+/// along with it.
+///
+/// A separate `Commands` type rather than more entries in `.commands {}` keeps
+/// the caller within the commands builder's ten-argument limit, which older SDKs
+/// still enforce.
+private struct RemovedMenus: Commands {
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {}
+        CommandGroup(replacing: .saveItem) {}
+        CommandGroup(replacing: .importExport) {}
+        CommandGroup(replacing: .printItem) {}
+        CommandGroup(replacing: .undoRedo) {}
+        CommandGroup(replacing: .toolbar) {}
+        CommandGroup(replacing: .sidebar) {}
+        CommandGroup(replacing: .windowSize) {}
+        CommandGroup(replacing: .windowList) {}
+    }
 }
