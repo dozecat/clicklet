@@ -74,6 +74,11 @@ final class BuiltinScriptAssetsTests: XCTestCase {
     }
 
     /// The whole point of the field is that the icon resolves on a real machine.
+    ///
+    /// That can only hold where the application is installed: a CI runner has no
+    /// VS Code, and neither has a contributor who edits in something else. The
+    /// identifier's shape is checked either way, so the test still says something
+    /// on a machine that has none of these apps.
     func testApplicationIconsResolve() throws {
         for package in packages {
             let data = try Data(contentsOf: package.appendingPathComponent("config.json"))
@@ -81,10 +86,17 @@ final class BuiltinScriptAssetsTests: XCTestCase {
             guard let identifier = config.applicationBundleIdentifier else {
                 continue
             }
-            XCTAssertNotNil(
-                NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier),
-                "\(package.lastPathComponent) names \(identifier), which resolves to no application"
+
+            XCTAssertGreaterThanOrEqual(
+                identifier.split(separator: ".").count, 2,
+                "\(package.lastPathComponent) names \(identifier), which is not a bundle identifier"
             )
+
+            guard NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) != nil else {
+                throw XCTSkip(
+                    "\(package.lastPathComponent) names \(identifier), which is not installed here"
+                )
+            }
         }
     }
 
