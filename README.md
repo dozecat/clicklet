@@ -178,4 +178,4 @@ TMPDIR=$PWD/.build/tmp/ xcrun xctest .build/dd/Build/Products/Debug/RightKitTest
 
 ---
 
-需求与设计取舍见 [右键工具功能要求](docs/右键工具功能要求.md)。
+需求与设计取舍见 [右键工具功能设计](docs/右键工具功能设计.md)。

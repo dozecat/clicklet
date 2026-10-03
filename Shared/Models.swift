@@ -165,19 +165,6 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
         return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
     }
 
-    /// Relaunch itself: the new process reads the freshly written language at launch.
-    @MainActor
-    static func relaunchApp() {
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(
-            at: Bundle.main.bundleURL,
-            configuration: configuration
-        ) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
-        }
-    }
-
     /// The name shown in the UI, each written natively in its own language; neither
     /// is translated.
     var displayName: String {

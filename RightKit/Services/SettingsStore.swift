@@ -30,11 +30,9 @@ final class SettingsStore: ObservableObject {
     func showHealthCheck() { showsHealthCheck = true }
     func dismissHealthCheck() { showsHealthCheck = false }
 
-    /// Opens the system settings page for Login Items & Extensions. Extensions moved
-    /// there after Ventura, and the old pane identifier is kept as a fallback. Both
-    /// the General page and the self-check page use it.
+    /// Stores the chosen language and makes the UI follow it at once: the strings are
+    /// looked up while rendering, so nothing here needs a relaunch.
     func setLanguage(_ language: AppLanguage) {
-        let previous = preferences.resolvedLanguage
         var updated = preferences
         updated.language = language
         preferences = updated
