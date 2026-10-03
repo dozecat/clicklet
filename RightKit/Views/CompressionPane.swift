@@ -4,6 +4,8 @@ import SwiftUI
 struct CompressionPane: View {
     @EnvironmentObject private var store: SettingsStore
 
+    @State private var kekaPermission: KekaPermission.State = .unknown
+
     private var compressors: [CompressorAdapter] {
         CompressionService.shared.availableCompressors
     }
@@ -33,6 +35,10 @@ struct CompressionPane: View {
                 }
             }
 
+            if selectedCompressor.identifier == KekaAdapter().identifier {
+                SettingsRow("Keka 权限") { kekaPermissionRow }
+            }
+
             SettingsGroupSeparator()
 
             SettingsRow("可压缩格式") {
@@ -42,6 +48,38 @@ struct CompressionPane: View {
             SettingsRow("可解压格式") {
                 FormatList(formats: selectedCompressor.capabilities.archiveFormats.sorted())
             }
+        }
+    }
+
+    /// Keka is sandboxed and its CLI only reaches locations the user has allowed, so
+    /// without the home-folder permission every 7z action from the menu fails. Showing
+    /// the state is better than letting the user run into that error.
+    @ViewBuilder
+    private var kekaPermissionRow: some View {
+        HStack(spacing: 8) {
+            switch kekaPermission {
+            case .granted:
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                SettingsValue(text: "已就绪")
+            case .missing:
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                SettingsValue(text: "需要在 Keka 里开启「文件访问权限 → 启用主文件夹访问权限」")
+                Button {
+                    NSWorkspace.shared.openApplication(
+                        at: URL(fileURLWithPath: "/Applications/Keka.app"),
+                        configuration: NSWorkspace.OpenConfiguration()
+                    )
+                } label: { L.t("打开 Keka") }
+            case .notInstalled:
+                SettingsValue(text: "未安装")
+            case .unknown:
+                SettingsValue(text: "检查中…")
+            }
+        }
+        .task { kekaPermission = await KekaPermission.check() }
+        .onChange(of: selectedCompressor.identifier) { _ in
+            kekaPermission = .unknown
+            Task { kekaPermission = await KekaPermission.check() }
         }
     }
 
