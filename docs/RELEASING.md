@@ -103,7 +103,9 @@ Contents/Resources/AppIcon.icns
 | 内置资源 | `Resources/BuiltinTemplates`（3 个模板）、`Resources/BuiltinScripts`（2 个脚本包） |
 | `-exportArchive -method developer-id` | 失败：`No signing certificate "Developer ID Application" found` —— 这正是发布前必须补上的那一步 |
 
-`package-release.sh` 里的前置检查就是照着这些期望写的，本地演练（`--skip-notarize`）会用 Apple Development 签名跑通前面所有步骤，只在导出环节停下。
+`package-release.sh` 里的前置检查就是照着这些期望写的。它在**归档之前**就会因为没有 Developer ID 身份而退出——这是有意的：`-exportArchive -method developer-id` 无论如何都需要该证书，跑到一半再失败没有意义。
+
+> **个人团队（Personal Team）发布不了**：免费账号即使已在 Xcode 登录，也申请不到 Developer ID Application 证书，更无法送公证，配置文件还只有 7 天有效期。要出可分发的 Release，必须先把该 Apple ID 加入付费的 Apple Developer Program。用 `defaults read com.apple.dt.Xcode IDEProvisioningTeamByIdentifier` 可以看到当前登录的是哪种团队（`isFreeProvisioningTeam = 1` 即个人团队）。
 
 ## 不做公证的退路
 
