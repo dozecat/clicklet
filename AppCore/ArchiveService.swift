@@ -85,7 +85,7 @@ enum ArchiveService {
         _ urls: [URL],
         in directory: URL,
         format: Format
-    ) async throws -> URL {
+    ) async throws -> URL? {
         let baseName = urls.count == 1
             ? urls[0].deletingPathExtension().lastPathComponent
             : directory.lastPathComponent
@@ -118,18 +118,14 @@ enum ArchiveService {
                 )
             }
         case .sevenZip:
-            guard capabilities.supportsSevenZip else {
-                // The built-in tools cannot make 7z archives; the toolbox hides
-                // this command in that case, so this is a last-resort guard.
-                throw ArchiveError.unsupportedForSelectedTool("7z")
-            }
-            try await discardOutputOnFailure {
-                try await run(
-                    try kekaExecutable(),
-                    ["--cli", "7zz", "a", "-y", output.lastPathComponent] + names,
-                    in: directory
-                )
-            }
+            // macOS has no system 7z writer, and Keka's CLI cannot be used: measured
+            // in a terminal it refuses every path, including /tmp, because it runs in
+            // Keka's sandbox with no user gesture behind the call.
+            //
+            // Handing the files to Keka's own window is the route that works — it is
+            // exactly what dragging files onto Keka does.
+            try await handToKeka(urls)
+            return nil
         }
 
         return output
@@ -167,15 +163,17 @@ enum ArchiveService {
     }
 
     /// Formats the built-in tools can unpack without Keka.
+    /// Extensions the system's bsdtar can read. zip is handled separately by ditto.
     private static let systemExtractable: Set<String> = [
-        "zip", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "txz"
+        "zip", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "txz",
+        "7z", "rar", "lz", "lzma", "zst", "lz4", "br", "cab"
     ]
 
     private static func extract(_ archive: URL, into destination: URL) async throws {
         let fileExtension = archive.pathExtension.lowercased()
 
+        // zip goes through ditto: it keeps resource forks and is what Finder uses.
         if fileExtension == "zip" {
-            // `ditto` keeps resource forks and is what Finder itself uses.
             try await run(
                 URL(fileURLWithPath: "/usr/bin/ditto"),
                 ["-x", "-k", archive.path, destination.path],
@@ -184,15 +182,12 @@ enum ArchiveService {
             return
         }
 
-        if capabilities.supportsSevenZip {
-            try await run(
-                try kekaExecutable(),
-                ["--cli", "7zz", "x", archive.path, "-o\(destination.path)", "-y"],
-                in: destination
-            )
-            return
-        }
-
+        // Everything else goes through the system's bsdtar (libarchive). Measured: it
+        // reads 7z, rar, tar, gz and xz, so Keka is not needed for extraction at all.
+        //
+        // Keka's CLI is deliberately not used here: it runs inside Keka's own app
+        // sandbox and a background call carries no user gesture, so Keka refuses every
+        // path. Reproduced in a terminal — it fails even for /tmp.
         guard systemExtractable.contains(fileExtension) else {
             throw ArchiveError.unsupportedForSelectedTool(".\(fileExtension)")
         }
@@ -249,6 +244,24 @@ enum ArchiveService {
     ///
     /// The arguments reach sh through argv with no string concatenation, so spaces
     /// and Chinese characters in file names are safe.
+    /// Hands the selection to Keka's window — the same thing dragging files onto
+    /// Keka does. Its command line cannot be used; see the note in extract().
+    private static func handToKeka(_ urls: [URL]) async throws {
+        guard let app = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: KekaAdapter().identifier
+        ) else {
+            throw ArchiveError.compressorUnavailable
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        _ = try await NSWorkspace.shared.open(
+            urls,
+            withApplicationAt: app,
+            configuration: configuration
+        )
+    }
+
     private static func run(
         _ executable: URL,
         _ arguments: [String],
