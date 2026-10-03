@@ -134,16 +134,15 @@ final class ActionCoordinator {
 
         Task.detached { [weak self] in
             do {
-                let result = try await ArchiveService.perform(
+                // Nothing is revealed on success, and no notification is posted: the
+                // archive lands in the very folder the menu was opened in, so Finder
+                // already shows it. Being pulled forward added nothing. Failures still
+                // speak, below.
+                _ = try await ArchiveService.perform(
                     kind,
                     urls: urls,
                     in: directory
                 )
-                await MainActor.run {
-                    if let result {
-                        NSWorkspace.shared.activateFileViewerSelecting([result])
-                    }
-                }
             } catch {
                 await self?.presentError(error, title: "压缩 / 解压")
             }

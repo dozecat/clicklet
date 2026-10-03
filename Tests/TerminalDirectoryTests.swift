@@ -1,5 +1,4 @@
 import XCTest
-@testable import RightKit
 
 /// The terminal path used to be computed inline as "parent of the selection", which
 /// sent a right-clicked folder's terminal one level up.
