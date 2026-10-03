@@ -211,7 +211,11 @@ fi
 
 # --------------------------------------------------------------- checksums
 echo "==> checksums"
-shasum -a 256 "$DMG" | tee "$DMG.sha256"
+# The file name is written bare, so `shasum -a 256 -c` works for whoever
+# downloads the two files side by side. An absolute path would only verify on
+# the machine that built it.
+( cd "$BUILD_DIR" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256" )
+cat "$DMG.sha256"
 
 cat <<EOF
 
