@@ -70,11 +70,8 @@ struct CompressionPane: View {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 SettingsValue(text: "需要在 Keka 里开启「文件访问权限 → 启用主文件夹访问权限」")
                 Button {
-                    NSWorkspace.shared.openApplication(
-                        at: URL(fileURLWithPath: "/Applications/Keka.app"),
-                        configuration: NSWorkspace.OpenConfiguration()
-                    )
-                } label: { L.t("打开 Keka") }
+                    Task { await KekaLauncher.openSettings() }
+                } label: { L.t("打开 Keka 设置") }
             case .notInstalled:
                 SettingsValue(text: "未安装")
             case .unknown:
