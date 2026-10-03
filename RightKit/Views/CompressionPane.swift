@@ -51,6 +51,11 @@ struct CompressionPane: View {
         }
     }
 
+    private func refreshKekaPermission() async {
+        kekaPermission = .unknown
+        kekaPermission = await KekaPermission.check()
+    }
+
     /// Keka is sandboxed and its CLI only reaches locations the user has allowed, so
     /// without the home-folder permission every 7z action from the menu fails. Showing
     /// the state is better than letting the user run into that error.
@@ -76,10 +81,15 @@ struct CompressionPane: View {
                 SettingsValue(text: "检查中…")
             }
         }
-        .task { kekaPermission = await KekaPermission.check() }
+        .onAppear { Task { await refreshKekaPermission() } }
         .onChange(of: selectedCompressor.identifier) { _ in
-            kekaPermission = .unknown
-            Task { kekaPermission = await KekaPermission.check() }
+            Task { await refreshKekaPermission() }
+        }
+        // Coming back from Keka, where the setting lives, is the flow this is for.
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+        ) { _ in
+            Task { await refreshKekaPermission() }
         }
     }
 

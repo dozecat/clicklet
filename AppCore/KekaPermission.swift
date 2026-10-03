@@ -29,8 +29,10 @@ enum KekaPermission {
         // setting is "access to the home folder", and ~/Library may be reachable
         // regardless, which would make the probe report success while the setting
         // is off. The folder is temporary and removed below.
+        // A unique name per run: the pane can trigger this from more than one place,
+        // and two runs sharing a folder would delete each other's files.
         let directory = fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent(".rightkit-keka-probe", isDirectory: true)
+            .appendingPathComponent(".rightkit-keka-probe-\(UUID().uuidString)", isDirectory: true)
 
         try? fileManager.removeItem(at: directory)
         guard (try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)) != nil else {
