@@ -25,8 +25,12 @@ enum KekaPermission {
         }
 
         let fileManager = FileManager.default
+        // Directly under the home folder, not somewhere inside ~/Library: the
+        // setting is "access to the home folder", and ~/Library may be reachable
+        // regardless, which would make the probe report success while the setting
+        // is off. The folder is temporary and removed below.
         let directory = fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Caches/RightKit/keka-permission-probe", isDirectory: true)
+            .appendingPathComponent(".rightkit-keka-probe", isDirectory: true)
 
         try? fileManager.removeItem(at: directory)
         guard (try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)) != nil else {
@@ -55,9 +59,13 @@ enum KekaPermission {
             return .granted
         }
 
-        // Only the sandbox refusal counts as "needs permission". Anything else — a
-        // corrupt archive, a full disk — is not something the user can fix in Keka.
+        // Anything other than success means the command line could not do the job,
+        // so the permission is not in place. An earlier version of this treated any
+        // failure whose text did not say "no file access" as success, and the sandbox
+        // also refuses with errno=2 — so turning the setting off still reported
+        // "already set up". Only proven success counts now.
         let output = String(data: data, encoding: .utf8) ?? ""
-        return output.contains("no file access") ? .missing : .granted
+        DiagnosticsLog.log("keka permission probe failed (\(process.terminationStatus)): \(output.suffix(200))")
+        return .missing
     }
 }
