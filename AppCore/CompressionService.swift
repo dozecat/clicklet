@@ -110,16 +110,20 @@ final class CompressionService {
         adapters
     }
 
-    /// The compressor in force: the user's choice, else the first installed one.
+    /// The compressor in force: the user's choice, else macOS's own tools.
     var selectedCompressor: CompressorAdapter {
         compressor(for: AppGroupStore.loadPreferences())
     }
 
     /// Resolves the choice against a specific preferences value, so callers that
     /// hold unsaved state see the same answer this service would.
+    ///
+    /// With nothing chosen the system's own tools are used, not the first installed
+    /// app. A fresh install and a factory reset therefore never depend on a
+    /// third-party app being present, or on it having been granted file access.
     func compressor(for preferences: AppPreferences) -> CompressorAdapter {
         adapters.first { $0.identifier == preferences.compressorIdentifier }
-            ?? adapters.first { $0.isInstalled }
+            ?? adapters.first { $0.identifier == SystemArchiveAdapter().identifier }
             ?? adapters[0]
     }
 

@@ -109,13 +109,23 @@ enum ArchiveService {
 
         switch format {
         case .zip:
-            // `-r` for folders, `-X` to skip Finder metadata.
+            // The chosen compressor decides here exactly as it does for 7z: pick Keka
+            // and Keka writes the zip; pick the system tools and `zip` does, where -r
+            // walks folders and -X skips Finder metadata.
             try await discardOutputOnFailure {
-                try await run(
-                    URL(fileURLWithPath: "/usr/bin/zip"),
-                    ["-r", "-X", output.lastPathComponent] + names,
-                    in: directory
-                )
+                if usesKeka {
+                    try await run(
+                        try kekaExecutable(),
+                        ["--cli", "7zz", "a", "-tzip", "-y", output.lastPathComponent] + names,
+                        in: directory
+                    )
+                } else {
+                    try await run(
+                        URL(fileURLWithPath: "/usr/bin/zip"),
+                        ["-r", "-X", output.lastPathComponent] + names,
+                        in: directory
+                    )
+                }
             }
         case .sevenZip:
             guard capabilities.supportsSevenZip else {
@@ -176,7 +186,20 @@ enum ArchiveService {
     private static func extract(_ archive: URL, into destination: URL) async throws {
         let fileExtension = archive.pathExtension.lowercased()
 
-        // zip goes through ditto: it keeps resource forks and is what Finder uses.
+        // The chosen compressor decides, the same way it does for compression: choose
+        // Keka and Keka unpacks, choose the system tools and they do.
+        if usesKeka, capabilities.archiveFormats.contains(fileExtension) {
+            try await run(
+                try kekaExecutable(),
+                ["--cli", "7zz", "x", archive.path, "-o\(destination.path)", "-y"],
+                in: destination
+            )
+            return
+        }
+
+        // macOS's own tools. `ditto` keeps resource forks and is what Finder uses for
+        // zip; `bsdtar` (libarchive) reads 7z, rar, tar, gz and xz, so the system
+        // option works with no third-party app involved at all.
         if fileExtension == "zip" {
             try await run(
                 URL(fileURLWithPath: "/usr/bin/ditto"),
@@ -186,10 +209,6 @@ enum ArchiveService {
             return
         }
 
-        // Everything else goes through the system's bsdtar (libarchive). Measured: it
-        // reads 7z, rar, tar, gz and xz, so extraction never depends on Keka — whose
-        // command line only has access to some locations (the Desktop works, /tmp and
-        // the user's working directories do not).
         guard systemExtractable.contains(fileExtension) else {
             throw ArchiveError.unsupportedForSelectedTool(".\(fileExtension)")
         }
@@ -199,6 +218,12 @@ enum ArchiveService {
             ["-xf", archive.path, "-C", destination.path],
             in: destination
         )
+    }
+
+    /// Whether the compressor chosen in the settings window is Keka. The menu follows
+    /// this for both directions: compression and extraction.
+    private static var usesKeka: Bool {
+        CompressionService.shared.selectedCompressor.identifier == KekaAdapter().identifier
     }
 
     /// Capabilities of the compressor currently chosen in the settings window.
