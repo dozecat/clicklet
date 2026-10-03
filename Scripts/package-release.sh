@@ -53,7 +53,7 @@ while [ $# -gt 0 ]; do
 done
 
 # ---------------------------------------------------------------- preflight
-PROJECT_VERSION="$(sed -nE 's/^[[:space:]]*MARKETING_VERSION:[[:space:]]*"(.*)".*/\1/p' project.yml | head -1)"
+PROJECT_VERSION="$(awk -F'"' '/^[[:space:]]*MARKETING_VERSION:/ { print $2; exit }' project.yml)"
 if [ -z "$PROJECT_VERSION" ]; then
     echo "error: could not read MARKETING_VERSION from project.yml" >&2
     exit 1
@@ -68,11 +68,14 @@ for tool in xcodegen xcodebuild xcrun hdiutil shasum security; do
     command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 1; }
 done
 
-if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
-    HAVE_DEVELOPER_ID=1
-else
-    HAVE_DEVELOPER_ID=0
-fi
+# Matched with a shell case, not `| grep -q`: under `set -o pipefail` an early
+# exit from grep can make the pipeline report a failure and send the script down
+# the development path even though a Developer ID identity is installed.
+keychain_identities="$(security find-identity -v -p codesigning 2>/dev/null || true)"
+case "$keychain_identities" in
+    *"Developer ID Application"*) HAVE_DEVELOPER_ID=1 ;;
+    *) HAVE_DEVELOPER_ID=0 ;;
+esac
 
 SIGNING="developer-id"
 if [ "$FORCE_DEVELOPMENT" = "1" ] || [ "$HAVE_DEVELOPER_ID" = "0" ]; then
@@ -130,14 +133,26 @@ bundle_version="$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/
 
 echo -n "    architectures: "; lipo -archs "$APP/Contents/MacOS/RightKit"
 
-if codesign -d --entitlements :- "$APP" 2>/dev/null | grep -q "get-task-allow"; then
-    echo "error: signed with get-task-allow; this is a debug build" >&2
-    exit 1
-fi
+# codesign's output is captured before it is matched. Piping into `grep -q` would
+# end the pipe as soon as grep matched, and with `set -o pipefail` the SIGPIPE
+# codesign then takes makes the whole pipeline look like a failure -- which is how
+# a correctly signed build gets reported as unsigned.
+app_entitlements="$(codesign -d --entitlements :- "$APP" 2>/dev/null || true)"
+case "$app_entitlements" in
+    *get-task-allow*)
+        echo "error: signed with get-task-allow; this is a debug build" >&2
+        exit 1 ;;
+esac
 
 codesign --verify --deep --strict "$APP"
-codesign -dv --verbose=4 "$APP" 2>&1 | grep -q "TeamIdentifier=$TEAM_ID" || {
-    echo "error: app is not signed by team $TEAM_ID" >&2; exit 1; }
+
+signing_info="$(codesign -dv --verbose=4 "$APP" 2>&1 || true)"
+case "$signing_info" in
+    *"TeamIdentifier=$TEAM_ID"*) ;;
+    *)
+        echo "error: app is not signed by team $TEAM_ID" >&2
+        exit 1 ;;
+esac
 
 for nested in "$APP/Contents/PlugIns/"*.appex "$APP/Contents/XPCServices/"*.xpc; do
     [ -e "$nested" ] || continue
@@ -150,10 +165,12 @@ done
 # build can get away without one, so this is a warning rather than an error.
 for target in "$APP" "$APP/Contents/PlugIns/"*.appex; do
     [ -e "$target" ] || continue
-    if codesign -d --entitlements :- "$target" 2>/dev/null | grep -q "application-groups" &&
-       [ ! -f "$target/Contents/embedded.provisionprofile" ]; then
-        echo "    note: $(basename "$target") has an App Group but no embedded profile"
-    fi
+    target_entitlements="$(codesign -d --entitlements :- "$target" 2>/dev/null || true)"
+    case "$target_entitlements" in
+        *application-groups*)
+            [ -f "$target/Contents/embedded.provisionprofile" ] ||
+                echo "    note: $(basename "$target") has an App Group but no embedded profile" ;;
+    esac
 done
 
 for resource in BuiltinTemplates BuiltinScripts; do
