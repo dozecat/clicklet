@@ -85,7 +85,7 @@ enum ArchiveService {
         _ urls: [URL],
         in directory: URL,
         format: Format
-    ) async throws -> URL? {
+    ) async throws -> URL {
         let baseName = urls.count == 1
             ? urls[0].deletingPathExtension().lastPathComponent
             : directory.lastPathComponent
@@ -118,14 +118,18 @@ enum ArchiveService {
                 )
             }
         case .sevenZip:
-            // macOS has no system 7z writer, and Keka's CLI cannot be used: measured
-            // in a terminal it refuses every path, including /tmp, because it runs in
-            // Keka's sandbox with no user gesture behind the call.
-            //
-            // Handing the files to Keka's own window is the route that works — it is
-            // exactly what dragging files onto Keka does.
-            try await handToKeka(urls)
-            return nil
+            guard capabilities.supportsSevenZip else {
+                // The built-in tools cannot make 7z archives; the toolbox hides
+                // this command in that case, so this is a last-resort guard.
+                throw ArchiveError.unsupportedForSelectedTool("7z")
+            }
+            try await discardOutputOnFailure {
+                try await run(
+                    try kekaExecutable(),
+                    ["--cli", "7zz", "a", "-y", output.lastPathComponent] + names,
+                    in: directory
+                )
+            }
         }
 
         return output
@@ -183,11 +187,9 @@ enum ArchiveService {
         }
 
         // Everything else goes through the system's bsdtar (libarchive). Measured: it
-        // reads 7z, rar, tar, gz and xz, so Keka is not needed for extraction at all.
-        //
-        // Keka's CLI is deliberately not used here: it runs inside Keka's own app
-        // sandbox and a background call carries no user gesture, so Keka refuses every
-        // path. Reproduced in a terminal — it fails even for /tmp.
+        // reads 7z, rar, tar, gz and xz, so extraction never depends on Keka — whose
+        // command line only has access to some locations (the Desktop works, /tmp and
+        // the user's working directories do not).
         guard systemExtractable.contains(fileExtension) else {
             throw ArchiveError.unsupportedForSelectedTool(".\(fileExtension)")
         }
@@ -244,24 +246,6 @@ enum ArchiveService {
     ///
     /// The arguments reach sh through argv with no string concatenation, so spaces
     /// and Chinese characters in file names are safe.
-    /// Hands the selection to Keka's window — the same thing dragging files onto
-    /// Keka does. Its command line cannot be used; see the note in extract().
-    private static func handToKeka(_ urls: [URL]) async throws {
-        guard let app = NSWorkspace.shared.urlForApplication(
-            withBundleIdentifier: KekaAdapter().identifier
-        ) else {
-            throw ArchiveError.compressorUnavailable
-        }
-
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        _ = try await NSWorkspace.shared.open(
-            urls,
-            withApplicationAt: app,
-            configuration: configuration
-        )
-    }
-
     private static func run(
         _ executable: URL,
         _ arguments: [String],
