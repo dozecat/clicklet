@@ -44,7 +44,13 @@ enum KekaPermission {
         let process = Process()
         process.executableURL = app
             .appendingPathComponent("Contents/MacOS/Keka")
-        process.arguments = ["--cli", "7zz", "a", "-y", "probe.7z", "probe.txt"]
+        // Absolute paths for both the archive and the input. Relative names relied on
+        // the child's working directory being honoured, and the log showed it is not:
+        // the probe failed with "Add new data to archive: 0 files, 0 bytes" and exit 1
+        // — 7zz ran, but never saw the file. That is not a permission refusal, which
+        // would have said "no file access" and exited 2.
+        let archive = directory.appendingPathComponent("probe.7z")
+        process.arguments = ["--cli", "7zz", "a", "-y", archive.path, sample.path]
         process.currentDirectoryURL = directory
 
         let pipe = Pipe()
@@ -65,7 +71,12 @@ enum KekaPermission {
         // also refuses with errno=2 — so turning the setting off still reported
         // "already set up". Only proven success counts now.
         let output = String(data: data, encoding: .utf8) ?? ""
-        DiagnosticsLog.log("keka permission probe failed (\(process.terminationStatus)): \(output.suffix(200))")
+        let reason = output.contains("no file access")
+            ? "refused by Keka's sandbox"
+            : "7zz did not fail on permissions"
+        DiagnosticsLog.log(
+            "keka permission probe failed (\(process.terminationStatus), \(reason)): \(output.suffix(200))"
+        )
         return .missing
     }
 }
