@@ -268,9 +268,10 @@ final class ActionCoordinator {
     /// Opens Terminal at the folder the action came from. Only the main app can
     /// do this: the extension is sandboxed.
     private func openInTerminal(for request: FinderActionRequest) {
-        let directory = request.selectedPaths.first
-            .map { URL(fileURLWithPath: $0).deletingLastPathComponent() }
-            ?? URL(fileURLWithPath: request.directoryPath, isDirectory: true)
+        let directory = TerminalTarget.directory(
+            selectedPaths: request.selectedPaths,
+            directoryPath: request.directoryPath
+        )
 
         guard let terminal = NSWorkspace.shared.urlForApplication(
             withBundleIdentifier: ToolboxCatalog.terminalBundleIdentifier
