@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Export options for `xcodebuild -exportArchive` when shipping a notarized
+  build outside the App Store. Used by Scripts/package-release.sh.
+-->
+<plist version="1.0">
+<dict>
+	<!-- Developer ID distribution: notarized, no App Store. -->
+	<key>method</key>
+	<string>developer-id</string>
+	<!-- Must match DEVELOPMENT_TEAM in project.yml. -->
+	<key>teamID</key>
+	<string>6T9RSL7KL6</string>
+	<!-- Let Xcode pick the Developer ID Application identity and profile. -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>destination</key>
+	<string>export</string>
+</dict>
+</plist>

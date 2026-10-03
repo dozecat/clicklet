@@ -1,0 +1,41 @@
+name: CI
+
+# RightKit.xcodeproj is generated from project.yml and is not committed, so
+# every job starts by regenerating it. That is what keeps project.yml honest:
+# if a source file, a setting or a target is added only to the pbxproj, this
+# job fails on a clean checkout.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Show the toolchain
+        run: xcodebuild -version
+
+      # Signing is disabled: the runner has no Developer ID certificate, and
+      # the linker still ad-hoc signs arm64 binaries, which is enough to load
+      # the test bundle. Release signing is Scripts/package-release.sh's job.
+      - name: Build and run the unit tests
+        run: |
+          xcodebuild test \
+            -project RightKit.xcodeproj \
+            -scheme RightKit \
+            -destination 'platform=macOS' \
+            -derivedDataPath .build/dd \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""

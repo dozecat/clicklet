@@ -54,7 +54,7 @@ Beyond the list, each item's toggle and order are managed in Settings and reach 
 
 ## 📦 Download & Install
 
-**[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. On first launch a self-check panel appears once, says what is still missing, and takes you to where each item is switched on.
+**[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a self-check panel appears once, says what is still missing, and takes you to where each item is switched on.
 
 What to turn on the first time:
 
@@ -66,6 +66,8 @@ What to turn on the first time:
 | **Notifications** (optional) | The prompt on first run; reports what compress, extract, and scripts did |
 
 > On older versions of macOS the Finder extension lives under **Privacy & Security → Extensions**. When you are not sure what is missing, open **Check Status…** from the menu bar icon.
+
+**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag RightKit to the Trash — scripts, templates and logs live in `~/Library/Application Support/RightKit/` and `~/Library/Logs/RightKit/` if you want them gone too.
 
 ## 🧩 Scripts
 

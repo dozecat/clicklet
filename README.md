@@ -52,7 +52,7 @@
 
 ## 📦 下载与安装
 
-**[前往 Releases 下载最新版](https://github.com/dozecat/rightkit/releases)**，打开后把 **RightKit** 拖进「应用程序」文件夹。首次启动会弹出一次自检面板，告诉你还缺哪一项，并带你到对应的地方开启。
+**[前往 Releases 下载最新版](https://github.com/dozecat/rightkit/releases)**，打开后把 **RightKit** 拖进「应用程序」文件夹。需要 macOS 13 Ventura 或更高版本。首次启动会弹出一次自检面板，告诉你还缺哪一项，并带你到对应的地方开启。
 
 权限列表：
 
@@ -64,6 +64,8 @@
 | **通知**（可选） | 首次运行时的系统弹窗，用来反馈压缩、解压与脚本的结果 |
 
 > 旧版 macOS 中，访达扩展在「隐私与安全性 → 扩展」下开启。拿不准缺哪一项时，从菜单栏图标进入「检查运行状态…」。
+
+**更新**：下载新版本覆盖安装即可，当前版本不含自动更新。**卸载**：关掉访达扩展，把 RightKit 拖进废纸篓；脚本、模板与日志分别在 `~/Library/Application Support/RightKit/` 与 `~/Library/Logs/RightKit/`，需要时一并删除。
 
 ## 🧩 脚本扩展
 

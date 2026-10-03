@@ -55,3 +55,4 @@ Scripts/reload-finder-extension.sh
 ## 相关文档
 
 - [设计文档](DESIGN.md)：功能边界、沙盒约束与进程通信的完整设计
+- [发布流程](RELEASING.md)：签名、公证、打包 DMG 与 Release 清单
