@@ -106,10 +106,9 @@ struct ToolboxPane: View {
 
     private func applicationBundleIdentifier(for item: ToolboxItem) -> String? {
         if item.id.usesCompressorIcon {
-            return store.preferences.compressorIdentifier
-                ?? CompressionService.shared.availableCompressors
-                    .first { $0.isInstalled }?
-                    .identifier
+            // Same resolution the settings window and the actions use, so the icon can
+            // never disagree with the compressor actually in force.
+            return CompressionService.shared.compressor(for: store.preferences).identifier
         }
 
         if item.id == .openInTerminal {

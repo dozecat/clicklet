@@ -108,11 +108,11 @@ struct CompressionPane: View {
 
     private var selection: Binding<String> {
         Binding(
-            get: {
-                store.preferences.compressorIdentifier
-                    ?? compressors.first(where: { $0.isInstalled })?.identifier
-                    ?? ""
-            },
+            // Resolved through the service, exactly as the icon above is. Repeating the
+            // fallback here is how the picker came to show Keka while the icon showed
+            // the system tools: after a factory reset the preference is nil, and this
+            // used to fall back to "first installed", which is Keka.
+            get: { CompressionService.shared.compressor(for: store.preferences).identifier },
             set: { store.setCompressor($0) }
         )
     }
