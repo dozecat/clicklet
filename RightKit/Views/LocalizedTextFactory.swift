@@ -14,9 +14,4 @@ enum L {
         // Source language: the key is the text, so there is no bundle to consult.
         return Text(verbatim: key)
     }
-
-    /// For places that are not views, such as an NSMenuItem title.
-    static func s(_ key: String) -> String {
-        LocalizedText.string(key, language: LocalizedText.currentLanguage)
-    }
 }
