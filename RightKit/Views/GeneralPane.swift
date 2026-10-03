@@ -29,7 +29,9 @@ struct GeneralPane: View {
                             // "Follow System" needs translating; "Simplified Chinese"
                             // and "English" are written natively in their own languages
                             // and are not in the catalog, so they display as-is.
-                            Text(LocalizedStringKey(language.displayName)).tag(language)
+                            // Language names are shown in their own language on purpose, so they must not
+                            // be looked up as translation keys.
+                            Text(verbatim: language.displayName).tag(language)
                         }
                     }
                     .labelsHidden()

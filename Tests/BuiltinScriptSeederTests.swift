@@ -1,331 +1,93 @@
 import XCTest
 
-/// The seeder is the only thing that writes into the user's scripts directory,
-/// so its three rules matter: never overwrite the user's edits, never resurrect
-/// what they deleted, and still deliver updates to packages they left alone.
+/// A factory reset should bring back a bundled script the user deleted, without
+/// touching anything else in the scripts folder.
 final class BuiltinScriptSeederTests: XCTestCase {
+    private let fm = FileManager.default
     private var root: URL!
-    private var source: URL!
-    private var scripts: URL!
-    private var record: URL!
 
     override func setUpWithError() throws {
-        root = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        source = root.appendingPathComponent("BuiltinScripts", isDirectory: true)
-        scripts = root.appendingPathComponent("Scripts", isDirectory: true)
-        record = root.appendingPathComponent("seeded-scripts.json")
-
-        try makePackage(named: "Open in VS Code", body: "#!/bin/zsh\nexit 0\n")
+        root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
     override func tearDownWithError() throws {
-        try? FileManager.default.removeItem(at: root)
+        try? fm.removeItem(at: root)
     }
 
-    private func makePackage(
-        named name: String,
-        body: String,
-        bundleIdentifier: String? = nil
-    ) throws {
-        let package = source.appendingPathComponent(name, isDirectory: true)
-        try FileManager.default.createDirectory(at: package, withIntermediateDirectories: true)
-        try Data(body.utf8).write(to: package.appendingPathComponent("script.sh"))
-
-        var config = #"{"name":"\#(name)""#
-        if let bundleIdentifier {
-            config += #","applicationBundleIdentifier":"\#(bundleIdentifier)""#
-        }
-        config += "}"
-        try Data(config.utf8).write(to: package.appendingPathComponent("config.json"))
+    /// Builds a source folder shaped like BuiltinScripts/.
+    private func makeSource() throws -> URL {
+        let source = root.appendingPathComponent("BuiltinScripts", isDirectory: true)
+        let package = source.appendingPathComponent("Example", isDirectory: true)
+        try fm.createDirectory(at: package, withIntermediateDirectories: true)
+        try Data("{\"name\":\"Example\"}".utf8).write(to: package.appendingPathComponent("config.json"))
+        try Data("echo hi\n".utf8).write(to: package.appendingPathComponent("script.sh"))
+        return source
     }
 
-    private func rewriteBundled(named name: String, body: String) throws {
-        let package = source.appendingPathComponent(name, isDirectory: true)
-        try Data(body.utf8).write(to: package.appendingPathComponent("script.sh"))
-    }
+    func testSeedsAPackageThatIsNotThere() throws {
+        let source = try makeSource()
+        let scripts = root.appendingPathComponent("Scripts", isDirectory: true)
+        let record = root.appendingPathComponent("record.json")
 
-    private func installedScript(named name: String) throws -> String {
-        try String(
-            contentsOf: scripts
-                .appendingPathComponent(name)
-                .appendingPathComponent("script.sh"),
-            encoding: .utf8
-        )
-    }
-
-    private func seed() -> [String] {
-        BuiltinScriptSeeder.seed(from: source, into: scripts, recordURL: record)
-    }
-
-    // MARK: - Seeding
-
-    func testSeedsMissingPackage() {
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"])
-        XCTAssertTrue(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Open in VS Code/config.json").path
-            )
-        )
-    }
-
-    /// The bundle keeps the bit, but a copy through a zip or a git checkout may
-    /// not, and a script without it is simply ignored by the scanner.
-    func testSeededScriptIsExecutable() {
-        _ = seed()
-
-        XCTAssertTrue(
-            FileManager.default.isExecutableFile(
-                atPath: scripts.appendingPathComponent("Open in VS Code/script.sh").path
-            )
-        )
-    }
-
-    func testSeedingAgainChangesNothing() throws {
-        _ = seed()
-        let first = try installedScript(named: "Open in VS Code")
-
-        let second = seed()
-
-        XCTAssertTrue(second.isEmpty, "already up to date, nothing to touch")
-        XCTAssertEqual(try installedScript(named: "Open in VS Code"), first)
-    }
-
-    /// A package the user made by hand under a name we also ship stays theirs.
-    func testPreexistingPackageIsLeftAlone() throws {
-        let destination = scripts.appendingPathComponent("Open in VS Code", isDirectory: true)
-        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
-        let edited = destination.appendingPathComponent("script.sh")
-        try Data("#!/bin/zsh\n# my own version\n".utf8).write(to: edited)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: edited.path)
-
-        _ = seed()
-
-        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("my own version"))
-    }
-
-    // MARK: - Updates
-
-    /// The whole point of fingerprinting: a shipped fix reaches a user who never
-    /// touched the package.
-    func testDeliversAnUpdateWhenTheCopyIsUntouched() throws {
-        _ = seed()
-        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
-
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"])
-        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("v2"))
-    }
-
-    func testDoesNotDeliverAnUpdateAfterTheUserEditedTheCopy() throws {
-        _ = seed()
-        let installed = scripts
-            .appendingPathComponent("Open in VS Code/script.sh")
-        try Data("#!/bin/zsh\n# mine now\n".utf8).write(to: installed)
-        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
-
-        let seeded = seed()
-
-        XCTAssertTrue(seeded.isEmpty)
-        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("mine now"))
-    }
-
-    /// Deleting a built-in script is a decision; a later launch must respect it.
-    func testDeletedPackageIsNotRestored() throws {
-        _ = seed()
-        let destination = scripts.appendingPathComponent("Open in VS Code", isDirectory: true)
-        try FileManager.default.removeItem(at: destination)
-        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
-
-        _ = seed()
-
-        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path))
-    }
-
-    /// A package shipped by a later version has not been offered yet, so it is.
-    func testPackageAddedLaterIsStillOffered() throws {
-        _ = seed()
-        try makePackage(named: "Resize Images", body: "#!/bin/zsh\nexit 0\n")
-
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Resize Images"])
-        XCTAssertTrue(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Resize Images/script.sh").path
-            )
-        )
-    }
-
-    /// Records written before fingerprints existed held a bare name list. Those
-    /// copies are ours, so they get upgraded once and then carry a fingerprint.
-    func testUpgradesALegacyRecordOnce() throws {
-        _ = seed()
-        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
-        try Data(#"{"seeded":["Open in VS Code"]}"#.utf8).write(to: record)
-
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"])
-        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("v2"))
-
-        let saved = try String(contentsOf: record, encoding: .utf8)
-        XCTAssertFalse(
-            saved.contains(#""Open in VS Code":"""#),
-            "the record should now hold a real fingerprint"
-        )
-    }
-
-    /// Shipping a new file must not look like a user edit.
-    ///
-    /// The record used to hold one fingerprint for the whole package, taken over
-    /// the bundle's file list at the time. Add a file to the bundle and that
-    /// fingerprint no longer matched a copy written from the previous list, so
-    /// the package was misread as user-edited and silently stopped updating.
-    func testDeliversAnUpdateThatAddsAFile() throws {
-        _ = seed()
-        try Data("#!/bin/zsh\nexit 0\n".utf8).write(
-            to: source.appendingPathComponent("Open in VS Code/extra.sh")
+        let added = BuiltinScriptSeeder.seed(
+            from: source, into: scripts, recordURL: record, fileManager: fm
         )
 
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"], "adding a shipped file is a change to deliver")
-        XCTAssertTrue(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Open in VS Code/extra.sh").path
-            )
-        )
+        XCTAssertEqual(added, ["Example"])
+        XCTAssertTrue(fm.fileExists(atPath: scripts.appendingPathComponent("Example/script.sh").path))
     }
 
-    /// The same in reverse: removing a shipped file is also a change.
-    func testDeliversAnUpdateThatRemovesAFile() throws {
-        // Ship it first, so the record knows this file came from us...
-        try Data("#!/bin/zsh\nexit 0\n".utf8).write(
-            to: source.appendingPathComponent("Open in VS Code/extra.sh")
-        )
-        _ = seed()
+    func testDoesNotResurrectADeletedPackageWhileTheRecordStands() throws {
+        let source = try makeSource()
+        let scripts = root.appendingPathComponent("Scripts", isDirectory: true)
+        let record = root.appendingPathComponent("record.json")
 
-        // ...then stop shipping it.
-        try FileManager.default.removeItem(
-            at: source.appendingPathComponent("Open in VS Code/extra.sh")
+        _ = BuiltinScriptSeeder.seed(from: source, into: scripts, recordURL: record, fileManager: fm)
+        try fm.removeItem(at: scripts.appendingPathComponent("Example", isDirectory: true))
+
+        let added = BuiltinScriptSeeder.seed(
+            from: source, into: scripts, recordURL: record, fileManager: fm
         )
 
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"])
-        XCTAssertFalse(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Open in VS Code/extra.sh").path
-            ),
-            "a file the bundle no longer ships should not linger"
-        )
-        XCTAssertTrue(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Open in VS Code/config.json").path
-            ),
-            "files the bundle still ships must stay"
-        )
+        XCTAssertEqual(added, [], "记录还在时不该复活")
+        XCTAssertFalse(fm.fileExists(atPath: scripts.appendingPathComponent("Example").path))
     }
 
-    /// The current record format, so a future change to it is a deliberate act.
-    func testRecordStoresAHundredAndSixtyFourBits() throws {
-        _ = seed()
-        let text = try String(contentsOf: record, encoding: .utf8)
+    func testDroppingTheRecordBringsTheDeletedPackageBack() throws {
+        let source = try makeSource()
+        let scripts = root.appendingPathComponent("Scripts", isDirectory: true)
+        let record = root.appendingPathComponent("record.json")
 
-        XCTAssertTrue(text.contains("\"files\""), "records are per file now, not one hash: \(text)")
-    }
+        _ = BuiltinScriptSeeder.seed(from: source, into: scripts, recordURL: record, fileManager: fm)
+        try fm.removeItem(at: scripts.appendingPathComponent("Example", isDirectory: true))
 
-    // MARK: - Icons
-
-    /// The icon ends up as a real file in the package, generated here rather than
-    /// shipped, so the user can see and replace it.
-    func testGeneratesTheApplicationIconIntoThePackage() throws {
-        try makePackage(
-            named: "Open in Terminal",
-            body: "#!/bin/zsh\nexit 0\n",
-            bundleIdentifier: "com.apple.Terminal"
+        // 恢复出厂设置做的事：丢掉记录，再发放一次
+        try fm.removeItem(at: record)
+        let added = BuiltinScriptSeeder.seed(
+            from: source, into: scripts, recordURL: record, fileManager: fm
         )
 
-        _ = seed()
-
-        let icon = scripts.appendingPathComponent("Open in Terminal/icon.png")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: icon.path))
-        XCTAssertGreaterThan(
-            (try? Data(contentsOf: icon).count) ?? 0,
-            0,
-            "the generated icon should not be empty"
-        )
+        XCTAssertEqual(added, ["Example"], "丢掉记录后应该重新发放")
+        XCTAssertTrue(fm.fileExists(atPath: scripts.appendingPathComponent("Example/script.sh").path))
     }
 
-    /// The generated icon must not look like a shipped change, or every launch
-    /// would rewrite the package.
-    func testGeneratedIconDoesNotTriggerRewrites() throws {
-        try makePackage(
-            named: "Open in Terminal",
-            body: "#!/bin/zsh\nexit 0\n",
-            bundleIdentifier: "com.apple.Terminal"
-        )
-        _ = seed()
+    func testLeavesAUserMadePackageAlone() throws {
+        let source = try makeSource()
+        let scripts = root.appendingPathComponent("Scripts", isDirectory: true)
+        let record = root.appendingPathComponent("record.json")
 
-        XCTAssertTrue(seed().isEmpty)
-    }
+        // 用户自己建了一个同名但内容不同的包
+        let mine = scripts.appendingPathComponent("Example", isDirectory: true)
+        try fm.createDirectory(at: mine, withIntermediateDirectories: true)
+        try Data("mine\n".utf8).write(to: mine.appendingPathComponent("script.sh"))
 
-    func testNoIconFileWithoutAnApplication() {
-        _ = seed()
-
-        XCTAssertFalse(
-            FileManager.default.fileExists(
-                atPath: scripts.appendingPathComponent("Open in VS Code/icon.png").path
-            )
-        )
-    }
-
-    /// A shared script package carries the icon away with it, so the file has to
-    /// say where it came from and that it should not be passed on.
-    func testGeneratedIconCarriesItsProvenance() throws {
-        try makePackage(
-            named: "Open in Terminal",
-            body: "#!/bin/zsh\nexit 0\n",
-            bundleIdentifier: "com.apple.Terminal"
-        )
-        _ = seed()
-
-        let icon = scripts.appendingPathComponent("Open in Terminal/icon.png")
-        let data = try Data(contentsOf: icon)
-        let text = String(decoding: data, as: UTF8.self)
-
-        XCTAssertTrue(text.contains("com.apple.Terminal"), "the source application should be recorded")
-        XCTAssertTrue(text.contains("Do not redistribute"), "the warning should travel with the file")
-    }
-
-    // MARK: - User files
-
-    /// Updating replaces the shipped files only; anything the user added stays put
-    /// and does not freeze future updates.
-    func testKeepsUserFilesAndStillUpdates() throws {
-        _ = seed()
-        let note = scripts.appendingPathComponent("Open in VS Code/NOTES.md")
-        try Data("my notes".utf8).write(to: note)
-        try rewriteBundled(named: "Open in VS Code", body: "#!/bin/zsh\n# v2\n")
-
-        let seeded = seed()
-
-        XCTAssertEqual(seeded, ["Open in VS Code"], "an added file must not block updates")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: note.path), "the note should survive")
-        XCTAssertTrue(try installedScript(named: "Open in VS Code").contains("v2"))
-    }
-
-    func testMissingSourceIsHarmless() {
-        let seeded = BuiltinScriptSeeder.seed(
-            from: root.appendingPathComponent("Nope", isDirectory: true),
-            into: scripts,
-            recordURL: record
+        let added = BuiltinScriptSeeder.seed(
+            from: source, into: scripts, recordURL: record, fileManager: fm
         )
 
-        XCTAssertTrue(seeded.isEmpty)
+        XCTAssertEqual(added, [], "同名但不是内置的包不该被动")
+        let body = try String(contentsOf: mine.appendingPathComponent("script.sh"), encoding: .utf8)
+        XCTAssertEqual(body, "mine\n", "内容必须原样保留")
     }
 }

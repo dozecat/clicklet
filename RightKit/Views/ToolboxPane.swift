@@ -60,7 +60,7 @@ struct ToolboxPane: View {
 
             // item.title is a runtime String, which Text would treat as verbatim, so
             // it has to be turned into a key explicitly.
-            Text(LocalizedStringKey(item.title))
+            L.t(item.title)
                 .opacity(isEnabled ? 1 : 0.5)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -119,9 +119,19 @@ struct ToolboxPane: View {
     }
 
     private func helpText(for item: ToolboxItem) -> String {
+        let language = LocalizedText.currentLanguage
+        let title = LocalizedText.string(item.title, language: language)
+
         guard let backgroundTitle = item.backgroundTitle else {
-            return item.title
+            return title
         }
-        return "\(item.title)；在空白处右键时显示为「\(backgroundTitle)」"
+
+        // The template and both arguments have to follow the chosen language, so none
+        // of them can go through Text's own lookup.
+        return String(
+            format: LocalizedText.string("%@；在空白处右键时显示为「%@」", language: language),
+            title,
+            LocalizedText.string(backgroundTitle, language: language)
+        )
     }
 }

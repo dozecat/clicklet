@@ -322,12 +322,19 @@ final class SettingsStore: ObservableObject {
     /// Puts every switch, order and choice back to its default.
     ///
     /// Files are deliberately left alone: the script packages, their generated
-    /// icons and any user templates are the user's own content, and losing them
-    /// to something labelled "reset" would be unforgivable. The built-in script
-    /// record is kept too, so a package the user deleted is not resurrected.
+    /// icons and any user templates are the user's own content, and losing them to
+    /// something labelled "reset" would be unforgivable.
+    ///
+    /// What is dropped is the record of which bundled scripts were offered, and the
+    /// bundled scripts are offered again straight away. That is the one thing a
+    /// factory reset should undo about scripts: one the user deleted on purpose — or
+    /// by accident — comes back, while the packages still on disk and anything the
+    /// user wrote themselves are left exactly as they are.
     func resetToDefaults() {
         preferences = AppPreferences()
-        DiagnosticsLog.log("preferences reset to defaults")
+        try? FileManager.default.removeItem(at: AppPaths.seededScriptsRecord)
+        _ = BuiltinScriptSeeder.seedIfNeeded()
+        DiagnosticsLog.log("preferences reset to defaults; bundled scripts offered again")
         persist()
     }
 
