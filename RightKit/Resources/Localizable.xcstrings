@@ -23,6 +23,17 @@
         }
       }
     },
+    "%@ 执行失败" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ failed"
+          }
+        }
+      }
+    },
     "%@；在空白处右键时显示为「%@」" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -52,17 +63,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS 13 or later"
-          }
-        }
-      }
-    },
-    "onAppear 那一刻窗口已经存在且是 main-capable" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "the window already exists and is main-capable at onAppear"
           }
         }
       }
@@ -100,6 +100,17 @@
         }
       }
     },
+    "一键开启" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On Now"
+          }
+        }
+      }
+    },
     "下一步" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -118,6 +129,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download…"
+          }
+        }
+      }
+    },
+    "不可写，脚本无法安装" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not writable — scripts cannot be installed"
+          }
+        }
+      }
+    },
+    "不可用：主 App 与扩展无法交换数据" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable — the app and the extension cannot exchange data"
+          }
+        }
+      }
+    },
+    "共享容器" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared Container"
           }
         }
       }
@@ -221,17 +265,6 @@
         }
       }
     },
-    "即将支持" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coming soon"
-          }
-        }
-      }
-    },
     "压缩 / 解压" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -265,6 +298,17 @@
         }
       }
     },
+    "压缩工具" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compressor"
+          }
+        }
+      }
+    },
     "压缩解压" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -283,6 +327,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Archive Tool"
+          }
+        }
+      }
+    },
+    "去启用" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On"
+          }
+        }
+      }
+    },
+    "去授权" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant access"
           }
         }
       }
@@ -309,6 +375,17 @@
         }
       }
     },
+    "可写入" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Writable"
+          }
+        }
+      }
+    },
     "可压缩格式" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -327,6 +404,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Extractable Formats"
+          }
+        }
+      }
+    },
+    "可读写" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read and write"
           }
         }
       }
@@ -397,17 +485,6 @@
         }
       }
     },
-    "在终端中打开" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open in Terminal"
-          }
-        }
-      }
-    },
     "好" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -441,6 +518,17 @@
         }
       }
     },
+    "已启用" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        }
+      }
+    },
     "已就绪" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -448,6 +536,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ready"
+          }
+        }
+      }
+    },
+    "已找到所选压缩器" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected compressor was found"
           }
         }
       }
@@ -463,13 +562,24 @@
         }
       }
     },
-    "已授权 / 已启用" : {
+    "已授权，新建文件会自动进入重命名" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorised / Enabled"
+            "value" : "Granted — new files go straight into rename mode"
+          }
+        }
+      }
+    },
+    "已有 %lld 小时没更新，改动可能没生效" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not updated for %lld hours — changes may not have taken effect"
           }
         }
       }
@@ -727,17 +837,6 @@
         }
       }
     },
-    "排查" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnostics"
-          }
-        }
-      }
-    },
     "改完系统设置后回来点一下" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -782,6 +881,28 @@
         }
       }
     },
+    "无法创建「%@」文件" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not create “%@” file"
+          }
+        }
+      }
+    },
+    "是新的" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date"
+          }
+        }
+      }
+    },
     "显示" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -804,13 +925,35 @@
         }
       }
     },
-    "有事" : {
+    "有 %lld 项建议开启" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "something is wrong"
+            "value" : "%lld items are recommended to be enabled"
+          }
+        }
+      }
+    },
+    "有 %lld 项需要处理" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld items need attention"
+          }
+        }
+      }
+    },
+    "未启用，右键菜单不会出现" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enabled — the context menu will not appear"
           }
         }
       }
@@ -837,6 +980,28 @@
         }
       }
     },
+    "未授权，新建文件后需要自己按回车改名" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not granted — you have to press Return to rename a new file"
+          }
+        }
+      }
+    },
+    "未授权，脚本结果不会提示" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not granted — script results will not be shown"
+          }
+        }
+      }
+    },
     "查看 Releases" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -844,6 +1009,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "View Releases"
+          }
+        }
+      }
+    },
+    "查看日志" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Logs"
           }
         }
       }
@@ -914,6 +1090,17 @@
         }
       }
     },
+    "没找到所选压缩器，压缩解压不可用" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected compressor was not found — compression is unavailable"
+          }
+        }
+      }
+    },
     "没有 Dock 图标，也不弹窗，需要时右键就有" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -932,17 +1119,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Without it, nothing appears in the context menu."
-          }
-        }
-      }
-    },
-    "深色模式下还是黑图标" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "still a black icon in dark mode"
           }
         }
       }
@@ -969,17 +1145,6 @@
         }
       }
     },
-    "状态未知" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown"
-          }
-        }
-      }
-    },
     "用 Keka 或系统自带工具，你选哪个就用哪个" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -998,6 +1163,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Launch at Login"
+          }
+        }
+      }
+    },
+    "系统自带" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in"
           }
         }
       }
@@ -1123,6 +1299,17 @@
         }
       }
     },
+    "菜单快照" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu Snapshot"
+          }
+        }
+      }
+    },
     "要运行「%@」吗？" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1179,22 +1366,12 @@
       }
     },
     "设置…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings…"
-          }
-        }
-      }
-    },
-    "设置完又自己变回去了" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "reverting itself after being set"
+            "value" : "Settings…"
           }
         }
       }
@@ -1210,7 +1387,7 @@
         }
       }
     },
-    "访达拓展" : {
+    "访达扩展" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
@@ -1276,6 +1453,17 @@
         }
       }
     },
+    "还没有生成过，右键菜单会是空的" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never generated — the context menu will be empty"
+          }
+        }
+      }
+    },
     "还没有脚本" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1331,17 +1519,6 @@
         }
       }
     },
-    "配置" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure"
-          }
-        }
-      }
-    },
     "重新检查" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1371,17 +1548,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Turn on File Access → Enable access to the home folder in Keka"
-          }
-        }
-      }
-    },
-    "需要处理" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "needs attention"
           }
         }
       }

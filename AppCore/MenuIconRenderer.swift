@@ -48,11 +48,12 @@ enum MenuIconRenderer {
     static func png(systemSymbol: String) -> Data? {
         // Deliberately NOT tinted.
         //
-        // Menu icons must be templates (see the isTemplate assignment in
-        // MenuBuilder). Tinting them with the accent colour made them the same
-        // colour as the highlight background, so hovering an item made its icon
-        // disappear. A template image carries only its alpha; the system picks
-        // the colour, including the white used while an item is highlighted.
+        // A symbol reaches the menu as an alpha-only glyph, so MenuBuilder marks
+        // it a template (see the isTemplate rule in `addItem`). Tinting it with
+        // the accent colour made it the same colour as the highlight background,
+        // so hovering an item made its icon disappear. A template image carries
+        // only its alpha; the system picks the colour, including the white used
+        // while an item is highlighted.
         let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
 
         guard let symbol = NSImage(

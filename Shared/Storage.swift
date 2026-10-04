@@ -199,18 +199,6 @@ enum AppGroupStore {
         try? FileManager.default.removeItem(at: url)
     }
 
-    static func encodeScriptJobResult(_ result: ScriptJobResult) throws -> Data {
-        try encoder.encode(result)
-    }
-
-    static func decodeScriptJobRequest(_ data: Data) throws -> ScriptJobRequest {
-        try decoder.decode(ScriptJobRequest.self, from: data)
-    }
-
-    static func decodeScriptJobResult(_ data: Data) throws -> ScriptJobResult {
-        try decoder.decode(ScriptJobResult.self, from: data)
-    }
-
     private static var menuSnapshotURL: URL? {
         AppGroup.containerURL?
             .appendingPathComponent("State", isDirectory: true)

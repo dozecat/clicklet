@@ -62,7 +62,10 @@ struct ScriptsPane: View {
             Text(message)
         }
         .confirmationDialog(
-            "删除这个脚本？",
+            // Resolved before it is handed over: the LocalizedStringKey overload
+            // would look the title up in Bundle.main, which never follows a
+            // language switch made after launch.
+            LocalizedText.string("删除这个脚本？", language: LocalizedText.currentLanguage),
             isPresented: Binding(
                 get: { scriptPendingRemoval != nil },
                 set: { if !$0 { scriptPendingRemoval = nil } }
@@ -71,7 +74,17 @@ struct ScriptsPane: View {
         ) { script in
             Button(role: .destructive) {
                 remove(script)
-            } label: { L.t("删除「\(script.name)」") }
+            } label: {
+                // The name has to be formatted in after the lookup: an interpolated
+                // key never matches the catalog.
+                Text(verbatim: String(
+                    format: LocalizedText.string(
+                        "删除「%@」",
+                        language: LocalizedText.currentLanguage
+                    ),
+                    script.name
+                ))
+            }
             Button(role: .cancel) {} label: { L.t("取消") }
         } message: { _ in
             L.t("整个脚本包文件夹会从脚本目录中删除，无法撤销。")

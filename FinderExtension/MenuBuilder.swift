@@ -147,6 +147,9 @@ enum MenuBuilder {
                 title: item.title(forBackground: background),
                 action: selector(for: item.id),
                 icon: icons[MenuIconKey.toolbox(item.id)],
+                // Compressor and Terminal artwork is a real application icon; the
+                // rest of the toolbox draws a system symbol.
+                isTemplate: !item.id.usesCompressorIcon && item.id != .openInTerminal,
                 target: target,
                 to: menu
             )
@@ -237,18 +240,12 @@ enum MenuBuilder {
         }
     }
 
-    private static func addSeparator(to menu: NSMenu) {
-        guard !menu.items.isEmpty, menu.items.last?.isSeparatorItem == false else {
-            return
-        }
-        menu.addItem(.separator())
-    }
-
     private static func addItem(
         title: String,
         action: Selector,
         tag: Int = 0,
         icon: Data? = nil,
+        isTemplate: Bool = true,
         target: FinderSync,
         to menu: NSMenu
     ) {
@@ -263,26 +260,26 @@ enum MenuBuilder {
         item.target = target
         item.tag = tag
         if let icon, let image = NSImage(data: icon) {
-            // Snapshot icons ship as finished pixels
-            // symbols and full-colour application icons. Letting AppKit template
-            // them would flatten the application icons to a single colour.
-            image.isTemplate = false
-            // This has to be set here: the icon was rendered to a PNG on disk and
-            // is read back here with NSImage(data:), and isTemplate is not stored
-            // in the PNG. Without this flag AppKit draws it as an ordinary image
-            // in its original colours, so when hovering the icon ends up the same
-            // colour as the background — and simply disappears.
-            image.isTemplate = true
+            // The snapshot ships two kinds of icon: alpha-only glyphs (system
+            // symbols, script icons) and full-colour artwork (application icons).
+            // A template keeps only the alpha, so the system can tint the glyph —
+            // including the white used while an item is highlighted — while the
+            // same flag would flatten application artwork to a single colour.
+            image.isTemplate = isTemplate
             item.image = image
         }
         menu.addItem(item)
     }
 
     /// Builds the menu image for a key, or nil when the snapshot has none.
+    ///
+    /// Only the submenus' own icons go through here, and those are system symbols,
+    /// so they are always templates — see `addItem` for the rule.
     private static func image(_ key: String, in icons: [String: Data]) -> NSImage? {
-        guard let data = icons[key] else {
+        guard let data = icons[key], let image = NSImage(data: data) else {
             return nil
         }
-        return NSImage(data: data)
+        image.isTemplate = true
+        return image
     }
 }

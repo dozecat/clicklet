@@ -1,26 +1,6 @@
 import AppKit
 import Foundation
 
-enum CompressionError: LocalizedError {
-    case unsupportedSelection
-    case compressorUnavailable
-    case unsupportedOperation
-    case launchFailed(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .unsupportedSelection:
-            return "The selected items are not supported for this operation."
-        case .compressorUnavailable:
-            return "Keka is not installed."
-        case .unsupportedOperation:
-            return "The selected compressor does not support this operation."
-        case let .launchFailed(message):
-            return "Unable to open Keka: \(message)"
-        }
-    }
-}
-
 struct CompressorCapabilities {
     /// Formats that can be created. Narrower than what can be read: rar can be
     /// unpacked but never written, and the built-in tools cannot make 7z.
@@ -28,8 +8,6 @@ struct CompressorCapabilities {
     /// Formats that can be unpacked, including read-only ones such as rar.
     let archiveFormats: Set<String>
     let supportsDecompression: Bool
-    let supportsPassword: Bool
-    let usesNativeProgressUI: Bool
 
     /// macOS ships no 7-Zip, so this separates the built-in tools from Keka.
     var supportsSevenZip: Bool {
@@ -62,9 +40,7 @@ struct SystemArchiveAdapter: CompressorAdapter {
         CompressorCapabilities(
             createsFormats: ["zip"],
             archiveFormats: ["zip", "tar", "gz", "bz2", "xz", "tgz", "tbz2"],
-            supportsDecompression: true,
-            supportsPassword: false,
-            usesNativeProgressUI: false
+            supportsDecompression: true
         )
     }
 
@@ -84,9 +60,7 @@ struct KekaAdapter: CompressorAdapter {
             // the list is read-only support.
             createsFormats: ["zip", "7z"],
             archiveFormats: CompressionSupport.archiveExtensions,
-            supportsDecompression: true,
-            supportsPassword: true,
-            usesNativeProgressUI: true
+            supportsDecompression: true
         )
     }
 

@@ -226,7 +226,9 @@ final class ScriptCatalogService {
             }
         }
 
-        return icons.compactMapValues { $0 }
+        // Assigning an optional through the subscript already drops nils, so the
+        // dictionary is complete as it stands.
+        return icons
     }
 
     func currentSnapshot() -> MenuSnapshot? {

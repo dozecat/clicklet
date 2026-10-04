@@ -28,7 +28,14 @@ struct SelfCheckSheet: View {
 
             SettingsPane {
                 SettingsRow("总体") {
-                    SettingsValue(text: results.isEmpty ? "检查中…" : HealthCheck.summary(results))
+                    SettingsValue(
+                        text: results.isEmpty
+                            ? "检查中…"
+                            : HealthCheck.summary(
+                                results,
+                                language: LocalizedText.currentLanguage
+                            )
+                    )
                 }
 
                 SettingsGroupSeparator()
@@ -40,7 +47,7 @@ struct SelfCheckSheet: View {
                                 .foregroundStyle(colour(for: result.level))
                             SettingsValue(text: result.detail)
                             if let fix = result.fix, let title = result.fixTitle {
-                                Button(title) { perform(fix) }
+                                Button { perform(fix) } label: { L.t(title) }
                             }
                         }
                     }
@@ -57,7 +64,7 @@ struct SelfCheckSheet: View {
 
             HStack {
                 Spacer()
-                Button { store.dismissHealthCheck() } label: { L.t("完成") }
+                Button { SelfCheckWindow.shared.close() } label: { L.t("完成") }
                     .keyboardShortcut(.defaultAction)
             }
             .padding(.horizontal, 20)
@@ -89,7 +96,8 @@ struct SelfCheckSheet: View {
                 scriptsDirectoryWritable: FileManager.default.isWritableFile(
                     atPath: AppPaths.scriptsDirectory.path
                 )
-            )
+            ),
+            language: LocalizedText.currentLanguage
         )
     }
 

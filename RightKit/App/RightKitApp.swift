@@ -55,8 +55,7 @@ struct RightKitApp: App {
                     L.t("设置引导…")
                 }
                 Button {
-                    SettingsStore.shared.showHealthCheck()
-                    SettingsOpener.show()
+                    SelfCheckWindow.shared.show()
                 } label: {
                     L.t("检查运行状态…")
                 }

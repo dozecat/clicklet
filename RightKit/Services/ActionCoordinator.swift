@@ -9,6 +9,10 @@ final class ActionCoordinator {
     private let xpcClient = ScriptXPCClient()
     private var activityTokens: [UUID: NSObjectProtocol] = [:]
     private var handledRequestIDs: Set<UUID> = []
+    /// Insertion order for `handledRequestIDs`. A Set cannot say which element is
+    /// the oldest, and evicting an arbitrary one lets a duplicate delivery of a
+    /// recent request through again — which created the file twice.
+    private var handledRequestOrder: [UUID] = []
     private var requestDirectorySource: DispatchSourceFileSystemObject?
 
     private init() {}
@@ -49,8 +53,9 @@ final class ActionCoordinator {
             return
         }
         handledRequestIDs.insert(requestID)
-        if handledRequestIDs.count > 50 {
-            handledRequestIDs.removeFirst()
+        handledRequestOrder.append(requestID)
+        if handledRequestOrder.count > 50 {
+            handledRequestIDs.remove(handledRequestOrder.removeFirst())
         }
 
         do {
@@ -144,7 +149,13 @@ final class ActionCoordinator {
                     in: directory
                 )
             } catch {
-                await self?.presentError(error, title: "压缩 / 解压")
+                await self?.presentError(
+                    error,
+                    title: LocalizedText.string(
+                        "压缩 / 解压",
+                        language: LocalizedText.currentLanguage
+                    )
+                )
             }
         }
     }
@@ -155,7 +166,7 @@ final class ActionCoordinator {
             DiagnosticsLog.log("template unavailable: \(request.templateID ?? "nil")")
             presentError(
                 ScriptCatalogError.templateUnavailable(request.templateID ?? "unknown"),
-                title: "New File"
+                title: LocalizedText.string("新建文件", language: LocalizedText.currentLanguage)
             )
             return
         }
@@ -183,7 +194,16 @@ final class ActionCoordinator {
         } catch {
             DiagnosticsLog.log("create failed: \(error.localizedDescription)")
             NSLog("RightKit failed to create file: %@", error.localizedDescription)
-            presentError(error, title: "Could not create \(template.name) file")
+            presentError(
+                error,
+                title: String(
+                    format: LocalizedText.string(
+                        "无法创建「%@」文件",
+                        language: LocalizedText.currentLanguage
+                    ),
+                    template.name
+                )
+            )
         }
     }
 
@@ -214,7 +234,7 @@ final class ActionCoordinator {
               let script = ScriptCatalogService.shared.script(id: scriptID) else {
             presentError(
                 ScriptCatalogError.scriptUnavailable(request.scriptID ?? "unknown"),
-                title: "Script"
+                title: LocalizedText.string("脚本", language: LocalizedText.currentLanguage)
             )
             return
         }
@@ -245,17 +265,25 @@ final class ActionCoordinator {
             }
             do {
                 let result = try await xpcClient.execute(job)
+                let language = LocalizedText.currentLanguage
                 if result.succeeded {
                     NotificationService.shared.post(
                         title: script.name,
-                        body: logTail(result.logPath) ?? "脚本执行完成。"
+                        body: logTail(result.logPath)
+                            ?? LocalizedText.string("脚本执行完成。", language: language)
                     )
                 } else {
                     NotificationService.shared.post(
-                        title: "\(script.name) 执行失败",
+                        title: String(
+                            format: LocalizedText.string("%@ 执行失败", language: language),
+                            script.name
+                        ),
                         body: result.errorMessage
                             ?? logTail(result.logPath)
-                            ?? "退出码 \(result.exitCode ?? -1)"
+                            ?? String(
+                                format: LocalizedText.string("退出码 %@", language: language),
+                                String(result.exitCode ?? -1)
+                            )
                     )
                 }
             } catch {
@@ -295,11 +323,18 @@ final class ActionCoordinator {
     }
 
     private func confirmScriptExecution(_ script: ScriptPackage) -> Bool {
+        let language = LocalizedText.currentLanguage
         let alert = NSAlert()
-        alert.messageText = "要运行「\(script.name)」吗？"
-        alert.informativeText = "脚本可以修改选中的文件，请确认来源可信。"
-        alert.addButton(withTitle: "运行")
-        alert.addButton(withTitle: "取消")
+        alert.messageText = String(
+            format: LocalizedText.string("要运行「%@」吗？", language: language),
+            script.name
+        )
+        alert.informativeText = LocalizedText.string(
+            "脚本可以修改选中的文件，请确认来源可信。",
+            language: language
+        )
+        alert.addButton(withTitle: LocalizedText.string("运行", language: language))
+        alert.addButton(withTitle: LocalizedText.string("取消", language: language))
         NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertFirstButtonReturn
     }
@@ -340,7 +375,9 @@ final class ActionCoordinator {
         alert.alertStyle = .warning
         alert.messageText = title
         alert.informativeText = error.localizedDescription
-        alert.addButton(withTitle: "OK")
+        alert.addButton(
+            withTitle: LocalizedText.string("好", language: LocalizedText.currentLanguage)
+        )
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }

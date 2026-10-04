@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 
 struct ScriptConfig: Codable, Equatable {
@@ -161,8 +160,18 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
     /// The user explicitly asked for no "Follow System" entry, so what is returned
     /// here is one definite language.
     static var defaultFromSystem: AppLanguage {
-        let preferred = (Locale.preferredLanguages.first ?? "en").lowercased()
-        return preferred.hasPrefix("zh") ? .simplifiedChinese : .english
+        // Read the system preference rather than Locale.preferredLanguages: that one is
+        // filtered by this bundle's own localizations, and only en.lproj is compiled —
+        // Chinese is the catalogue's source language and produces no lproj — so inside
+        // the app it always answers "en", even on a Chinese system.
+        //
+        // The app's own domain holds no AppleLanguages (an older build used to write
+        // one), so `UserDefaults.standard` resolves to the global setting.
+        let preferred = UserDefaults.standard.stringArray(forKey: "AppleLanguages")?.first
+            ?? Locale.preferredLanguages.first
+            ?? "en"
+
+        return preferred.lowercased().hasPrefix("zh") ? .simplifiedChinese : .english
     }
 
     /// The name shown in the UI, each written natively in its own language; neither

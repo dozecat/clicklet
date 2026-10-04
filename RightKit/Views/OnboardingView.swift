@@ -14,45 +14,30 @@ struct OnboardingView: View {
     @State private var selectedLanguage: AppLanguage
 
     /// Live state, supplied by the caller.
-    private let extensionEnabled: Bool
-    private let accessibilityGranted: Bool
     private let onOpenExtensionSettings: () -> Void
     private let onOpenAccessibilitySettings: () -> Void
     private let onFinish: () -> Void
-    private let onEnableExtension: () -> Void
-    private let language: AppLanguage
     private let onSelectLanguage: (AppLanguage) -> Void
 
     init(
         initialStep: Step = .welcome,
-        extensionEnabled: Bool = false,
-        accessibilityGranted: Bool = false,
         onOpenExtensionSettings: @escaping () -> Void = {},
         onOpenAccessibilitySettings: @escaping () -> Void = {},
         language: AppLanguage = .simplifiedChinese,
         onSelectLanguage: @escaping (AppLanguage) -> Void = { _ in },
         onFinish: @escaping () -> Void = {},
-        onEnableExtension: @escaping () -> Void = {}
     ) {
         _step = State(initialValue: initialStep)
         _selectedLanguage = State(initialValue: language)
-        self.extensionEnabled = extensionEnabled
-        self.accessibilityGranted = accessibilityGranted
         self.onOpenExtensionSettings = onOpenExtensionSettings
         self.onOpenAccessibilitySettings = onOpenAccessibilitySettings
         self.onFinish = onFinish
-        self.onEnableExtension = onEnableExtension
-        self.language = language
         self.onSelectLanguage = onSelectLanguage
     }
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
-            // SwiftUI diffs Text by its key, so the same key with a different bundle
-            // is not redrawn — the language change looked like it needed several
-            // attempts. Tying the subtree's identity to the language forces the
-            // rebuild. `step` lives outside, so it is not reset.
             content
                 .frame(maxWidth: .infinity)
             Spacer(minLength: 0)
@@ -84,8 +69,6 @@ struct OnboardingView: View {
             title: "开启访达扩展",
             detail: "没有它，右键菜单里不会出现任何项目。",
             path: Self.finderExtensionPath,
-            primaryTitle: "一键开启",
-            primaryAction: onEnableExtension,
             action: onOpenExtensionSettings
         )
         case .accessibility: instructions(
@@ -93,7 +76,6 @@ struct OnboardingView: View {
             title: "需要时再开 — 辅助功能",
             detail: "「新建文件」之后要直接进入重命名，需要它。其他功能不受影响。",
             path: "系统设置 → 隐私与安全性 → 辅助功能",
-            primaryTitle: nil, primaryAction: {},
             action: onOpenAccessibilitySettings
         )
         case .done: donePage
@@ -153,9 +135,7 @@ struct OnboardingView: View {
     /// is on this macOS version, and a link that opens Settings there.
     private func instructions(
         appBundleIdentifier: String, title: String, detail: String,
-        path: String,
-        primaryTitle: String?, primaryAction: @escaping () -> Void,
-        action: @escaping () -> Void
+        path: String, action: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 24) {
             Group {
@@ -173,6 +153,7 @@ struct OnboardingView: View {
 
                 // Plain text, no card behind it: it is one line, not a section.
                 L.t(path).font(.system(size: 13)).padding(.top, 2)
+
 
                 // A link, not a button, so it reads as "go there" rather than "do it".
                 Button(action: action) { L.t("打开系统设置") }

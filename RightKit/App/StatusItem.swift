@@ -47,8 +47,7 @@ struct StatusItemMenu: View {
         }
 
         Button {
-            store.showHealthCheck()
-            SettingsOpener.show()
+            SelfCheckWindow.shared.show()
         } label: {
             L.t("检查运行状态…")
         }

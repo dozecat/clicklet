@@ -31,7 +31,7 @@ struct SettingsWindowView: View {
         // and afterwards is summoned from the Help menu.
         .sheet(
             isPresented: Binding(
-                get: { store.showsHealthCheck },
+                get: { false },
                 set: { if !$0 { store.dismissHealthCheck() } }
             )
         ) {

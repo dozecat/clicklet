@@ -287,38 +287,9 @@ struct SettingsCheckbox: View {
     }
 }
 
-/// Checkbox that reports a state this window cannot change.
-struct SettingsReadOnlyCheckbox: View {
-    let title: String
-    let isOn: Bool
-
-    var body: some View {
-        Toggle(title, isOn: .constant(isOn))
-            .toggleStyle(.checkbox)
-            .disabled(true)
-    }
-}
-
 /// Alternating row colour for a striped table.
 func SettingsStripe(index: Int) -> Color {
     index.isMultiple(of: 2) ? Color.clear : Color.primary.opacity(0.045)
-}
-
-/// Alternating row background for panes built from a plain stack.
-struct SettingsStriped<Content: View>: View {
-    let index: Int
-    private let content: Content
-
-    init(index: Int, @ViewBuilder content: () -> Content) {
-        self.index = index
-        self.content = content()
-    }
-
-    var body: some View {
-        content
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(index.isMultiple(of: 2) ? Color.clear : Color.primary.opacity(0.045))
-    }
 }
 
 /// Centred placeholder shown when a list has no rows yet.
@@ -334,15 +305,17 @@ struct SettingsEmptyState: View {
             Image(systemName: systemImage)
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
-            Text(title)
+            // L.t rather than Text(title): the latter is the verbatim overload for a
+            // runtime String, so the placeholder stayed in the source language.
+            L.t(title)
                 .font(.headline)
-            Text(message)
+            L.t(message)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 400)
             if let actionTitle, let action {
-                Button(actionTitle, action: action)
+                Button(action: action) { L.t(actionTitle) }
             }
         }
         .frame(maxWidth: .infinity)
@@ -351,55 +324,6 @@ struct SettingsEmptyState: View {
 }
 
 // MARK: - Small pieces
-
-struct SettingsStatusDot: View {
-    enum Kind {
-        case ok
-        case warning
-        case unknown
-    }
-
-    let kind: Kind
-
-    var body: some View {
-        Image(systemName: symbolName)
-            .foregroundStyle(color)
-            .help(helpText)
-    }
-
-    private var symbolName: String {
-        switch kind {
-        case .ok:
-            return "checkmark.circle.fill"
-        case .warning:
-            return "exclamationmark.circle"
-        case .unknown:
-            return "questionmark.circle"
-        }
-    }
-
-    private var color: Color {
-        switch kind {
-        case .ok:
-            return .green
-        case .warning:
-            return .orange
-        case .unknown:
-            return .secondary
-        }
-    }
-
-    private var helpText: String {
-        switch kind {
-        case .ok:
-            return "已授权 / 已启用"
-        case .warning:
-            return "需要处理"
-        case .unknown:
-            return "状态未知"
-        }
-    }
-}
 
 /// Surfaces a failure on every pane instead of leaving one page looking inert.
 struct SettingsStatusBanner: View {

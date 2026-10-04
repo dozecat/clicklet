@@ -38,24 +38,6 @@ enum FinderExtensionController {
         return parseState(from: result.output)
     }
 
-    /// Forces pkd to reload the extension, whatever its current election.
-    ///
-    /// The off→on pair is the part that matters: it is exactly what the switch in
-    /// System Settings does, and it is the only route that works on every macOS
-    /// release — the Settings pane's location has moved more than once, and no
-    /// `x-apple.systempreferences:` URL reaches the extensions list any more.
-    @discardableResult
-    static func forceReload() -> Bool {
-        do {
-            try setEnabled(false)
-            try setEnabled(true)
-            DiagnosticsLog.log("extension force-reloaded (off then on)")
-            return true
-        } catch {
-            DiagnosticsLog.log("extension force-reload failed: \(error)")
-            return false
-        }
-    }
 
     /// Makes pkd reload the extension.
     ///

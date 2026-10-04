@@ -25,11 +25,8 @@ final class SettingsStore: ObservableObject {
     /// "configuration" and the self-check is "troubleshooting", and on top of that
     /// the self-check is normally "everything is fine" — a tab that always states
     /// the obvious is not worth a slot.
-    @Published private(set) var showsHealthCheck = false
 
-    func showHealthCheck() { showsHealthCheck = true }
     func dismissHealthCheck() {
-        showsHealthCheck = false
         // Dismissing the sheet counts as finishing the first-run guide, so it stops
         // appearing. Until then it comes back on every launch, which is what makes it
         // usable as an onboarding step rather than a one-shot notice.
@@ -64,31 +61,39 @@ final class SettingsStore: ObservableObject {
             "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
             "x-apple.systempreferences:com.apple.ExtensionsPreferences"
         ]
+        let identifier = "com.apple.systempreferences"
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: identifier)
+        guard !running.isEmpty else {
+            openFirstAvailableExtensionPane(candidates)
+            return
+        }
+
         // System Settings, when already running, often just comes to the front and
         // keeps whatever page it was showing — which is why the destination looked
         // random (sometimes General, sometimes Login Items). Quitting it first makes
         // the URL actually navigate; it has no unsaved state to lose.
-        quitSystemSettings()
-        for candidate in candidates {
-            if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
-                return
+        running.forEach { $0.terminate() }
+
+        // The wait for it to disappear happens off the main thread: this is reached
+        // from a button, and the previous `usleep` loop froze the settings window for
+        // up to two seconds. The URL only navigates once the old instance is gone.
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let deadline = Date().addingTimeInterval(2)
+            while Date() < deadline,
+                  !NSRunningApplication.runningApplications(withBundleIdentifier: identifier).isEmpty {
+                usleep(50_000)
+            }
+            DispatchQueue.main.async {
+                self?.openFirstAvailableExtensionPane(candidates)
             }
         }
     }
 
-    /// Quits System Settings and waits for it to go, so the URL that follows is
-    /// handled by a fresh launch rather than an existing window.
-    private func quitSystemSettings() {
-        let identifier = "com.apple.systempreferences"
-        let running = NSRunningApplication.runningApplications(withBundleIdentifier: identifier)
-        guard !running.isEmpty else { return }
-
-        running.forEach { $0.terminate() }
-
-        let deadline = Date().addingTimeInterval(2)
-        while Date() < deadline,
-              !NSRunningApplication.runningApplications(withBundleIdentifier: identifier).isEmpty {
-            usleep(50_000)
+    private func openFirstAvailableExtensionPane(_ candidates: [String]) {
+        for candidate in candidates {
+            if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
+                return
+            }
         }
     }
 
@@ -364,6 +369,11 @@ final class SettingsStore: ObservableObject {
     /// user wrote themselves are left exactly as they are.
     func resetToDefaults() {
         preferences = AppPreferences()
+        // The reset also puts the language back to its default. The Finder menu
+        // reads the file, but the settings window renders through the override, so
+        // without this the window kept the old language until the next launch.
+        LocalizedText.languageOverride = preferences.resolvedLanguage
+        LocalizedText.invalidate()
         try? FileManager.default.removeItem(at: AppPaths.seededScriptsRecord)
         _ = BuiltinScriptSeeder.seedIfNeeded()
         // Forget that the first-run guide was shown, so it comes back. A reset that

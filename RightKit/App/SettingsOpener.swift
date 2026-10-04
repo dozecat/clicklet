@@ -83,15 +83,17 @@ struct SettingsMenuButton: View {
     var body: some View {
         if #available(macOS 14.0, *) {
             SettingsLink {
-                Text("设置…")
+                L.t("设置…")
             }
             .keyboardShortcut(",", modifiers: .command)
             .onAppear {
                 DiagnosticsLog.log("settings: menu item appeared")
             }
         } else {
-            Button("设置…") {
+            Button {
                 SettingsOpener.show()
+            } label: {
+                L.t("设置…")
             }
             .keyboardShortcut(",", modifiers: .command)
         }

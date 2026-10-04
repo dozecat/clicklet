@@ -19,7 +19,10 @@ struct CompressionPane: View {
                     if selectedCompressor.isInstalled {
                         Picker("", selection: selection) {
                             ForEach(Array(compressors.enumerated()), id: \.offset) { _, compressor in
-                                Text(compressor.displayName).tag(compressor.identifier)
+                                // The built-in tools' name is a catalogue key; the
+                                // other adapter's name is a product name and passes
+                                // through the failed lookup unchanged.
+                                L.t(compressor.displayName).tag(compressor.identifier)
                             }
                         }
                         .labelsHidden()

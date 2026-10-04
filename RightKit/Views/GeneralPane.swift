@@ -41,7 +41,7 @@ struct GeneralPane: View {
 
             SettingsGroupSeparator()
 
-            SettingsRow("访达拓展") {
+            SettingsRow("访达扩展") {
                 if store.finderMenuState == .unknown {
                     Button { store.openExtensionSettings() } label: { L.t("打开系统设置…") }
                 } else {
@@ -103,7 +103,13 @@ struct GeneralPane: View {
             }
         }
         .confirmationDialog(
-            "恢复出厂设置？",
+            // A String, not a LocalizedStringKey: the key overload consults
+            // Bundle.main, whose language is fixed at launch, so the dialog would
+            // stay in the old language after a switch.
+            LocalizedText.string(
+                "恢复出厂设置？",
+                language: LocalizedText.currentLanguage
+            ),
             isPresented: $isConfirmingReset
         ) {
             Button(role: .destructive) { store.resetToDefaults() } label: { L.t("恢复") }

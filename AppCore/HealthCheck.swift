@@ -64,75 +64,120 @@ enum HealthCheck {
     /// a failure that has really happened.
     static let snapshotStaleAfter: TimeInterval = 24 * 60 * 60
 
-    static func run(_ input: HealthCheckInput) -> [HealthCheckResult] {
+    /// The language is a parameter rather than a global read, because the check is a
+    /// pure function: the tests drive it with no settings store at all. The source
+    /// language is the default, so a caller that passes nothing gets the catalog
+    /// keys back unchanged.
+    static func run(
+        _ input: HealthCheckInput,
+        language: AppLanguage = .simplifiedChinese
+    ) -> [HealthCheckResult] {
         [
-            extensionCheck(input),
-            accessibilityCheck(input),
-            notificationCheck(input),
-            appGroupCheck(input),
-            snapshotCheck(input),
-            compressorCheck(input),
-            scriptsCheck(input)
+            extensionCheck(input, language: language),
+            accessibilityCheck(input, language: language),
+            notificationCheck(input, language: language),
+            appGroupCheck(input, language: language),
+            snapshotCheck(input, language: language),
+            compressorCheck(input, language: language),
+            scriptsCheck(input, language: language)
         ]
     }
 
     // MARK: - Individual checks
 
-    private static func extensionCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func extensionCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "extension",
-            title: "访达扩展",
+            title: LocalizedText.string("访达扩展", language: language),
             level: input.extensionEnabled ? .ok : .failed,
-            detail: input.extensionEnabled ? "已启用" : "未启用，右键菜单不会出现",
+            detail: LocalizedText.string(
+                input.extensionEnabled ? "已启用" : "未启用，右键菜单不会出现",
+                language: language
+            ),
             fix: input.extensionEnabled ? nil : .openExtensionSettings,
-            fixTitle: input.extensionEnabled ? nil : "去启用"
+            fixTitle: input.extensionEnabled
+                ? nil
+                : LocalizedText.string("去启用", language: language)
         )
     }
 
-    private static func accessibilityCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func accessibilityCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "accessibility",
-            title: "辅助功能",
+            title: LocalizedText.string("辅助功能", language: language),
             level: input.accessibilityGranted ? .ok : .warning,
-            detail: input.accessibilityGranted
-                ? "已授权，新建文件会自动进入重命名"
-                : "未授权，新建文件后需要自己按回车改名",
+            detail: LocalizedText.string(
+                input.accessibilityGranted
+                    ? "已授权，新建文件会自动进入重命名"
+                    : "未授权，新建文件后需要自己按回车改名",
+                language: language
+            ),
             fix: input.accessibilityGranted ? nil : .requestAccessibility,
-            fixTitle: input.accessibilityGranted ? nil : "去授权"
+            fixTitle: input.accessibilityGranted
+                ? nil
+                : LocalizedText.string("去授权", language: language)
         )
     }
 
-    private static func notificationCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func notificationCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "notifications",
-            title: "通知",
+            title: LocalizedText.string("通知", language: language),
             level: input.notificationsGranted ? .ok : .warning,
-            detail: input.notificationsGranted ? "已授权" : "未授权，脚本结果不会提示",
+            detail: LocalizedText.string(
+                input.notificationsGranted ? "已授权" : "未授权，脚本结果不会提示",
+                language: language
+            ),
             fix: input.notificationsGranted ? nil : .requestNotifications,
-            fixTitle: input.notificationsGranted ? nil : "去授权"
+            fixTitle: input.notificationsGranted
+                ? nil
+                : LocalizedText.string("去授权", language: language)
         )
     }
 
-    private static func appGroupCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func appGroupCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "appGroup",
-            title: "共享容器",
+            title: LocalizedText.string("共享容器", language: language),
             level: input.appGroupAvailable ? .ok : .failed,
-            detail: input.appGroupAvailable
-                ? "可读写"
-                : "不可用：主 App 与扩展无法交换数据",
+            detail: LocalizedText.string(
+                input.appGroupAvailable
+                    ? "可读写"
+                    : "不可用：主 App 与扩展无法交换数据",
+                language: language
+            ),
             fix: nil,
             fixTitle: nil
         )
     }
 
-    private static func snapshotCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func snapshotCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
+        let title = LocalizedText.string("菜单快照", language: language)
+
         guard let age = input.snapshotAge else {
             return HealthCheckResult(
                 id: "snapshot",
-                title: "菜单快照",
+                title: title,
                 level: .failed,
-                detail: "还没有生成过，右键菜单会是空的",
+                detail: LocalizedText.string(
+                    "还没有生成过，右键菜单会是空的",
+                    language: language
+                ),
                 fix: nil,
                 fixTitle: nil
             )
@@ -142,9 +187,15 @@ enum HealthCheck {
             let hours = Int(age / 3600)
             return HealthCheckResult(
                 id: "snapshot",
-                title: "菜单快照",
+                title: title,
                 level: .warning,
-                detail: "已有 \(hours) 小时没更新，改动可能没生效",
+                detail: String(
+                    format: LocalizedText.string(
+                        "已有 %lld 小时没更新，改动可能没生效",
+                        language: language
+                    ),
+                    hours
+                ),
                 fix: nil,
                 fixTitle: nil
             )
@@ -152,44 +203,75 @@ enum HealthCheck {
 
         return HealthCheckResult(
             id: "snapshot",
-            title: "菜单快照",
+            title: title,
             level: .ok,
-            detail: "是新的",
+            detail: LocalizedText.string("是新的", language: language),
             fix: nil,
             fixTitle: nil
         )
     }
 
-    private static func compressorCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func compressorCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "compressor",
-            title: "压缩工具",
+            title: LocalizedText.string("压缩工具", language: language),
             level: input.compressorInstalled ? .ok : .warning,
-            detail: input.compressorInstalled
-                ? "已找到所选压缩器"
-                : "没找到所选压缩器，压缩解压不可用",
+            detail: LocalizedText.string(
+                input.compressorInstalled
+                    ? "已找到所选压缩器"
+                    : "没找到所选压缩器，压缩解压不可用",
+                language: language
+            ),
             fix: nil,
             fixTitle: nil
         )
     }
 
-    private static func scriptsCheck(_ input: HealthCheckInput) -> HealthCheckResult {
+    private static func scriptsCheck(
+        _ input: HealthCheckInput,
+        language: AppLanguage
+    ) -> HealthCheckResult {
         HealthCheckResult(
             id: "scriptsDirectory",
-            title: "脚本目录",
+            title: LocalizedText.string("脚本目录", language: language),
             level: input.scriptsDirectoryWritable ? .ok : .failed,
-            detail: input.scriptsDirectoryWritable ? "可写入" : "不可写，脚本无法安装",
+            detail: LocalizedText.string(
+                input.scriptsDirectoryWritable ? "可写入" : "不可写，脚本无法安装",
+                language: language
+            ),
             fix: input.scriptsDirectoryWritable ? nil : .revealLogs,
-            fixTitle: input.scriptsDirectoryWritable ? nil : "查看日志"
+            fixTitle: input.scriptsDirectoryWritable
+                ? nil
+                : LocalizedText.string("查看日志", language: language)
         )
     }
 
     /// A one-line summary when something failed, used at the top of the UI.
-    static func summary(_ results: [HealthCheckResult]) -> String {
+    ///
+    /// The count goes through `%lld` rather than into the key, so one catalog entry
+    /// covers every number. The default language keeps the source-language result
+    /// the tests pin down.
+    static func summary(
+        _ results: [HealthCheckResult],
+        language: AppLanguage = .simplifiedChinese
+    ) -> String {
         let failed = results.filter { $0.level == .failed }.count
         let warnings = results.filter { $0.level == .warning }.count
-        if failed > 0 { return "有 \(failed) 项需要处理" }
-        if warnings > 0 { return "有 \(warnings) 项建议开启" }
-        return "一切正常"
+        if failed > 0 {
+            return String(
+                format: LocalizedText.string("有 %lld 项需要处理", language: language),
+                failed
+            )
+        }
+        if warnings > 0 {
+            return String(
+                format: LocalizedText.string("有 %lld 项建议开启", language: language),
+                warnings
+            )
+        }
+        return LocalizedText.string("一切正常", language: language)
     }
 }
