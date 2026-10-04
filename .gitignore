@@ -34,3 +34,7 @@ RightKit/Resources/BuiltinScripts/**/icon.png
 
 # App 图标候选稿：仅供挑选，选定后再做成 AppIcon.appiconset 入库
 icon-candidates/
+
+# Release artifacts: built locally and attached to the GitHub release.
+*.dmg
+*.dmg.sha256

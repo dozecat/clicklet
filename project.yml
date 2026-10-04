@@ -5,9 +5,10 @@ options:
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "13.0"
-  # Info.plist 里的 CFBundleDevelopmentRegion 用的是 $(DEVELOPMENT_LANGUAGE)，
-  # 而这个变量由工程的 developmentRegion 决定。不设的话它会是 en，
-  # 于是缺 lproj 时会回退到英文——中文界面反而变英文。
+  # Info.plist's CFBundleDevelopmentRegion is $(DEVELOPMENT_LANGUAGE), which the
+  # project's developmentRegion fills in. Left unset it becomes en, so a missing
+  # lproj falls back to English — turning a Chinese interface English. Set it
+  # explicitly instead: the source language of Localizable.xcstrings is zh-Hans.
   developmentLanguage: zh-Hans
 
 settings:
@@ -50,15 +51,16 @@ targets:
         INFOPLIST_FILE: RightKit/Info.plist
         CODE_SIGN_ENTITLEMENTS: RightKit/RightKit.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Xcode 15+ 默认会生成 Swift 资产符号（GeneratedAssetSymbols.swift）。
-        # 这个项目一个都没用到——图标走 CFBundleIconFile，颜色走 SwiftUI 内置的
-        # Color.accentColor——而这一步正是报 "Failed to write Swift generated
-        # asset symbols" 的地方，所以直接关掉，让构建不再依赖它。
-        # 关掉资产符号生成。actool 的实际开关是 --generate-swift-asset-symbols，
-        # 由下面这个设置控制（名字取自 Xcode 自己的 AssetCatalogCompiler.xcspec）；
-        # 带 _EXTENSIONS 的那个只管 Swift 侧的扩展方法，关不掉生成本身。
-        # 本项目一个符号都没用到：图标走 CFBundleIconFile，颜色走 SwiftUI 内置的
-        # Color.accentColor。
+        # Xcode 15+ generates Swift asset symbols (GeneratedAssetSymbols.swift) by
+        # default. This project uses none of them — the icon comes from
+        # CFBundleIconFile and the tint from SwiftUI's own Color.accentColor — and
+        # that step is where "Failed to write Swift generated asset symbols" comes
+        # from, so it is switched off outright.
+        #
+        # actool's real switch is --generate-swift-asset-symbols, driven by the
+        # setting below (the name is taken from Xcode's own AssetCatalogCompiler
+        # .xcspec). The _EXTENSIONS variant only governs the Swift-side extension
+        # methods; it cannot stop the generation itself.
         ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
         ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
         ENABLE_APP_SANDBOX: NO
@@ -79,9 +81,10 @@ targets:
           - "Info.plist"
           - "*.entitlements"
       - path: Shared
-      # 菜单在扩展进程里构建，本地化表必须也进这个 bundle，
-      # 否则右键菜单永远是源语言。加在**已有的** sources 数组里——
-      # 再起一个 sources: 键会让目标丢掉上面这些源文件。
+          # The menu is built in the extension process, so the localisation table has
+          # to be in that bundle too — otherwise the context menu stays in the source
+          # language. Added to the **existing** sources array: a second `sources:` key
+          # would make the target drop the source files listed above.
       - path: RightKit/Resources/Localizable.xcstrings
     settings:
       base:

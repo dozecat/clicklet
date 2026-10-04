@@ -1,10 +1,11 @@
 #!/bin/zsh
 #
-# 用 Python 运行选中的 .py 文件。
+# Runs the selected .py files with Python.
 #
-# RightKit 通过 XPC 服务执行脚本，继承的是 launchd 的最小环境，
-# /opt/homebrew/bin 与 /usr/local/bin 都不在其中，因此这里显式补上。
-# 指定的 python3 与输出都会写进日志，主 App 会把最后一行放进通知里。
+# RightKit runs scripts through an XPC service, so the environment inherited is
+# launchd's minimal one: /opt/homebrew/bin and /usr/local/bin are missing from it,
+# hence the explicit setting below. The python3 that runs and its output both go to
+# the log, and the main app puts the last line into a notification.
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -25,7 +26,7 @@ exit_code=0
 for file in "$@"; do
     echo
     echo "==> 运行 ${file}"
-    # 在脚本自己所在的目录里执行，脚本里的相对路径才符合直觉。
+    # Run from the script's own directory, so relative paths inside it behave as expected.
     (
         cd "$(dirname "${file}")" || exit 1
         python3 "$(basename "${file}")"

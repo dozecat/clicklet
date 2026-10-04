@@ -62,7 +62,7 @@ final class BuiltinScriptSeederTests: XCTestCase {
         _ = BuiltinScriptSeeder.seed(from: source, into: scripts, recordURL: record, fileManager: fm)
         try fm.removeItem(at: scripts.appendingPathComponent("Example", isDirectory: true))
 
-        // 恢复出厂设置做的事：丢掉记录，再发放一次
+        // What Restore Factory Settings does: drop the record, then seed once more.
         try fm.removeItem(at: record)
         let added = BuiltinScriptSeeder.seed(
             from: source, into: scripts, recordURL: record, fileManager: fm
@@ -77,7 +77,7 @@ final class BuiltinScriptSeederTests: XCTestCase {
         let scripts = root.appendingPathComponent("Scripts", isDirectory: true)
         let record = root.appendingPathComponent("record.json")
 
-        // 用户自己建了一个同名但内容不同的包
+        // The user built a package with the same name but different contents.
         let mine = scripts.appendingPathComponent("Example", isDirectory: true)
         try fm.createDirectory(at: mine, withIntermediateDirectories: true)
         try Data("mine\n".utf8).write(to: mine.appendingPathComponent("script.sh"))
