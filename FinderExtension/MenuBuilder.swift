@@ -208,6 +208,13 @@ enum MenuBuilder {
                 action: #selector(FinderSync.newFile(_:)),
                 tag: tag,
                 icon: icons[MenuIconKey.template(template.id)],
+                // A bundled starter and a language mark both carry colour: the real
+                // Word/Pages/Python artwork, taken from the system or shipped with the
+                // app. Marking those as templates keeps only the alpha, which flattens
+                // them to a black mask. Plain SF Symbols are the ones that should take
+                // the system tint.
+                isTemplate: template.contentSource != .bundledResource
+                    && template.iconResourcePath == nil,
                 target: target,
                 to: submenu
             )

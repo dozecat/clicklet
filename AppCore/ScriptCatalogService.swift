@@ -267,7 +267,7 @@ enum TemplateCatalogService {
         fileManager: FileManager = .default
     ) -> [FileTemplate] {
         orderedTemplates(preferences: preferences, fileManager: fileManager)
-            .filter { preferences.templates[$0.id]?.isEnabled ?? true }
+            .filter { preferences.templates[$0.id]?.isEnabled ?? $0.defaultEnabled ?? true }
     }
 
     /// The App Group `Templates/` folder that user templates are copied into.

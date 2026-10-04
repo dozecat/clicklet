@@ -108,11 +108,32 @@ final class NewFileServiceTests: XCTestCase {
 
     func testBundledTemplatesDeclareAResourceName() {
         let bundled = BuiltinTemplates.all.filter { $0.contentSource == .bundledResource }
+        let expected: Set<String> = [
+            "builtin.docx", "builtin.xlsx", "builtin.pptx",   // ship with the app
+            "builtin.pages", "builtin.numbers", "builtin.key" // dropped in by hand
+        ]
 
-        XCTAssertEqual(bundled.count, 3)
+        XCTAssertEqual(Set(bundled.map(\.id)), expected)
         for template in bundled {
             XCTAssertNotNil(template.contentPath, "\(template.id) has no resource name")
             XCTAssertFalse(template.contentPath!.isEmpty)
+        }
+    }
+
+    /// Most templates start switched on; only the niche developer formats start off,
+    /// so that the New File submenu stays short on a fresh install.
+    func testTemplateDefaultEnablement() {
+        let offByDefault: Set<String> = [
+            "builtin.css", "builtin.js", "builtin.py", "builtin.sh",
+            "builtin.yml", "builtin.csv", "builtin.rtf"
+        ]
+
+        for template in BuiltinTemplates.all {
+            let expected = !offByDefault.contains(template.id)
+            XCTAssertEqual(
+                template.defaultEnabled ?? true, expected,
+                "\(template.id) default enablement"
+            )
         }
     }
 
@@ -162,7 +183,14 @@ final class TemplateCatalogServiceTests: XCTestCase {
 
         XCTAssertEqual(
             identifiers,
-            ["builtin.txt", "builtin.md", "builtin.docx", "builtin.xlsx", "builtin.pptx"]
+            [
+                // On by default: the everyday documents, the two most common code
+                // formats, and the three iWork types. The rest of the developer
+                // formats start switched off so the submenu stays short.
+                "builtin.txt", "builtin.md", "builtin.docx", "builtin.xlsx",
+                "builtin.pptx", "builtin.pages", "builtin.numbers", "builtin.key",
+                "builtin.json", "builtin.html"
+            ]
         )
     }
 

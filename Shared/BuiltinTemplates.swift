@@ -9,6 +9,14 @@ enum BuiltinTemplates {
     static let bundledDirectoryName = "BuiltinTemplates"
 
     /// Resource file names inside `Resources/BuiltinTemplates/`.
+    // The three iWork templates have to be made by hand, in the apps themselves:
+    // there is no way to synthesise a valid .pages/.numbers/.key from code, and a
+    // zero-byte file with the right extension is not one — the app refuses it.
+    // Drop the files in and the entries appear; without them they are hidden.
+    static let pagesResourceName = "Empty.pages"
+    static let numbersResourceName = "Empty.numbers"
+    static let keynoteResourceName = "Empty.key"
+
     static let wordResourceName = "Empty.docx"
     static let excelResourceName = "Empty.xlsx"
     static let powerpointResourceName = "Empty.pptx"
@@ -58,6 +66,122 @@ enum BuiltinTemplates {
             contentSource: .bundledResource,
             contentPath: powerpointResourceName,
             order: 50
+        ),
+        FileTemplate(
+            id: "builtin.pages",
+            name: "Pages",
+            fileExtension: "pages",
+            icon: "doc.richtext",
+            contentSource: .bundledResource,
+            contentPath: pagesResourceName,
+            order: 60
+        ),
+        FileTemplate(
+            id: "builtin.numbers",
+            name: "Numbers",
+            fileExtension: "numbers",
+            icon: "tablecells",
+            contentSource: .bundledResource,
+            contentPath: numbersResourceName,
+            order: 70
+        ),
+        FileTemplate(
+            id: "builtin.key",
+            name: "Keynote",
+            fileExtension: "key",
+            icon: "rectangle.on.rectangle",
+            contentSource: .bundledResource,
+            contentPath: keynoteResourceName,
+            order: 80
+        ),
+        FileTemplate(
+            id: "builtin.json",
+            name: "JSON",
+            fileExtension: "json",
+            icon: "curlybraces",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 90
+        ),
+        FileTemplate(
+            id: "builtin.html",
+            name: "HTML",
+            fileExtension: "html",
+            icon: "chevron.left.forwardslash.chevron.right",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 100
+        ),
+        FileTemplate(
+            id: "builtin.css",
+            name: "CSS",
+            fileExtension: "css",
+            icon: "paintbrush",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 110,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.js",
+            name: "JavaScript",
+            fileExtension: "js",
+            icon: "curlybraces",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 120,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.py",
+            name: "Python",
+            fileExtension: "py",
+            icon: "chevron.left.forwardslash.chevron.right",
+            iconResourcePath: "BuiltinScripts/Run Python/icon.png",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 130,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.sh",
+            name: "Shell",
+            fileExtension: "sh",
+            icon: "terminal",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 140,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.yml",
+            name: "YAML",
+            fileExtension: "yml",
+            icon: "list.bullet.rectangle",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 150,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.csv",
+            name: "CSV",
+            fileExtension: "csv",
+            icon: "tablecells",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 160,
+            defaultEnabled: false
+        ),
+        FileTemplate(
+            id: "builtin.rtf",
+            name: "Rich Text",
+            fileExtension: "rtf",
+            icon: "doc.richtext",
+            contentSource: .emptyText,
+            contentPath: nil,
+            order: 170,
+            defaultEnabled: false
         )
     ]
 }

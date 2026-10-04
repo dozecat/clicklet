@@ -84,9 +84,18 @@ struct FileTemplate: Codable, Equatable, Identifiable {
     let name: String
     let fileExtension: String
     let icon: String?
+    /// A PNG inside the app bundle to use instead of `icon`. Only language marks go
+    /// here — the ones the project ships for the same reason it ships the Python
+    /// logo: they indicate what a file is, rather than redistribute an application's
+    /// artwork. Application icons come from `SystemIcon.file(for:)` instead.
+    var iconResourcePath: String? = nil
     let contentSource: TemplateContentSource
     let contentPath: String?
     let order: Int
+    /// Whether the template starts switched on. `nil` means "on", which is both the
+    /// old behaviour and what all but a few templates want, so most definitions can
+    /// leave it out.
+    var defaultEnabled: Bool? = nil
 }
 
 extension FileTemplate {
@@ -106,9 +115,11 @@ extension FileTemplate {
             name: name,
             fileExtension: fileExtension,
             icon: icon,
+            iconResourcePath: iconResourcePath,
             contentSource: contentSource,
             contentPath: contentPath,
-            order: preference.order ?? order
+            order: preference.order ?? order,
+            defaultEnabled: defaultEnabled
         )
     }
 }

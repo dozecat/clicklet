@@ -32,7 +32,7 @@
 
 ## ✨ 功能
 
-- <img src="docs/images/icons/newFile.png" width="20" alt=""> **新建文件**：在空白处右键，按模板创建文件。在文件夹里建好后会就地进入重命名；在桌面上则静默创建，图标直接出现在原位，想改名按一下回车。内置文本、Markdown、Word、Excel、PowerPoint 五种模板。
+- <img src="docs/images/icons/newFile.png" width="20" alt=""> **新建文件**：在空白处右键，按模板创建文件。在文件夹里建好后会就地进入重命名；在桌面上则静默创建，图标直接出现在原位，想改名按一下回车。默认提供文本、Markdown、Word、Excel、PowerPoint、Pages、Numbers、Keynote、JSON、HTML 十种模板；CSS、JavaScript、Python、Shell、YAML、CSV、RTF 七种在设置里勾选即可使用。
 - <img src="docs/images/icons/copyPath.png" width="20" alt=""> **拷贝路径**：复制选中项的绝对路径，多选时每行一个；在空白处右键则复制当前文件夹的路径。
 - <img src="docs/images/icons/copyFileName.png" width="20" alt=""> **拷贝文件名**：只在有选中项时出现，只复制文件名，不带路径。
 - <img src="docs/images/icons/terminal.png" width="20" alt=""> **在此处打开终端**：在当前文件夹打开 Terminal；选中的是文件夹就在那个文件夹，选中的是文件则在其所在文件夹。

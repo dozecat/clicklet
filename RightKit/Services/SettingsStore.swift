@@ -220,7 +220,7 @@ final class SettingsStore: ObservableObject {
     // MARK: - Templates
 
     func isTemplateEnabled(_ template: FileTemplate) -> Bool {
-        preferences.templates[template.id]?.isEnabled ?? true
+        preferences.templates[template.id]?.isEnabled ?? template.defaultEnabled ?? true
     }
 
     func setTemplate(_ template: FileTemplate, enabled: Bool) {

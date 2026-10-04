@@ -8,6 +8,14 @@ enum SystemIcon {
     /// file itself when it exists, otherwise the icon macOS uses for that file
     /// type — which is Word/Excel/PowerPoint's own icon once Office is installed.
     static func file(for template: FileTemplate) -> NSImage {
+        // A language mark shipped with the app wins: macOS has no icon of its own for
+        // .py, and a Python file should look like Python in the menu.
+        if let path = template.iconResourcePath,
+           let url = Bundle.main.url(forResource: path, withExtension: nil),
+           let image = NSImage(contentsOf: url) {
+            return image
+        }
+
         if template.isUserTemplate, let path = template.contentPath {
             return NSWorkspace.shared.icon(forFile: path)
         }

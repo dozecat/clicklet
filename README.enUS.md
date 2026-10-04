@@ -34,7 +34,7 @@ It bundles no archiver: you choose between the system's own tools and [Keka](htt
 
 ## ✨ Features
 
-- <img src="docs/images/icons/newFile.png" width="20" alt=""> **New File**: right-click empty space to create a file from a template. Inside a folder it goes straight into rename; on the Desktop it is created silently, in place — press Return to rename it. Five templates ship with it — text, Markdown, Word, Excel, PowerPoint — and a file of your own becomes a template too.
+- <img src="docs/images/icons/newFile.png" width="20" alt=""> **New File**: right-click empty space to create a file from a template. Inside a folder it goes straight into rename; on the Desktop it is created silently, in place — press Return to rename it. Ten ship enabled — text, Markdown, Word, Excel, PowerPoint, Pages, Numbers, Keynote, JSON and HTML — with CSS, JavaScript, Python, Shell, YAML, CSV and RTF a checkbox away in Settings. A file of your own becomes a template too.
 - <img src="docs/images/icons/copyPath.png" width="20" alt=""> **Copy Path**: copies the absolute path, one per line for a multi-selection; on empty space it copies the current folder.
 - <img src="docs/images/icons/copyFileName.png" width="20" alt=""> **Copy File Name**: appears with a selection only, and copies the name without the path.
 - <img src="docs/images/icons/terminal.png" width="20" alt=""> **Open Terminal Here**: opens Terminal in the current folder — a selected folder itself, or the folder holding a selected file.
