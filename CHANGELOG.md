@@ -10,6 +10,22 @@ Versions are also the release tags: `MARKETING_VERSION` in `project.yml`, the
 
 ## [Unreleased]
 
+### Changed
+
+- New File on the Desktop no longer raises Finder. There is no Finder window to bring
+  forward there — the Desktop is Finder's own window — so activating it opened a new
+  window showing ~/Desktop, and the rename keystroke that followed was unreliable
+  because that window had only just been created. The file now appears in place; press
+  Return if you want to rename it. Inside a folder the behaviour is unchanged.
+
+### Fixed
+
+- Inline rename after New File is more reliable. The Return keystroke is posted to
+  Finder's process rather than into the session, where it went to whatever AppKit
+  believed was frontmost — Finder reports itself frontmost before its window is
+  actually key. The wait before the keystroke also went from 0.2s to 0.6s, and the
+  overall timeout from 2.5s to 4s, because Finder may be creating the window.
+
 ## [1.0.1] - 2026-10-04
 
 ### Added

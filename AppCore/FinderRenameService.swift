@@ -34,7 +34,7 @@ enum FinderRenameService {
     /// *after* the handler has already hidden the app — so it and Finder spend a
     /// moment contending for the front. Waiting for the state we actually need,
     /// instead of guessing at a delay, is what makes the rename land.
-    static func beginRename(of url: URL, timeout: TimeInterval = 2.5) {
+    static func beginRename(of url: URL, timeout: TimeInterval = 4) {
         guard isPermitted else {
             DiagnosticsLog.log(
                 "inline rename skipped for \(url.lastPathComponent): "
@@ -72,9 +72,9 @@ enum FinderRenameService {
             return
         }
 
-        // Finder is in front; let it finish applying the selection before the
-        // keystroke lands.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        // Finder is in front; let it finish applying the selection — and, in a folder
+        // it has just opened, creating the window — before the keystroke lands.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             postReturnKey()
             DiagnosticsLog.log("inline rename requested for \(url.lastPathComponent)")
         }
@@ -95,7 +95,19 @@ enum FinderRenameService {
             return
         }
 
-        keyDown.post(tap: .cghidEventTap)
-        keyUp.post(tap: .cghidEventTap)
+        // Posted to Finder's own process rather than into the session. A session-level
+        // post goes to whatever AppKit thinks is frontmost, and Finder reports itself
+        // frontmost before its window is actually key — which is how the keystroke was
+        // getting dropped. On the Desktop it is worse: Finder has only just created the
+        // window it needs.
+        if let finder = NSRunningApplication
+            .runningApplications(withBundleIdentifier: finderBundleIdentifier)
+            .first {
+            keyDown.postToPid(finder.processIdentifier)
+            keyUp.postToPid(finder.processIdentifier)
+        } else {
+            keyDown.post(tap: .cghidEventTap)
+            keyUp.post(tap: .cghidEventTap)
+        }
     }
 }

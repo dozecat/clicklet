@@ -210,12 +210,34 @@ final class ActionCoordinator {
     /// Brings Finder forward with the new item selected and starts its inline
     /// rename. This app was only woken up to do the work, so it gets out of the
     /// way instead of leaving its settings window in front.
+    ///
+    /// Skipped on the Desktop, where there is no Finder window to bring forward — the
+    /// Desktop *is* Finder's window. Activating Finder there opens a new window showing
+    /// ~/Desktop, and the keystroke that follows is unreliable because that window has
+    /// only just been created. The new file appears in place on the Desktop, which is
+    /// visible enough on its own; the user can rename it with Return if they want to.
     private func revealForRenaming(_ url: URL) {
+        guard !isOnDesktop(url) else {
+            DiagnosticsLog.log(
+                "inline rename skipped for \(url.lastPathComponent): created on the Desktop"
+            )
+            return
+        }
+
         // No hiding here. The app is woken in the background now, so it is not in
         // the way; hiding up front would make an open settings window vanish for
         // no reason. `FinderRenameService` steps aside only if it has to.
         NSWorkspace.shared.activateFileViewerSelecting([url])
         FinderRenameService.beginRename(of: url)
+    }
+
+    private func isOnDesktop(_ url: URL) -> Bool {
+        guard let desktop = FileManager.default
+            .urls(for: .desktopDirectory, in: .userDomainMask)
+            .first else { return false }
+
+        return url.deletingLastPathComponent().standardizedFileURL
+            == desktop.standardizedFileURL
     }
 
     /// Prefers the menu snapshot, which reflects the user's settings, and only
