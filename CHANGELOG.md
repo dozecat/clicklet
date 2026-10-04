@@ -10,6 +10,42 @@ Versions are also the release tags: `MARKETING_VERSION` in `project.yml`, the
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-04
+
+### Added
+
+- A four-page first-run guide (welcome, Finder extension, Accessibility, done).
+  It gives the exact System Settings path for the running macOS release, and
+  replaces the self-check sheet as the onboarding path.
+- The language can be chosen inside the guide and changed later at runtime; the
+  interface follows immediately, without a relaunch.
+- The self-check is a window of its own, so opening it no longer raises the
+  settings window.
+
+### Changed
+
+- The interface is fully localised. The toolbar list, the language picker, the
+  status bar menu, the app menu, the guide, the self-check and every dialog
+  ActionCoordinator produces now resolve through the selected language bundle.
+- On first launch the language follows the system setting. It used to read
+  `Locale.preferredLanguages`, which is filtered by the bundle's own
+  localizations — only `en.lproj` is compiled — so it always answered English.
+- The Finder extension is re-elected at launch. Finder does not load a Finder
+  Sync extension after a reboot until its election changes.
+- Archive actions follow the chosen compressor in both directions, and the
+  default is the system tools rather than the first installed app. Extraction no
+  longer depends on Keka, whose command line is sandboxed and refuses the paths
+  a background call hands it.
+- A factory reset offers the bundled scripts again, including deleted ones.
+
+### Fixed
+
+- Menu icons: application artwork keeps its colour instead of being drawn as an
+  alpha mask, and request de-duplication evicts the oldest id rather than an
+  arbitrary element of a Set.
+- The guide window centres correctly and is raised when the app becomes active,
+  without being pinned above every other window.
+
 ## [1.0.0] - 2026-10-03
 
 First public release: a lightweight Finder context menu for macOS, distributed

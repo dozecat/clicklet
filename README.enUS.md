@@ -54,7 +54,7 @@ Beyond the list, each item's toggle and order are managed in Settings and reach 
 
 ## 📦 Download & Install
 
-**[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a self-check panel appears once, says what is still missing, and takes you to where each item is switched on.
+**[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a four-page guide appears, says what is still missing, and takes you straight to where each item is switched on. You can reopen it any time from the menu bar icon under Help → Setup Guide….
 
 > **This build is not notarized by Apple**, so macOS will say it cannot verify the developer. To open it the first time, right-click RightKit and choose **Open**, then **Open** again in the dialog — or allow it under **System Settings → Privacy & Security**. You can also run `xattr -dr com.apple.quarantine /Applications/RightKit.app` in Terminal.
 
@@ -62,14 +62,14 @@ What to turn on the first time:
 
 | What | Where |
 |---|---|
-| **Finder extension** | System Settings → General → Login Items & Extensions → Finder Extensions |
+| **Finder extension** | System Settings → General → Login Items & Extensions → File Providers |
 | **Accessibility** | System Settings → Privacy & Security → Accessibility |
 | **Keka folder access** | For 7z only: Keka → Settings → File Access |
 | **Notifications** (optional) | The prompt on first run; reports what compress, extract, and scripts did |
 
 > On older versions of macOS the Finder extension lives under **Privacy & Security → Extensions**. When you are not sure what is missing, open **Check Status…** from the menu bar icon.
 
-**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag RightKit to the Trash — scripts, templates and logs live in `~/Library/Application Support/RightKit/` and `~/Library/Logs/RightKit/` if you want them gone too.
+**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag RightKit to the Trash — scripts, templates and logs live in `~/Library/Application Support/RightKit/` and the App Group container (`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.RightKit/Logs`) if you want them gone too.
 
 ## 🧩 Scripts
 

@@ -46,7 +46,21 @@ final class OnboardingWindow {
     /// `.id()` did not help either. Rebuilding the hosting controller is the one thing
     /// that reliably shows the new language on the first switch.
     func refresh() {
-        window?.contentViewController = NSHostingController(rootView: makeView())
+        // Deferred: the caller is a SwiftUI callback, and swapping the content view
+        // controller straight away lands in the middle of AppKit's layout pass, which
+        // logs "It's not legal to call -layoutSubtreeIfNeeded on a view which is
+        // already being laid out". Letting the current pass finish avoids it.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let window = self.window else { return }
+
+            window.contentViewController = NSHostingController(rootView: self.makeView())
+
+            // A new content view controller carries its own size, and the window adopts
+            // it while keeping its origin — which is the bottom-left corner in AppKit, so
+            // the top edge appears to jump. Pin the size and re-centre instead.
+            window.setContentSize(Self.contentSize)
+            self.centre(window)
+        }
     }
 
     func close() {

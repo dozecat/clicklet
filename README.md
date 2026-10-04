@@ -52,7 +52,7 @@
 
 ## 📦 下载与安装
 
-**[前往 Releases 下载最新版](https://github.com/dozecat/rightkit/releases)**，打开后把 **RightKit** 拖进「应用程序」文件夹。需要 macOS 13 Ventura 或更高版本。首次启动会弹出一次自检面板，告诉你还缺哪一项，并带你到对应的地方开启。
+**[前往 Releases 下载最新版](https://github.com/dozecat/rightkit/releases)**，打开后把 **RightKit** 拖进「应用程序」文件夹。需要 macOS 13 Ventura 或更高版本。首次启动会打开一个四页的引导，逐项告诉你还缺哪一项，并直接带你到对应的地方开启。之后随时可以从菜单栏图标的「帮助 → 设置引导…」再看一遍。
 
 > **安装包未经 Apple 公证**，macOS 会提示「无法验证开发者」。首次打开请右键点按 RightKit → **打开**，在弹窗里再点一次「打开」；或在「系统设置 → 隐私与安全性」里点「仍要打开」。也可以直接在终端执行 `xattr -dr com.apple.quarantine /Applications/RightKit.app`。
 
@@ -60,14 +60,14 @@
 
 | 项目 | 在哪里开启 |
 |---|---|
-| **访达扩展** | 系统设置 → 通用 → 登录项与扩展 → 访达扩展 |
+| **访达扩展** | 系统设置 → 通用 → 登录项与扩展 → 文件提供程序 |
 | **辅助功能** | 系统设置 → 隐私与安全性 → 辅助功能 |
 | **Keka 文件夹访问** | 仅用 7z 时需要，在 Keka → 设置 → 文件访问权限里开启 |
 | **通知**（可选） | 首次运行时的系统弹窗，用来反馈压缩、解压与脚本的结果 |
 
 > 旧版 macOS 中，访达扩展在「隐私与安全性 → 扩展」下开启。拿不准缺哪一项时，从菜单栏图标进入「检查运行状态…」。
 
-**更新**：下载新版本覆盖安装即可，当前版本不含自动更新。**卸载**：关掉访达扩展，把 RightKit 拖进废纸篓；脚本、模板与日志分别在 `~/Library/Application Support/RightKit/` 与 `~/Library/Logs/RightKit/`，需要时一并删除。
+**更新**：下载新版本覆盖安装即可，当前版本不含自动更新。**卸载**：关掉访达扩展，把 RightKit 拖进废纸篓；脚本与模板在 `~/Library/Application Support/RightKit/`，日志在 App Group 容器里：`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.RightKit/Logs`，需要时一并删除。
 
 ## 🧩 脚本扩展
 
