@@ -28,7 +28,13 @@ final class SettingsStore: ObservableObject {
     @Published private(set) var showsHealthCheck = false
 
     func showHealthCheck() { showsHealthCheck = true }
-    func dismissHealthCheck() { showsHealthCheck = false }
+    func dismissHealthCheck() {
+        showsHealthCheck = false
+        // Dismissing the sheet counts as finishing the first-run guide, so it stops
+        // appearing. Until then it comes back on every launch, which is what makes it
+        // usable as an onboarding step rather than a one-shot notice.
+        AppGroupStore.markFirstRunCompleted()
+    }
 
     /// Stores the chosen language and makes the UI follow it at once: the strings are
     /// looked up while rendering, so nothing here needs a relaunch.
@@ -49,14 +55,40 @@ final class SettingsStore: ObservableObject {
     }
 
     func openExtensionSettings() {
+        // Order matters and `open` reports success even when the pane only comes to the
+        // front, so the first candidate is the one verified to land on Login Items &
+        // Extensions. `com.apple.AppleFileProvider` was tried first and landed on
+        // General on at least one system, where it also stopped the fallbacks from
+        // being reached — so it is gone.
         let candidates = [
             "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
             "x-apple.systempreferences:com.apple.ExtensionsPreferences"
         ]
+        // System Settings, when already running, often just comes to the front and
+        // keeps whatever page it was showing — which is why the destination looked
+        // random (sometimes General, sometimes Login Items). Quitting it first makes
+        // the URL actually navigate; it has no unsaved state to lose.
+        quitSystemSettings()
         for candidate in candidates {
             if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
                 return
             }
+        }
+    }
+
+    /// Quits System Settings and waits for it to go, so the URL that follows is
+    /// handled by a fresh launch rather than an existing window.
+    private func quitSystemSettings() {
+        let identifier = "com.apple.systempreferences"
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: identifier)
+        guard !running.isEmpty else { return }
+
+        running.forEach { $0.terminate() }
+
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline,
+              !NSRunningApplication.runningApplications(withBundleIdentifier: identifier).isEmpty {
+            usleep(50_000)
         }
     }
 
@@ -334,7 +366,11 @@ final class SettingsStore: ObservableObject {
         preferences = AppPreferences()
         try? FileManager.default.removeItem(at: AppPaths.seededScriptsRecord)
         _ = BuiltinScriptSeeder.seedIfNeeded()
-        DiagnosticsLog.log("preferences reset to defaults; bundled scripts offered again")
+        // Forget that the first-run guide was shown, so it comes back. A reset that
+        // left the guide suppressed meant a user could never see it again, and there
+        // was no way to get it back short of deleting files by hand.
+        try? FileManager.default.removeItem(at: AppGroupStore.firstRunMarker)
+        DiagnosticsLog.log("preferences reset to defaults; bundled scripts and guide offered again")
         persist()
     }
 

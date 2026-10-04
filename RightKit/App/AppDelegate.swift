@@ -13,14 +13,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // But do not pop a window when the launch came from a Finder action: that
         // kind of launch should just do the work quietly and drop back into the
         // background, while a window would land right in front of the user.
+        // The marker is written when the user finishes the sheet, not here. Marking it
+        // up front meant that quitting before the permissions were granted retired the
+        // guide for good — the exact complaint this fixes.
         if !AppGroupStore.hasCompletedFirstRun {
-            AppGroupStore.markFirstRunCompleted()
             if AppGroupStore.pendingActionRequestIDs().isEmpty {
-                SettingsStore.shared.showHealthCheck()
-                SettingsOpener.show()
-                DiagnosticsLog.log("first run: showing the health check sheet")
+                OnboardingWindow.shared.show()
+                DiagnosticsLog.log("first run: showing the onboarding guide")
             }
         }
+
+        // After a reboot Finder will not load the extension until its election changes,
+        // which is why the menu used to be missing until the switch in System Settings
+        // was toggled. Do that half-flip here instead, quietly.
+        FinderExtensionController.reelect()
 
         let seeded = BuiltinScriptSeeder.seedIfNeeded()
         if !seeded.isEmpty {

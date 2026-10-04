@@ -33,8 +33,10 @@ struct RightKitApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("关于 RightKit") {
+                Button {
                     showAboutPanel()
+                } label: {
+                    L.t("关于 RightKit")
                 }
             }
 
@@ -47,9 +49,16 @@ struct RightKitApp: App {
             // The self-check does not take a tab; it is reached from the Help menu —
             // only needed when something goes wrong, invisible the rest of the time.
             CommandGroup(after: .help) {
-                Button("检查运行状态…") {
+                Button {
+                    OnboardingWindow.shared.show()
+                } label: {
+                    L.t("设置引导…")
+                }
+                Button {
                     SettingsStore.shared.showHealthCheck()
                     SettingsOpener.show()
+                } label: {
+                    L.t("检查运行状态…")
                 }
             }
 

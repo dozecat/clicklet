@@ -38,22 +38,24 @@ struct StatusItemMenu: View {
         // only guaranteed way into the app.
         if #available(macOS 14.0, *) {
             SettingsLink {
-                Text("打开设置…")
+                L.t("打开设置…")
             }
             .keyboardShortcut(",", modifiers: .command)
         } else {
-            Button("打开设置…") { SettingsOpener.show() }
+            Button { SettingsOpener.show() } label: { L.t("打开设置…") }
                 .keyboardShortcut(",", modifiers: .command)
         }
 
-        Button("检查运行状态…") {
+        Button {
             store.showHealthCheck()
             SettingsOpener.show()
+        } label: {
+            L.t("检查运行状态…")
         }
 
         Divider()
 
-        Button("退出 RightKit") { NSApp.terminate(nil) }
+        Button { NSApp.terminate(nil) } label: { L.t("退出 RightKit") }
             .keyboardShortcut("q", modifiers: .command)
     }
 }

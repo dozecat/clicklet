@@ -12,6 +12,17 @@
         }
       }
     },
+    "「新建文件」之后要直接进入重命名，需要它。其他功能不受影响。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needed to start renaming right after New File. Everything else works without it."
+          }
+        }
+      }
+    },
     "%@；在空白处右键时显示为「%@」" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -56,6 +67,28 @@
         }
       }
     },
+    "sh 脚本放进脚本目录，右键就能运行" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop a shell script in the scripts folder and run it from the menu"
+          }
+        }
+      }
+    },
+    "一切就绪" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All set"
+          }
+        }
+      }
+    },
     "一切正常" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -63,6 +96,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Everything is fine"
+          }
+        }
+      }
+    },
+    "下一步" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
           }
         }
       }
@@ -227,7 +271,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Compression"
+            "value" : "Compress & extract"
           }
         }
       }
@@ -283,6 +327,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Extractable Formats"
+          }
+        }
+      }
+    },
+    "右键访达里的文件或空白处，就能看到 RightKit 的菜单。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right-click a file or empty space in Finder to see the RightKit menu."
           }
         }
       }
@@ -419,6 +474,39 @@
         }
       }
     },
+    "开启访达扩展" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on the Finder extension"
+          }
+        }
+      }
+    },
+    "开始" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "开始前请先完成初始化设置" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish setting up before you start"
+          }
+        }
+      }
+    },
     "开机后自动运行，右键菜单无需手动启动" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -540,6 +628,17 @@
         }
       }
     },
+    "打开系统设置" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        }
+      }
+    },
     "打开系统设置…" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -574,11 +673,12 @@
       }
     },
     "打开设置…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings…"
+            "value" : "Open Settings…"
           }
         }
       }
@@ -803,6 +903,39 @@
         }
       }
     },
+    "欢迎使用 RightKit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to RightKit"
+          }
+        }
+      }
+    },
+    "没有 Dock 图标，也不弹窗，需要时右键就有" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Dock icon, no windows — there when you right-click"
+          }
+        }
+      }
+    },
+    "没有它，右键菜单里不会出现任何项目。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without it, nothing appears in the context menu."
+          }
+        }
+      }
+    },
     "深色模式下还是黑图标" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -847,6 +980,17 @@
         }
       }
     },
+    "用 Keka 或系统自带工具，你选哪个就用哪个" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keka or the built-in tools — whichever you pick"
+          }
+        }
+      }
+    },
     "登录时启动" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -865,6 +1009,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Requirements"
+          }
+        }
+      }
+    },
+    "系统设置 → 通用 → 登录项与扩展 → 文件提供程序" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Settings → General → Login Items & Extensions → File Providers"
+          }
+        }
+      }
+    },
+    "系统设置 → 隐私与安全性 → 扩展" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Settings → Privacy & Security → Extensions"
+          }
+        }
+      }
+    },
+    "系统设置 → 隐私与安全性 → 辅助功能" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Settings → Privacy & Security → Accessibility"
           }
         }
       }
@@ -931,6 +1108,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scripts Folder"
+          }
+        }
+      }
+    },
+    "自己的脚本" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your own scripts"
           }
         }
       }
@@ -1011,6 +1199,17 @@
         }
       }
     },
+    "设置引导…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup Guide…"
+          }
+        }
+      }
+    },
     "访达拓展" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1040,6 +1239,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Path"
+          }
+        }
+      }
+    },
+    "轻量" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightweight"
           }
         }
       }
@@ -1172,6 +1382,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "needs attention"
+          }
+        }
+      }
+    },
+    "需要时再开 — 辅助功能" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional — Accessibility"
           }
         }
       }

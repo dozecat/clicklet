@@ -38,6 +38,50 @@ enum FinderExtensionController {
         return parseState(from: result.output)
     }
 
+    /// Forces pkd to reload the extension, whatever its current election.
+    ///
+    /// The off→on pair is the part that matters: it is exactly what the switch in
+    /// System Settings does, and it is the only route that works on every macOS
+    /// release — the Settings pane's location has moved more than once, and no
+    /// `x-apple.systempreferences:` URL reaches the extensions list any more.
+    @discardableResult
+    static func forceReload() -> Bool {
+        do {
+            try setEnabled(false)
+            try setEnabled(true)
+            DiagnosticsLog.log("extension force-reloaded (off then on)")
+            return true
+        } catch {
+            DiagnosticsLog.log("extension force-reload failed: \(error)")
+            return false
+        }
+    }
+
+    /// Makes pkd reload the extension.
+    ///
+    /// Finder does not load a Finder Sync extension by itself after a reboot: it waits
+    /// for the extension's election to change. That is why the menu is missing after a
+    /// restart until the switch in System Settings has been flipped off and on — the
+    /// "off" half is what does the work. Doing the same thing once per launch is this
+    /// method's whole purpose.
+    ///
+    /// Only runs when the extension is currently elected, so a user who turned it off
+    /// on purpose keeps it off.
+    @discardableResult
+    static func reelect() -> Bool {
+        guard currentState() == .enabled else { return false }
+
+        do {
+            try setEnabled(false)
+            try setEnabled(true)
+            DiagnosticsLog.log("extension re-elected at launch")
+            return true
+        } catch {
+            DiagnosticsLog.log("extension re-election failed: \(error)")
+            return false
+        }
+    }
+
     static func setEnabled(_ isEnabled: Bool) throws {
         let election = isEnabled ? "use" : "ignore"
         guard let result = runPluginkit(["-e", election, "-i", bundleIdentifier]) else {
