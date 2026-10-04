@@ -92,11 +92,23 @@ struct ToolboxPane: View {
     private func icon(for item: ToolboxItem) -> some View {
         if let bundleIdentifier = applicationBundleIdentifier(for: item),
            let image = SystemIcon.application(bundleIdentifier: bundleIdentifier) {
+            // A real application icon: the chosen compressor, or Terminal.
             Image(nsImage: image)
                 .resizable()
                 .interpolation(.high)
                 .frame(width: 18, height: 18)
+        } else if let tile = MenuIconRenderer.image(
+            tile: item.icon,
+            colour: item.id.tileColour
+        ) {
+            // The same coloured tile the Finder menu draws, so a row here and its menu
+            // item are recognisably the same thing.
+            Image(nsImage: tile)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 18, height: 18)
         } else {
+            // Last resort, for a tile that fails to render.
             Image(systemName: item.icon)
                 .font(.system(size: 15))
                 .foregroundStyle(Color.accentColor)

@@ -147,9 +147,10 @@ enum MenuBuilder {
                 title: item.title(forBackground: background),
                 action: selector(for: item.id),
                 icon: icons[MenuIconKey.toolbox(item.id)],
-                // Compressor and Terminal artwork is a real application icon; the
-                // rest of the toolbox draws a system symbol.
-                isTemplate: !item.id.usesCompressorIcon && item.id != .openInTerminal,
+                // None of the toolbox icons are template images any more: the compressor
+                // ones are application artwork and the rest are coloured tiles, and a
+                // template would flatten both to a single tint.
+                isTemplate: false,
                 target: target,
                 to: menu
             )

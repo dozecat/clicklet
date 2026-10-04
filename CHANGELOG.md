@@ -8,23 +8,51 @@ Versions are also the release tags: `MARKETING_VERSION` in `project.yml`, the
 `v*` git tag and the release heading below always agree. See
 [docs/RELEASING.md](docs/RELEASING.md) for how a release is cut.
 
-## [Unreleased]
+## [1.0.2] - 2026-10-04
+
+### Added
+
+- Twelve more file templates: Pages, Numbers and Keynote (real empty documents
+  rather than renamed archives), JSON, HTML, CSS, JavaScript, Python, Shell,
+  YAML, CSV and RTF. The last seven are off by default; tick them in
+  Settings › New File.
+- A status dot per permission on the General page, green when granted and orange
+  when something still needs doing, plus a one-line summary at the top saying
+  whether all three are in place. The status bar menu no longer offers the
+  self-check window: the page answers the same question in place.
+- Coloured icons in both the Finder menu and the settings window — a tinted
+  rounded tile per toolbox item, in the style of an application icon.
 
 ### Changed
 
-- New File on the Desktop no longer raises Finder. There is no Finder window to bring
-  forward there — the Desktop is Finder's own window — so activating it opened a new
-  window showing ~/Desktop, and the rename keystroke that followed was unreliable
-  because that window had only just been created. The file now appears in place; press
-  Return if you want to rename it. Inside a folder the behaviour is unchanged.
+- The settings window has an ordinary title bar with the name centred in it and
+  the tab strip below it. It used to blank the title, make the bar transparent
+  and run the content up into it, which fought SwiftUI on every window
+  activation and left a stray rule above the tab strip.
+- The General page is 720x520, so it fits without scrolling, and the group rules
+  nearly span the window instead of stopping at the value column.
+- The compression format lists are capsules rather than a comma-separated run of
+  up to sixteen formats, so what is supported can be counted at a glance.
+- New File on the Desktop no longer raises Finder. There is no Finder window to
+  bring forward there — the Desktop is Finder's own window — so activating it
+  opened a new window showing ~/Desktop, and the rename keystroke that followed
+  was unreliable because that window had only just been created. The file now
+  appears in place; press Return if you want to rename it. Inside a folder the
+  behaviour is unchanged.
 
 ### Fixed
 
-- Inline rename after New File is more reliable. The Return keystroke is posted to
-  Finder's process rather than into the session, where it went to whatever AppKit
-  believed was frontmost — Finder reports itself frontmost before its window is
-  actually key. The wait before the keystroke also went from 0.2s to 0.6s, and the
-  overall timeout from 2.5s to 4s, because Finder may be creating the window.
+- Inline rename after New File is more reliable. The Return keystroke is posted
+  to Finder's process rather than into the session, where it went to whatever
+  AppKit believed was frontmost — Finder reports itself frontmost before its
+  window is actually key. The wait before the keystroke also went from 0.2s to
+  0.6s, and the overall timeout from 2.5s to 4s, because Finder may be creating
+  the window.
+- The first-run guide no longer sinks behind other applications after a trip to
+  System Settings. Closing that window hands the focus to whatever else was
+  open, and this app — being LSUIElement — is never activated, so a notification
+  driven fix could not work. Its level now follows the frontmost application:
+  floating above everything except System Settings itself.
 
 ## [1.0.1] - 2026-10-04
 
@@ -108,5 +136,6 @@ outside the App Store.
   search results and network volumes are not covered.
 - 7z compression requires Keka; the system tools cover ZIP plus the tar family.
 
-[Unreleased]: https://github.com/dozecat/rightkit/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/dozecat/rightkit/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/dozecat/rightkit/releases/tag/v1.0.2
 [1.0.0]: https://github.com/dozecat/rightkit/releases/tag/v1.0.0

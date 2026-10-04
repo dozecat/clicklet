@@ -202,7 +202,7 @@ final class ScriptCatalogService {
                     icons[key] = MenuIconRenderer.png(for: image)
                 }
             } else {
-                icons[key] = MenuIconRenderer.png(systemSymbol: item.icon)
+                icons[key] = MenuIconRenderer.png(tile: item.icon, colour: item.id.tileColour)
             }
         }
 
