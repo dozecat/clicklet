@@ -44,16 +44,6 @@ struct CompressionPane: View {
 
             SettingsGroupSeparator()
 
-            SettingsRow("说明") {
-                SettingsValue(
-                    text: selectedCompressor.identifier == KekaAdapter().identifier
-                        ? "Keka 支持 7z 与 zip；解压仍走系统工具。"
-                        : "系统自带工具只压缩为 zip；想要 7z 请选 Keka。"
-                )
-            }
-
-            SettingsGroupSeparator()
-
             SettingsRow("可压缩格式") {
                 FormatList(formats: selectedCompressor.capabilities.createsFormats.sorted())
             }

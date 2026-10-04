@@ -179,6 +179,30 @@ struct SettingsStatusDot: View {
     }
 }
 
+/// One line at the top of the General page saying whether the permissions are all in
+/// place. This is the question the separate self-check window used to answer and the
+/// status bar menu used to open; on the page itself it needs no extra window.
+struct PermissionSummaryBanner: View {
+    @EnvironmentObject private var store: SettingsStore
+
+    var body: some View {
+        let ready = store.allPermissionsReady
+
+        return HStack(spacing: 8) {
+            Image(systemName: ready ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(ready ? Color.green : Color.orange)
+
+            L.t(ready ? "三项权限都已就绪" : "还有权限没有开启，见下方")
+
+            Spacer(minLength: 0)
+        }
+        .font(.callout)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 9)
+        .background((ready ? Color.green : Color.orange).opacity(0.10))
+    }
+}
+
 /// Just a group of rows. The separation comes from `SettingsGroupSeparator`, not
 /// from a background: a tinted card reads as a second surface, and the pane is
 /// meant to stay flat.
@@ -225,12 +249,12 @@ let settingsTrailingInset: CGFloat = 18
 /// The settings window width, matching `SettingsWindowView`'s frame.
 let settingsWindowWidth: CGFloat = 720
 
-/// Width of the value column that stays inside the separator: window − 150 of
-/// separator padding on each side − label column − spacing.
-/// Text wider than this runs past the end of the separator and looks like it
-/// overflows the group.
-let settingsValueWidthWithinSeparator: CGFloat =
-    settingsWindowWidth - settingsLeadingInset * 2 - settingsLabelWidth - settingsLabelGap
+/// Marks the windows that are not the settings scene — the guide and the self-check —
+/// so that the settings window's title bar configuration leaves them alone.
+extension NSUserInterfaceItemIdentifier {
+    static let rightKitAuxiliaryWindow = NSUserInterfaceItemIdentifier("rightkit.auxiliary")
+}
+
 let settingsLabelWidth: CGFloat = 140
 
 /// Table panes start further left than the label/control panes: their first

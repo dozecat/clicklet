@@ -161,6 +161,13 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    /// True when all three permissions the app asks for are in place. The General
+    /// page shows this as one line at the top, which is the question the separate
+    /// self-check window used to answer.
+    var allPermissionsReady: Bool {
+        finderMenuState == .enabled && canAutoRename && notificationsAuthorized
+    }
+
     func setFinderMenuEnabled(_ isEnabled: Bool) {
         do {
             try FinderExtensionController.setEnabled(isEnabled)

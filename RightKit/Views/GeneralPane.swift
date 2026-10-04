@@ -8,6 +8,8 @@ struct GeneralPane: View {
 
     var body: some View {
         SettingsPane {
+            PermissionSummaryBanner()
+
             SettingsSection {
             SettingsRow("登录时启动") {
                 SettingsCheckbox(

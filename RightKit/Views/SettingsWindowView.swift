@@ -34,6 +34,12 @@ struct SettingsWindowView: View {
         .onAppear {
             configureWindow()
 
+            // Opening from the status bar leaves the window behind other apps: this app
+            // has no Dock icon, so nothing activates it. Done here rather than in
+            // `configureWindow` because that one is also called from didBecomeKey.
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.windows.first { $0.isVisible }?.makeKeyAndOrderFront(nil)
+
             // And again on the next run loop turn. On the first open SwiftUI finishes
             // configuring the title bar *after* onAppear, which puts the separator back
             // — that is why the rule was visible until the window was clicked, since
@@ -58,6 +64,13 @@ struct SettingsWindowView: View {
         ) { _ in
             configureWindow()
         }
+        // The toolbar label is drawn by AppKit, so it does not follow the language on
+        // its own the way the rest of the pane does.
+        .onChange(of: store.preferences.resolvedLanguage) { _ in
+            // Deferred: this fires inside a SwiftUI update, and configureWindow touches
+            // AppKit state, which must not happen there.
+            DispatchQueue.main.async { configureWindow() }
+        }
         .background(Color(nsColor: .windowBackgroundColor))
         .environmentObject(store)
     }
@@ -75,6 +88,11 @@ struct SettingsWindowView: View {
         let title = LocalizedText.string("设置", language: LocalizedText.currentLanguage)
 
         for window in NSApp.windows {
+            // Only this scene's window. The guide and the self-check have their own
+            // windows, and this loop was giving the guide a toolbar with "Settings" in
+            // it as well.
+            guard window.identifier != .rightKitAuxiliaryWindow else { continue }
+
             window.title = title
             // The name is drawn by the toolbar item below, not by the title bar.
             window.titleVisibility = .hidden
@@ -82,7 +100,11 @@ struct SettingsWindowView: View {
             window.styleMask.insert(.fullSizeContentView)
             window.titlebarSeparatorStyle = .none
 
-            // Only once: this runs again on every didBecomeKey.
+            // Only the label follows a language change here. Raising the window must NOT
+            // happen in this method: it runs from `didBecomeKey`, so calling
+            // `makeKeyAndOrderFront` would re-trigger that notification and loop.
+            (window.toolbar?.delegate as? TitleToolbarDelegate)?.updateTitle(title)
+
             if window.toolbar == nil {
                 let delegate = TitleToolbarDelegate(title: title)
                 // The toolbar holds its delegate weakly, so keep ours alive.
@@ -133,10 +155,22 @@ struct SettingsWindowView: View {
 private final class TitleToolbarDelegate: NSObject, NSToolbarDelegate {
     static let titleIdentifier = NSToolbarItem.Identifier("rightkit.title")
 
-    private let title: String
+    private let label = NSTextField(labelWithString: "")
 
     init(title: String) {
-        self.title = title
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.alignment = .center
+        // Not `updateTitle(title)`: a method call on self is not allowed before
+        // super.init, and this subclass of NSObject has to call it.
+        label.stringValue = title
+        label.sizeToFit()
+    }
+
+    /// The window keeps its toolbar across a language change, so the label has to be
+    /// updated rather than rebuilt.
+    func updateTitle(_ title: String) {
+        label.stringValue = title
+        label.sizeToFit()
     }
 
     func toolbar(
@@ -145,10 +179,6 @@ private final class TitleToolbarDelegate: NSObject, NSToolbarDelegate {
         willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-        let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
-        label.alignment = .center
-        label.sizeToFit()
         item.view = label
         return item
     }

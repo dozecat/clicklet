@@ -46,12 +46,6 @@ struct StatusItemMenu: View {
                 .keyboardShortcut(",", modifiers: .command)
         }
 
-        Button {
-            SelfCheckWindow.shared.show()
-        } label: {
-            L.t("检查运行状态…")
-        }
-
         Divider()
 
         Button { NSApp.terminate(nil) } label: { L.t("退出 RightKit") }

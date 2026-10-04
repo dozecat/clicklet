@@ -40,6 +40,7 @@ final class SelfCheckWindow {
             backing: .buffered,
             defer: false
         )
+        window.identifier = .rightKitAuxiliaryWindow
         window.title = "RightKit"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true

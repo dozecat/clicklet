@@ -15,18 +15,27 @@ final class OnboardingWindow {
     private static let contentSize = NSSize(width: 640, height: 486)
 
     private var window: NSWindow?
-    private var activationObserver: NSObjectProtocol?
+    private var levelTimer: Timer?
 
     func show() {
         let window = ensureWindow()
         NSApp.activate(ignoringOtherApps: true)
-        // Deliberately NOT `.floating`: that pins the window above everything for as
-        // long as it exists, and the user cannot get to anything else. The window keeps
-        // the normal level and is simply brought forward at the two moments that
-        // matter — here, and when the app becomes active again below.
         window.makeKeyAndOrderFront(nil)
         centre(window)
-        observeActivation()
+        // Floating, except while System Settings is in front.
+        //
+        // The rule the guide needs is not "always on top" nor "only while this app is
+        // active". It is: on top of everything the user might be reading, but out of the
+        // way while they are switching permissions on — and back on top the moment that
+        // window closes. Watching activation cannot express that: this app is
+        // LSUIElement, so closing System Settings hands the focus to whatever else was
+        // open and this app is never activated at all.
+        //
+        // What the frontmost application actually is happens to be exactly the question,
+        // so that is what gets polled.
+        window.orderFrontRegardless()
+        window.makeKeyAndOrderFront(nil)
+        startLevelPolling()
 
         // Centred twice more, on the next two run loop turns. NSHostingController
         // reports its size only once the SwiftUI content has laid out, so the frame
@@ -63,33 +72,39 @@ final class OnboardingWindow {
         }
     }
 
-    func close() {
-        if let activationObserver {
-            NotificationCenter.default.removeObserver(activationObserver)
+    /// Keeps the guide floating above everything except System Settings.
+    ///
+    /// Polling rather than notifications: the transitions that matter here — System
+    /// Settings opening and closing — do not all produce a notification this app
+    /// receives, and the check is a bundle identifier comparison four times a second.
+    private func startLevelPolling() {
+        levelTimer?.invalidate()
+        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, let window = self.window, window.isVisible else { return }
+
+                let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+                let settingsIsFront = front == "com.apple.systempreferences"
+
+                // `.normal` while the user is in System Settings so the guide cannot
+                // cover the switches they came to use; `.floating` otherwise, so it
+                // comes back on top by itself when that window closes.
+                window.level = settingsIsFront ? .normal : .floating
+            }
         }
-        activationObserver = nil
+    }
+
+    func close() {
+        levelTimer?.invalidate()
+        levelTimer = nil
+        window?.level = .normal
         window?.close()
         window = nil
     }
 
     // MARK: - Private
 
-    /// Coming back from System Settings is the moment the guide tends to end up behind
-    /// something, so it is brought forward again whenever the app becomes active.
-    private func observeActivation() {
-        guard activationObserver == nil else { return }
 
-        activationObserver = NotificationCenter.default.addObserver(
-            forName: NSApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, let window = self.window, window.isVisible else { return }
-                window.makeKeyAndOrderFront(nil)
-            }
-        }
-    }
 
 
     /// Centres on the visible frame, so the window never lands under the menu bar or
@@ -116,6 +131,7 @@ final class OnboardingWindow {
             backing: .buffered,
             defer: false
         )
+        window.identifier = .rightKitAuxiliaryWindow
         window.title = "RightKit"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
