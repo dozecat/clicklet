@@ -80,7 +80,10 @@ struct SettingsTabStrip: View {
 
             Spacer(minLength: 88)
         }
-        .padding(.top, 8)
+        // Slightly negative on purpose: the toolbar's own bottom padding still left a
+        // gap between the centred name and the tab icons. ~2pt per millimetre at 72dpi,
+        // so this pulls the row up by about 1.8mm.
+        .padding(.top, -5)
         .padding(.bottom, 6)
     }
 
@@ -164,6 +167,31 @@ struct SettingsPane<Content: View>: View {
     }
 }
 
+/// The page is deliberately grey, so the only colour is a status dot. Green means
+/// granted, orange means the user still has to do something.
+struct SettingsStatusDot: View {
+    let isOn: Bool
+
+    var body: some View {
+        Circle()
+            .fill(isOn ? Color.green : Color.orange)
+            .frame(width: 7, height: 7)
+    }
+}
+
+/// Just a group of rows. The separation comes from `SettingsGroupSeparator`, not
+/// from a background: a tinted card reads as a second surface, and the pane is
+/// meant to stay flat.
+struct SettingsSection<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content
+        }
+    }
+}
+
 /// Divider between groups of rows. Rows inside a group are separated by spacing
 /// alone, which is what keeps the pane quiet.
 struct SettingsGroupSeparator: View {
@@ -175,8 +203,14 @@ struct SettingsGroupSeparator: View {
             // Long text (when "Extractable Formats" lists 11 of them) runs past
             // the end of the separator — that problem is solved by that row folding
             // on its own, not by widening the separator.
-            .padding(.horizontal, settingsLeadingInset)
-            .padding(.vertical, 12)
+            // Nearly the full width. At the label column's inset (150) the line
+            // looked like a short dash floating in the middle of the pane; running it
+            // close to both edges makes it read as a real separation.
+            .padding(.horizontal, 28)
+            // More air above than below: the line separates what came before from what
+            // follows, so it should sit closer to the group it opens.
+            .padding(.top, 22)
+            .padding(.bottom, 12)
     }
 }
 
@@ -189,7 +223,7 @@ let settingsLeadingInset: CGFloat = 150
 let settingsTrailingInset: CGFloat = 18
 
 /// The settings window width, matching `SettingsWindowView`'s frame.
-let settingsWindowWidth: CGFloat = 700
+let settingsWindowWidth: CGFloat = 720
 
 /// Width of the value column that stays inside the separator: window − 150 of
 /// separator padding on each side − label column − spacing.
@@ -277,13 +311,22 @@ struct SettingsCheckbox: View {
     let title: String
     @Binding var isOn: Bool
     var isEnabled: Bool = true
+    /// Draws a status dot before the checkbox. Optional, so the callers that are not
+    /// about a permission stay as they are.
+    var showsStatusDot: Bool = false
 
     var body: some View {
-        // Passing a String would pick Toggle's StringProtocol overload, which does
-        // not consult the catalog.
-        Toggle(isOn: $isOn) { L.t(title) }
-            .toggleStyle(.checkbox)
-            .disabled(!isEnabled)
+        HStack(spacing: 6) {
+            if showsStatusDot {
+                SettingsStatusDot(isOn: isOn)
+            }
+
+            // Passing a String would pick Toggle's StringProtocol overload, which does
+            // not consult the catalog.
+            Toggle(isOn: $isOn) { L.t(title) }
+                .toggleStyle(.checkbox)
+                .disabled(!isEnabled)
+        }
     }
 }
 

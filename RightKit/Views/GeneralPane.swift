@@ -8,6 +8,7 @@ struct GeneralPane: View {
 
     var body: some View {
         SettingsPane {
+            SettingsSection {
             SettingsRow("登录时启动") {
                 SettingsCheckbox(
                     title: store.launchAtLogin ? "打开" : "关闭",
@@ -38,9 +39,11 @@ struct GeneralPane: View {
                     .frame(width: 130)
                 }
             }
+            }
 
             SettingsGroupSeparator()
 
+            SettingsSection {
             SettingsRow("访达扩展") {
                 if store.finderMenuState == .unknown {
                     Button { store.openExtensionSettings() } label: { L.t("打开系统设置…") }
@@ -50,40 +53,42 @@ struct GeneralPane: View {
                         isOn: Binding(
                             get: { store.finderMenuState == .enabled },
                             set: { store.setFinderMenuEnabled($0) }
-                        )
+                        ),
+                        showsStatusDot: true
                     )
                     .help(L.t("关闭后 Finder 中不再出现 RightKit 菜单"))
                 }
             }
 
             SettingsRow("辅助功能") {
-                Toggle(
-                    "",
-                    isOn: Binding(
-                        get: { store.canAutoRename },
-                        set: { if $0 { store.requestRenamePermission() } }
+                HStack(spacing: 6) {
+                    SettingsStatusDot(isOn: store.canAutoRename)
+
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { store.canAutoRename },
+                            set: { if $0 { store.requestRenamePermission() } }
+                        )
                     )
-                )
-                .labelsHidden()
-                .toggleStyle(.checkbox)
-                .disabled(store.canAutoRename)
+                    .labelsHidden()
+                    .toggleStyle(.checkbox)
+                    .disabled(store.canAutoRename)
+                }
                 .help(L.t("授权后新建文件会自动进入重命名状态"))
             }
 
             SettingsRow("通知") {
-                if store.notificationsAuthorized {
-                    HStack(spacing: 6) {
-                        SettingsValue(text: "已授权")
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                    }
-                } else {
-                    SettingsValue(text: "未授权")
+                HStack(spacing: 6) {
+                    SettingsStatusDot(isOn: store.notificationsAuthorized)
+                    SettingsValue(text: store.notificationsAuthorized ? "已授权" : "未授权")
                 }
+            }
             }
 
             SettingsGroupSeparator()
 
+            SettingsSection {
             SettingsRow("脚本目录") {
                 Button { store.revealScriptsDirectory() } label: { L.t("显示") }
                     .help(shortenedPath(store.scriptsDirectory.path))
@@ -95,11 +100,14 @@ struct GeneralPane: View {
                         .help(shortenedPath(templatesDirectory.path))
                 }
             }
+            }
 
             SettingsGroupSeparator()
 
+            SettingsSection {
             SettingsRow("重置设置") {
                 Button { isConfirmingReset = true } label: { L.t("恢复出厂设置…") }
+            }
             }
         }
         .confirmationDialog(
