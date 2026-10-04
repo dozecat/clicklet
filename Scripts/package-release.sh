@@ -64,7 +64,7 @@ if [ "$VERSION" != "$PROJECT_VERSION" ]; then
     exit 1
 fi
 
-for tool in xcodegen xcodebuild xcrun hdiutil shasum security; do
+for tool in xcodegen xcodebuild xcrun hdiutil shasum security osascript; do
     command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 1; }
 done
 
@@ -180,10 +180,10 @@ done
 
 # ----------------------------------------------------------------- make dmg
 echo "==> building $DMG"
-mkdir -p "$STAGING"
-cp -R "$APP" "$STAGING/"
-ln -s /Applications "$STAGING/Applications"
-hdiutil create -volname "RightKit" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
+# make-dmg.sh stages the app, mounts a writable image, lets Finder lay the window
+# out and converts the result. A plain `hdiutil create -srcfolder` cannot do that:
+# the layout only reaches the image's .DS_Store while it is mounted.
+"$REPO_ROOT/Scripts/make-dmg.sh" "$APP" "$DMG"
 
 # ------------------------------------------------- notarize and staple
 if [ "$SIGNING" = "development" ]; then
