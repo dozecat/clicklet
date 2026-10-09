@@ -5,8 +5,8 @@ import SwiftUI
 /// in a form that can be read without opening a panel, and with the links
 /// clickable.
 struct AboutPane: View {
-    private let repository = URL(string: "https://github.com/dozecat/rightkit")!
-    private let releases = URL(string: "https://github.com/dozecat/rightkit/releases")!
+    private let repository = URL(string: "https://github.com/dozecat/clicklet")!
+    private let releases = URL(string: "https://github.com/dozecat/clicklet/releases")!
 
     var body: some View {
         SettingsPane {
@@ -53,7 +53,7 @@ struct AboutPane: View {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(
             options: [
-                .applicationName: "RightKit",
+                .applicationName: "Clicklet",
                 .applicationVersion: version,
                 .credits: NSAttributedString(
                     string: "GNU General Public License v3.0\n\(repository.absoluteString)"

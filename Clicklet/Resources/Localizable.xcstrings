@@ -188,13 +188,13 @@
         }
       }
     },
-    "关于 RightKit" : {
+    "关于 Clicklet" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About RightKit"
+            "value" : "About Clicklet"
           }
         }
       }
@@ -221,13 +221,13 @@
         }
       }
     },
-    "关闭后 Finder 中不再出现 RightKit 菜单" : {
+    "关闭后 Finder 中不再出现 Clicklet 菜单" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turning this off removes the RightKit menu from Finder"
+            "value" : "Turning this off removes the Clicklet menu from Finder"
           }
         }
       }
@@ -430,13 +430,13 @@
         }
       }
     },
-    "右键访达里的文件或空白处，就能看到 RightKit 的菜单。" : {
+    "右键访达里的文件或空白处，就能看到 Clicklet 的菜单。" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Right-click a file or empty space in Finder to see the RightKit menu."
+            "value" : "Right-click a file or empty space in Finder to see the Clicklet menu."
           }
         }
       }
@@ -1090,13 +1090,13 @@
         }
       }
     },
-    "欢迎使用 RightKit" : {
+    "欢迎使用 Clicklet" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welcome to RightKit"
+            "value" : "Welcome to Clicklet"
           }
         }
       }
@@ -1497,13 +1497,13 @@
         }
       }
     },
-    "退出 RightKit" : {
+    "退出 Clicklet" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quit RightKit"
+            "value" : "Quit Clicklet"
           }
         }
       }

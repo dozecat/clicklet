@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 final class ScriptRunner: NSObject, ScriptXPCProtocol {
-    private let executionQueue = DispatchQueue(label: "com.dozecat.RightKit.script-runner")
+    private let executionQueue = DispatchQueue(label: "com.dozecat.Clicklet.script-runner")
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let timeout: TimeInterval = 300
@@ -66,8 +66,8 @@ final class ScriptRunner: NSObject, ScriptXPCProtocol {
             process.standardError = logHandle
 
             var environment = ProcessInfo.processInfo.environment
-            environment["RIGHTKIT_DIR"] = workingDirectory.path
-            environment["RIGHTKIT_FILES"] = request.arguments.joined(separator: "\n")
+            environment["CLICKLET_DIR"] = workingDirectory.path
+            environment["CLICKLET_FILES"] = request.arguments.joined(separator: "\n")
             process.environment = environment
 
             activeProcess = process
@@ -161,7 +161,7 @@ final class ScriptRunner: NSObject, ScriptXPCProtocol {
         workingDirectory: URL
     ) throws {
         let header = """
-        RightKit script execution
+        Clicklet script execution
         request: \(request.requestID.uuidString)
         script: \(scriptURL.path)
         working directory: \(workingDirectory.path)

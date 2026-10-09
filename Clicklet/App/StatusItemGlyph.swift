@@ -69,7 +69,7 @@ enum StatusItemImage {
                 image.isTemplate = true
                 return image
             }
-            return NSImage(systemSymbolName: "cursorarrow.click", accessibilityDescription: "RightKit")
+            return NSImage(systemSymbolName: "cursorarrow.click", accessibilityDescription: "Clicklet")
                 ?? NSImage()
         }
 

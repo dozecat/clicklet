@@ -58,7 +58,7 @@ struct GeneralPane: View {
                         ),
                         showsStatusDot: true
                     )
-                    .help(L.t("关闭后 Finder 中不再出现 RightKit 菜单"))
+                    .help(L.t("关闭后 Finder 中不再出现 Clicklet 菜单"))
                 }
             }
 

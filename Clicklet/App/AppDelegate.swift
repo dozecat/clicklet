@@ -40,7 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
         } catch {
             DiagnosticsLog.log("catalog refresh failed: \(error.localizedDescription)")
-            NSLog("RightKit catalog refresh failed: %@", error.localizedDescription)
+            NSLog("Clicklet catalog refresh failed: %@", error.localizedDescription)
         }
         ActionCoordinator.shared.start()
         NotificationService.shared.requestAuthorization()
@@ -48,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         DiagnosticsLog.log("app received urls: \(urls.map(\.absoluteString))")
-        NSLog("RightKit received URLs: %@", urls.map(\.absoluteString))
+        NSLog("Clicklet received URLs: %@", urls.map(\.absoluteString))
         urls.forEach {
             ActionCoordinator.shared.handle(url: $0)
         }

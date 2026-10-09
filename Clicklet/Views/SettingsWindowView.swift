@@ -91,7 +91,7 @@ struct SettingsWindowView: View {
             // Only this scene's window. The guide and the self-check have their own
             // windows, and this loop was giving the guide a toolbar with "Settings" in
             // it as well.
-            guard window.identifier != .rightKitAuxiliaryWindow else { continue }
+            guard window.identifier != .clickletAuxiliaryWindow else { continue }
 
             window.title = title
             // The name is drawn by the toolbar item below, not by the title bar.
@@ -153,7 +153,7 @@ struct SettingsWindowView: View {
 /// it. `centeredItemIdentifier` is what actually centres it — an empty toolbar leaves
 /// the title left-aligned, which is why this exists at all.
 private final class TitleToolbarDelegate: NSObject, NSToolbarDelegate {
-    static let titleIdentifier = NSToolbarItem.Identifier("rightkit.title")
+    static let titleIdentifier = NSToolbarItem.Identifier("clicklet.title")
 
     private let label = NSTextField(labelWithString: "")
 

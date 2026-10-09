@@ -131,8 +131,8 @@ final class OnboardingWindow {
             backing: .buffered,
             defer: false
         )
-        window.identifier = .rightKitAuxiliaryWindow
-        window.title = "RightKit"
+        window.identifier = .clickletAuxiliaryWindow
+        window.title = "Clicklet"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false

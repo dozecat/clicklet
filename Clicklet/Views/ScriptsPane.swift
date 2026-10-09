@@ -50,7 +50,7 @@ struct ScriptsPane: View {
             }
         }
         .alert(
-            "RightKit",
+            "Clicklet",
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }

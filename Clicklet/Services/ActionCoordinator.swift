@@ -30,7 +30,7 @@ final class ActionCoordinator {
         DiagnosticsLog.log("received url \(url.absoluteString)")
         guard let requestID = FinderActionURL.requestID(from: url) else {
             DiagnosticsLog.log("ignored invalid action URL")
-            NSLog("RightKit ignored invalid action URL: %@", url.absoluteString)
+            NSLog("Clicklet ignored invalid action URL: %@", url.absoluteString)
             return
         }
         process(requestID: requestID)
@@ -66,12 +66,12 @@ final class ActionCoordinator {
                     + "template=\(request.templateID ?? "nil") dir=\(request.directoryPath)"
             )
             NSLog(
-                "RightKit handling action %@ request %@",
+                "Clicklet handling action %@ request %@",
                 request.kind.rawValue,
                 request.id.uuidString
             )
             // Run the interaction on a later main-actor turn. When Finder cold
-            // launches the app through rightkit://, running a modal alert from
+            // launches the app through clicklet://, running a modal alert from
             // inside application(_:open:) can leave the app without a key window
             // and the alert never becomes visible.
             Task { @MainActor [weak self] in
@@ -79,7 +79,7 @@ final class ActionCoordinator {
             }
         } catch {
             DiagnosticsLog.log("failed to load request \(requestID.uuidString): \(error.localizedDescription)")
-            NSLog("RightKit failed to load action request %@: %@", requestID.uuidString, error.localizedDescription)
+            NSLog("Clicklet failed to load action request %@: %@", requestID.uuidString, error.localizedDescription)
             presentError(error)
         }
     }
@@ -189,11 +189,11 @@ final class ActionCoordinator {
                 in: directory
             )
             DiagnosticsLog.log("created file \(createdURL.path)")
-            NSLog("RightKit created file: %@", createdURL.path)
+            NSLog("Clicklet created file: %@", createdURL.path)
             revealForRenaming(createdURL)
         } catch {
             DiagnosticsLog.log("create failed: \(error.localizedDescription)")
-            NSLog("RightKit failed to create file: %@", error.localizedDescription)
+            NSLog("Clicklet failed to create file: %@", error.localizedDescription)
             presentError(
                 error,
                 title: String(
@@ -276,7 +276,7 @@ final class ActionCoordinator {
         )
         let activityToken = ProcessInfo.processInfo.beginActivity(
             options: [.userInitiated, .suddenTerminationDisabled, .automaticTerminationDisabled],
-            reason: "Running RightKit script \(script.id)"
+            reason: "Running Clicklet script \(script.id)"
         )
         activityTokens[request.id] = activityToken
 
@@ -382,16 +382,16 @@ final class ActionCoordinator {
 
     private func showError(_ error: Error) {
         NotificationService.shared.post(
-            title: "RightKit",
+            title: "Clicklet",
             body: error.localizedDescription
         )
     }
 
     /// Reports a failure the user just triggered. A notification is too easy to
     /// miss, which made broken menu items look like they did nothing at all.
-    private func presentError(_ error: Error, title: String = "RightKit") {
+    private func presentError(_ error: Error, title: String = "Clicklet") {
         DiagnosticsLog.log("presenting error [\(title)]: \(error.localizedDescription)")
-        NSLog("RightKit error: %@", error.localizedDescription)
+        NSLog("Clicklet error: %@", error.localizedDescription)
 
         let alert = NSAlert()
         alert.alertStyle = .warning

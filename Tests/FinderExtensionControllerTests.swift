@@ -2,19 +2,19 @@ import XCTest
 
 final class FinderExtensionControllerTests: XCTestCase {
     func testParsesEnabledElection() {
-        let output = "+\tcom.dozecat.RightKit.FinderExtension(1.0.0)\n"
+        let output = "+\tcom.dozecat.Clicklet.FinderExtension(1.0.0)\n"
 
         XCTAssertEqual(FinderExtensionController.parseState(from: output), .enabled)
     }
 
     func testParsesDisabledElection() {
-        let output = "-\tcom.dozecat.RightKit.FinderExtension(1.0.0)\n"
+        let output = "-\tcom.dozecat.Clicklet.FinderExtension(1.0.0)\n"
 
         XCTAssertEqual(FinderExtensionController.parseState(from: output), .disabled)
     }
 
     func testParsesMatchWithLeadingWhitespace() {
-        let output = "  +\t\tcom.dozecat.RightKit.FinderExtension(1.0.0)\t/path/RightKit.appex\n"
+        let output = "  +\t\tcom.dozecat.Clicklet.FinderExtension(1.0.0)\t/path/Clicklet.appex\n"
 
         XCTAssertEqual(FinderExtensionController.parseState(from: output), .enabled)
     }
@@ -22,7 +22,7 @@ final class FinderExtensionControllerTests: XCTestCase {
     func testIgnoresOtherExtensions() {
         let output = """
         +\tcn.better365.iRightMouse.Extension(1.0)
-        -\tcom.dozecat.RightKit.FinderExtension(1.0.0)
+        -\tcom.dozecat.Clicklet.FinderExtension(1.0.0)
         """
 
         XCTAssertEqual(FinderExtensionController.parseState(from: output), .disabled)
@@ -46,7 +46,7 @@ final class FinderExtensionControllerTests: XCTestCase {
     }
 
     func testUnknownWhenElectionMarkerIsMissing() {
-        let output = "\t\tcom.dozecat.RightKit.FinderExtension(1.0.0)\n"
+        let output = "\t\tcom.dozecat.Clicklet.FinderExtension(1.0.0)\n"
 
         XCTAssertEqual(FinderExtensionController.parseState(from: output), .unknown)
     }

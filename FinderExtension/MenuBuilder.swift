@@ -16,7 +16,7 @@ enum MenuBuilder {
     ) -> NSMenu? {
         registry.reset()
 
-        let menu = NSMenu(title: "RightKit")
+        let menu = NSMenu(title: "Clicklet")
         let scripts = snapshot?.scripts.filter {
             $0.isEnabled && matches($0, selectedURLs: selectedURLs)
         } ?? []

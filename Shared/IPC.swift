@@ -5,5 +5,5 @@ import Foundation
 }
 
 enum XPCService {
-    static let scriptServiceName = "com.dozecat.RightKit.ScriptXPCService"
+    static let scriptServiceName = "com.dozecat.Clicklet.ScriptXPCService"
 }

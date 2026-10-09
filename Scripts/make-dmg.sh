@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Build a RightKit DMG with the window layout this project ships.
+# Build a Clicklet DMG with the window layout this project ships.
 #
-#   Scripts/make-dmg.sh <RightKit.app> <output.dmg>
+#   Scripts/make-dmg.sh <Clicklet.app> <output.dmg>
 #
 # Why this is not a one-liner
 # ---------------------------
@@ -26,12 +26,12 @@
 
 set -euo pipefail
 
-APP="${1:?usage: make-dmg.sh <RightKit.app> <output.dmg>}"
-OUT="${2:?usage: make-dmg.sh <RightKit.app> <output.dmg>}"
+APP="${1:?usage: make-dmg.sh <Clicklet.app> <output.dmg>}"
+OUT="${2:?usage: make-dmg.sh <Clicklet.app> <output.dmg>}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKGROUND="$SCRIPT_DIR/dmg-background.png"
-VOLNAME="RightKit"
+VOLNAME="Clicklet"
 
 # Keep these in step with dmg-background.png (1120x720 at 2x, so 560x360 points).
 WIN_X=140; WIN_Y=100; WIN_W=1120; WIN_H=720
@@ -43,7 +43,7 @@ LINK_POS_X=840; LINK_POS_Y=430
 [ -f "$BACKGROUND" ] || { echo "error: missing $BACKGROUND" >&2; exit 1; }
 
 WORK="$(mktemp -d)"
-RW="$WORK/RightKit-rw.dmg"
+RW="$WORK/Clicklet-rw.dmg"
 STAGE="$WORK/stage"
 MOUNT=""
 
@@ -84,7 +84,7 @@ tell application "Finder"
         set icon size of theViewOptions to $ICON
         set text size of theViewOptions to 15
         set background picture of theViewOptions to file ".background:background.png"
-        set position of item "RightKit.app" of container window to {$APP_POS_X, $APP_POS_Y}
+        set position of item "Clicklet.app" of container window to {$APP_POS_X, $APP_POS_Y}
         set position of item "Applications" of container window to {$LINK_POS_X, $LINK_POS_Y}
         update without registering applications
         delay 1

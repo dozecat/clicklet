@@ -2,7 +2,7 @@
 #
 # Opens the selection in Visual Studio Code; from empty space, the current folder.
 #
-# RightKit runs scripts through an XPC service, so the PATH inherited is launchd's
+# Clicklet runs scripts through an XPC service, so the PATH inherited is launchd's
 # minimal one: /opt/homebrew/bin and /usr/local/bin are missing from it, hence the
 # explicit setting below. This script only reads — `open` changes nothing.
 
@@ -13,11 +13,11 @@ APP_PATH="/Applications/${APP_NAME}.app"
 
 # With no arguments — triggered from empty space, say — fall back to the current folder.
 if [ "$#" -eq 0 ]; then
-    if [ -z "$RIGHTKIT_DIR" ]; then
+    if [ -z "$CLICKLET_DIR" ]; then
         echo "没有可打开的目标。" >&2
         exit 1
     fi
-    set -- "$RIGHTKIT_DIR"
+    set -- "$CLICKLET_DIR"
 fi
 
 if [ ! -d "$APP_PATH" ]; then
