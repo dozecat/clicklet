@@ -69,7 +69,7 @@ What to turn on the first time:
 
 > On older versions of macOS the Finder extension lives under **Privacy & Security → Extensions**. When you are not sure what is missing, open **Check Status…** from the menu bar icon.
 
-**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag Clicklet to the Trash — scripts, templates and logs live in `~/Library/Application Support/Clicklet/` and the App Group container (`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.Clicklet/Logs`) if you want them gone too.
+**Updating**: download a new version and install it over the old one; there is no automatic updater yet. The one exception is going from RightKit 1.0.x to 1.1.0 — that release renamed the app and with it the bundle identifier (`com.dozecat.RightKit` → `com.dozecat.Clicklet`), so macOS treats Clicklet as a **different application**: the two install side by side, preferences do not carry over, and the Finder extension has to be ticked once more — untick the old RightKit while you are there. **Uninstalling**: turn off the Finder extension and drag Clicklet to the Trash — scripts, templates and logs live in `~/Library/Application Support/Clicklet/` and the App Group container (`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.Clicklet/Logs`) if you want them gone too.
 
 ## 🧩 Scripts
 

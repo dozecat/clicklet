@@ -67,7 +67,7 @@
 
 > 旧版 macOS 中，访达扩展在「隐私与安全性 → 扩展」下开启。拿不准缺哪一项时，从菜单栏图标进入「检查运行状态…」。
 
-**更新**：下载新版本覆盖安装即可，当前版本不含自动更新。**卸载**：关掉访达扩展，把 Clicklet 拖进废纸篓；脚本与模板在 `~/Library/Application Support/Clicklet/`，日志在 App Group 容器里：`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.Clicklet/Logs`，需要时一并删除。
+**更新**：下载新版本覆盖安装即可，当前版本不含自动更新。唯一的例外是从 RightKit 1.0.x 升到 1.1.0——那一版随改名换了 bundle id（`com.dozecat.RightKit` → `com.dozecat.Clicklet`），macOS 会把 Clicklet 当成**另一个应用**：新旧两版并存，偏好设置不会带过来，访达扩展要重新勾选一次，顺手把旧的 RightKit 取消掉。**卸载**：关掉访达扩展，把 Clicklet 拖进废纸篓；脚本与模板在 `~/Library/Application Support/Clicklet/`，日志在 App Group 容器里：`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.Clicklet/Logs`，需要时一并删除。
 
 ## 🧩 脚本扩展
 
