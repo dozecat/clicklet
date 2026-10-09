@@ -8,7 +8,7 @@
 # and Finder starts it again. Symptoms of forgetting this: the menu still shows
 # old titles, or a fixed bug appears to still be broken.
 #
-# Usage:  Scripts/reload-finder-extension.sh
+# Usage:  tools/reload-finder-extension.sh
 #
 set -euo pipefail
 

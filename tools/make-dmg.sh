@@ -2,7 +2,7 @@
 #
 # Build a Clicklet DMG with the window layout this project ships.
 #
-#   Scripts/make-dmg.sh <Clicklet.app> <output.dmg>
+#   tools/make-dmg.sh <Clicklet.app> <output.dmg>
 #
 # Why this is not a one-liner
 # ---------------------------
