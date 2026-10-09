@@ -36,7 +36,7 @@ open Clicklet.xcodeproj
 Finder 会一直留着自己加载的扩展进程，重新构建只替换磁盘上的二进制，运行中的进程仍执行旧代码。症状是菜单标题没变，或者明明修好的 bug 看起来还在。
 
 ```bash
-Scripts/reload-finder-extension.sh
+tools/reload-finder-extension.sh
 ```
 
 这个脚本会退出 Clicklet、结束扩展进程并重启 Finder，让新二进制重新加载。

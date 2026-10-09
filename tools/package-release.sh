@@ -2,7 +2,7 @@
 #
 # Build, sign and package a Clicklet release.
 #
-#   Scripts/package-release.sh [--development] [--skip-notarize] [--version 1.0.0]
+#   tools/package-release.sh [--development] [--skip-notarize] [--version 1.0.0]
 #
 # Two signing modes:
 #
@@ -22,7 +22,7 @@
 # Environment:
 #   TEAM_ID          developer team id             (default: the project's)
 #   NOTARY_PROFILE   notarytool keychain profile  (default: clicklet-notary)
-#   EXPORT_OPTIONS   path to ExportOptions.plist  (default: Scripts/ExportOptions.plist)
+#   EXPORT_OPTIONS   path to ExportOptions.plist  (default: tools/ExportOptions.plist)
 #
 # One-time setup for the notarized mode:
 #   xcrun notarytool store-credentials clicklet-notary \
@@ -36,7 +36,7 @@ cd "$REPO_ROOT"
 
 TEAM_ID="${TEAM_ID:-6T9RSL7KL6}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-clicklet-notary}"
-EXPORT_OPTIONS="${EXPORT_OPTIONS:-Scripts/ExportOptions.plist}"
+EXPORT_OPTIONS="${EXPORT_OPTIONS:-tools/ExportOptions.plist}"
 
 FORCE_DEVELOPMENT=0
 SKIP_NOTARIZE=0
@@ -183,7 +183,7 @@ echo "==> building $DMG"
 # make-dmg.sh stages the app, mounts a writable image, lets Finder lay the window
 # out and converts the result. A plain `hdiutil create -srcfolder` cannot do that:
 # the layout only reaches the image's .DS_Store while it is mounted.
-"$REPO_ROOT/Scripts/make-dmg.sh" "$APP" "$DMG"
+"$REPO_ROOT/tools/make-dmg.sh" "$APP" "$DMG"
 
 # ------------------------------------------------- notarize and staple
 if [ "$SIGNING" = "development" ]; then

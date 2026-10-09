@@ -28,7 +28,7 @@ jobs:
 
       # Signing is disabled: the runner has no Developer ID certificate, and
       # the linker still ad-hoc signs arm64 binaries, which is enough to load
-      # the test bundle. Release signing is Scripts/package-release.sh's job.
+      # the test bundle. Release signing is tools/package-release.sh's job.
       - name: Build and run the unit tests
         run: |
           xcodebuild test \

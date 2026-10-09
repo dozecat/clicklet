@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Export options for `xcodebuild -exportArchive` when shipping a notarized
-  build outside the App Store. Used by Scripts/package-release.sh.
+  build outside the App Store. Used by tools/package-release.sh.
 -->
 <plist version="1.0">
 <dict>

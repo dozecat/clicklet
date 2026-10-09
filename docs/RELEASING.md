@@ -12,7 +12,7 @@ Clicklet 目前走**路径 B**：用本机的 Apple Development 证书签名、*
 | 公证 | 无 | 有（`notarytool` + `stapler`） |
 | 产物来源 | 直接从 `.xcarchive` 取 app | `xcodebuild -exportArchive` |
 | 用户首次打开 | 需手动放行一次 | 双击即可 |
-| 命令 | `Scripts/package-release.sh --development` | `Scripts/package-release.sh` |
+| 命令 | `tools/package-release.sh --development` | `tools/package-release.sh` |
 
 `package-release.sh` 会自动判断：钥匙串里有 Developer ID Application 就走路径 A，否则（或显式传 `--development`）走路径 B。
 
@@ -25,7 +25,7 @@ Clicklet 目前走**路径 B**：用本机的 Apple Development 证书签名、*
 3. 打包：
 
 ```bash
-Scripts/package-release.sh --development
+tools/package-release.sh --development
 ```
 
 产物在 `.build/Clicklet-<版本>.dmg`（`.build/` 已忽略，不入库）。
@@ -48,7 +48,7 @@ git tag -a v1.0.0 -m "Clicklet 1.0.0" && git push origin v1.0.0
 
 ### 什么时候升级到路径 A
 
-加入付费 Apple Developer Program、装好 Developer ID Application 证书后，直接运行 `Scripts/package-release.sh`（不带 `--development`）即可，其余流程不变。
+加入付费 Apple Developer Program、装好 Developer ID Application 证书后，直接运行 `tools/package-release.sh`（不带 `--development`）即可，其余流程不变。
 
 ## 路径 A：公证发布
 
@@ -80,7 +80,7 @@ ls Clicklet.app/Contents/embedded.provisionprofile
 ### 每次发布
 
 1. 改版本号并更新 `CHANGELOG.md`，提交；确认 `git status --short` 干净。
-2. `Scripts/package-release.sh`（自动识别为路径 A）。
+2. `tools/package-release.sh`（自动识别为路径 A）。
 3. 打 tag、建 Release、上传 `.dmg` 与 `.sha256`。
 
 ## 脚本做了什么
