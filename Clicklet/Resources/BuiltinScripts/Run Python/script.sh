@@ -2,7 +2,7 @@
 #
 # Runs the selected .py files with Python.
 #
-# RightKit runs scripts through an XPC service, so the environment inherited is
+# Clicklet runs scripts through an XPC service, so the environment inherited is
 # launchd's minimal one: /opt/homebrew/bin and /usr/local/bin are missing from it,
 # hence the explicit setting below. The python3 that runs and its output both go to
 # the log, and the main app puts the last line into a notification.

@@ -56,7 +56,7 @@ struct FinderCommand: Equatable {
 }
 
 enum FinderActionURL {
-    static let scheme = "rightkit"
+    static let scheme = "clicklet"
 
     static func make(for requestID: UUID) -> URL? {
         URL(string: "\(scheme)://action/\(requestID.uuidString)")

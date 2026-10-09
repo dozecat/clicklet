@@ -32,7 +32,7 @@ enum KekaPermission {
         // A unique name per run: the pane can trigger this from more than one place,
         // and two runs sharing a folder would delete each other's files.
         let directory = fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent(".rightkit-keka-probe-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent(".clicklet-keka-probe-\(UUID().uuidString)", isDirectory: true)
 
         try? fileManager.removeItem(at: directory)
         guard (try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)) != nil else {

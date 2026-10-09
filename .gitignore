@@ -23,10 +23,10 @@ xcuserdata/
 
 # 内置脚本的图标由 App 在用户本机生成，不入库
 # （图标属于各应用自己的商标资源，随仓库分发等于再分发他人资产）
-RightKit/Resources/BuiltinScripts/**/icon.png
+Clicklet/Resources/BuiltinScripts/**/icon.png
 # 例外：Python 语言 logo 随包分发——它是「语言」的标志，用来表明这个脚本跑的是 Python，
 # 属于正当的指示性使用；而应用图标（VS Code / Keka）仍在本机生成，不入库。
-!RightKit/Resources/BuiltinScripts/Run Python/icon.png
+!Clicklet/Resources/BuiltinScripts/Run Python/icon.png
 
 # 本地签名与脚本
 *.p12

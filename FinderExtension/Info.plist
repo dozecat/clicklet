@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>RightKit Finder Extension</string>
+	<string>Clicklet Finder Extension</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -20,8 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>RightKitAppGroupIdentifier</key>
-	<string>$(TeamIdentifierPrefix)group.com.dozecat.RightKit</string>
+	<key>ClickletAppGroupIdentifier</key>
+	<string>$(TeamIdentifierPrefix)group.com.dozecat.Clicklet</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>

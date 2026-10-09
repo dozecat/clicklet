@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct RightKitApp: App {
+struct ClickletApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
@@ -36,7 +36,7 @@ struct RightKitApp: App {
                 Button {
                     showAboutPanel()
                 } label: {
-                    L.t("关于 RightKit")
+                    L.t("关于 Clicklet")
                 }
             }
 
@@ -74,9 +74,9 @@ struct RightKitApp: App {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(
             options: [
-                .applicationName: "RightKit",
+                .applicationName: "Clicklet",
                 .credits: NSAttributedString(
-                    string: "GNU General Public License v3.0\nhttps://github.com/dozecat/rightkit"
+                    string: "GNU General Public License v3.0\nhttps://github.com/dozecat/clicklet"
                 )
             ]
         )

@@ -437,7 +437,7 @@ final class SettingsStore: ObservableObject {
     }
 
     private func report(_ error: Error) {
-        NSLog("RightKit settings error: %@", error.localizedDescription)
+        NSLog("Clicklet settings error: %@", error.localizedDescription)
         statusMessage = error.localizedDescription
     }
 

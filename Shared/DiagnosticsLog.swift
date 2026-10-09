@@ -9,7 +9,7 @@ import Foundation
 /// actionable instead of guesswork.
 enum DiagnosticsLog {
     static let directoryName = "Logs"
-    static let fileName = "rightkit.log"
+    static let fileName = "clicklet.log"
 
     /// Small enough to stay cheap to rewrite, large enough to cover a session.
     private static let maximumBytes = 128 * 1024

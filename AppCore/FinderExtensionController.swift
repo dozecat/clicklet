@@ -7,7 +7,7 @@ enum FinderExtensionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .pluginkitUnavailable:
-            return "RightKit could not run pluginkit to change the Finder extension."
+            return "Clicklet could not run pluginkit to change the Finder extension."
         case let .commandFailed(message):
             return "pluginkit failed: \(message)"
         }
@@ -17,11 +17,11 @@ enum FinderExtensionError: LocalizedError {
 /// Reads and changes whether the Finder Sync extension is enabled.
 ///
 /// A Finder Sync extension is hosted by Finder, not by the containing app, so
-/// quitting RightKit leaves the right-click menu running. macOS keeps the on/off
+/// quitting Clicklet leaves the right-click menu running. macOS keeps the on/off
 /// state in the PlugInKit election database, and `pluginkit(1)` is the supported
 /// way for an app to read and change it.
 enum FinderExtensionController {
-    static let bundleIdentifier = "com.dozecat.RightKit.FinderExtension"
+    static let bundleIdentifier = "com.dozecat.Clicklet.FinderExtension"
 
     enum State: Equatable {
         case enabled
@@ -134,7 +134,7 @@ enum FinderExtensionController {
             try process.run()
         } catch {
             DiagnosticsLog.log("could not run pluginkit: \(error.localizedDescription)")
-            NSLog("RightKit could not run pluginkit: %@", error.localizedDescription)
+            NSLog("Clicklet could not run pluginkit: %@", error.localizedDescription)
             return nil
         }
 

@@ -6,7 +6,7 @@
 		<false/>
 		<key>com.apple.security.application-groups</key>
 		<array>
-			<string>$(TeamIdentifierPrefix)group.com.dozecat.RightKit</string>
+			<string>$(TeamIdentifierPrefix)group.com.dozecat.Clicklet</string>
 		</array>
 	</dict>
 </plist>

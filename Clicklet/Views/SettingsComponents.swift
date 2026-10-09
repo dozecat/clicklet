@@ -252,7 +252,7 @@ let settingsWindowWidth: CGFloat = 720
 /// Marks the windows that are not the settings scene — the guide and the self-check —
 /// so that the settings window's title bar configuration leaves them alone.
 extension NSUserInterfaceItemIdentifier {
-    static let rightKitAuxiliaryWindow = NSUserInterfaceItemIdentifier("rightkit.auxiliary")
+    static let clickletAuxiliaryWindow = NSUserInterfaceItemIdentifier("clicklet.auxiliary")
 }
 
 let settingsLabelWidth: CGFloat = 140

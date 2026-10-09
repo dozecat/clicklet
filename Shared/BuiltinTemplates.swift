@@ -1,6 +1,6 @@
 import Foundation
 
-/// Starter documents that RightKit always offers in the Finder "New File" menu.
+/// Starter documents that Clicklet always offers in the Finder "New File" menu.
 ///
 /// This lives in `Shared/` on purpose: the Finder extension builds its menu from
 /// the App Group snapshot, but it must still offer "New File" on a fresh install

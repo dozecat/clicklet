@@ -16,7 +16,7 @@ final class FinderSync: FIFinderSync {
         let directoryURLs = DirectoryRegistrationPolicy.urls
         FIFinderSyncController.default().directoryURLs = directoryURLs
         DiagnosticsLog.log("registered directories: \(directoryURLs.map(\.path).sorted())")
-        NSLog("RightKit registered directories: %@", directoryURLs.map(\.path).sorted())
+        NSLog("Clicklet registered directories: %@", directoryURLs.map(\.path).sorted())
         reloadSnapshot()
         DiagnosticsLog.log("initial snapshot: \(snapshotSummary())")
         DistributedNotificationCenter.default().addObserver(
@@ -28,11 +28,11 @@ final class FinderSync: FIFinderSync {
     }
 
     override var toolbarItemName: String {
-        "RightKit"
+        "Clicklet"
     }
 
     override var toolbarItemToolTip: String {
-        "RightKit"
+        "Clicklet"
     }
 
     override var toolbarItemImage: NSImage {
@@ -54,7 +54,7 @@ final class FinderSync: FIFinderSync {
                 + "\(snapshotSummary()) items=\(menu?.items.count ?? 0)"
         )
         DiagnosticsLog.log("menu contents: \(describe(menu))")
-        NSLog("RightKit building menu for kind: %lu", menuKind.rawValue)
+        NSLog("Clicklet building menu for kind: %lu", menuKind.rawValue)
         return menu
     }
 
@@ -226,7 +226,7 @@ final class FinderSync: FIFinderSync {
             try AppGroupStore.saveActionRequest(request)
             DiagnosticsLog.log("saved request \(request.id.uuidString)")
             NSLog(
-                "RightKit saved action %@ request %@",
+                "Clicklet saved action %@ request %@",
                 command.kind.rawValue,
                 request.id.uuidString
             )
@@ -243,11 +243,11 @@ final class FinderSync: FIFinderSync {
             NSWorkspace.shared.open(url, configuration: openConfiguration) { _, error in
                 guard let error else {
                     DiagnosticsLog.log("opened \(url.absoluteString)")
-                    NSLog("RightKit opened action URL %@", url.absoluteString)
+                    NSLog("Clicklet opened action URL %@", url.absoluteString)
                     return
                 }
 
-                // LaunchServices may not have the rightkit:// scheme registered
+                // LaunchServices may not have the clicklet:// scheme registered
                 // yet, for instance right after the app was moved. The request is
                 // already in the App Group and the app drains that queue on
                 // launch.
@@ -255,7 +255,7 @@ final class FinderSync: FIFinderSync {
                     "open failed for \(url.absoluteString) (\(error.localizedDescription)); "
                         + "launching app directly"
                 )
-                NSLog("RightKit could not open %@; launching the app directly", url.absoluteString)
+                NSLog("Clicklet could not open %@; launching the app directly", url.absoluteString)
 
                 let launchConfiguration = NSWorkspace.OpenConfiguration()
                 launchConfiguration.activates = false
@@ -266,7 +266,7 @@ final class FinderSync: FIFinderSync {
                     if let launchError {
                         DiagnosticsLog.log("launch failed: \(launchError.localizedDescription)")
                         NSLog(
-                            "RightKit could not launch the app: %@",
+                            "Clicklet could not launch the app: %@",
                             launchError.localizedDescription
                         )
                     }
@@ -274,12 +274,12 @@ final class FinderSync: FIFinderSync {
             }
         } catch {
             DiagnosticsLog.log("save failed: \(error.localizedDescription)")
-            NSLog("RightKit could not create action request: %@", error.localizedDescription)
+            NSLog("Clicklet could not create action request: %@", error.localizedDescription)
         }
     }
 
     /// The app that embeds this extension:
-    /// `RightKit.app/Contents/PlugIns/FinderExtension.appex`.
+    /// `Clicklet.app/Contents/PlugIns/FinderExtension.appex`.
     private var containingAppURL: URL {
         Bundle.main.bundleURL
             .deletingLastPathComponent()

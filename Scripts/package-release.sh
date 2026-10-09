@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Build, sign and package a RightKit release.
+# Build, sign and package a Clicklet release.
 #
 #   Scripts/package-release.sh [--development] [--skip-notarize] [--version 1.0.0]
 #
@@ -21,11 +21,11 @@
 #
 # Environment:
 #   TEAM_ID          developer team id             (default: the project's)
-#   NOTARY_PROFILE   notarytool keychain profile  (default: rightkit-notary)
+#   NOTARY_PROFILE   notarytool keychain profile  (default: clicklet-notary)
 #   EXPORT_OPTIONS   path to ExportOptions.plist  (default: Scripts/ExportOptions.plist)
 #
 # One-time setup for the notarized mode:
-#   xcrun notarytool store-credentials rightkit-notary \
+#   xcrun notarytool store-credentials clicklet-notary \
 #       --apple-id <your apple id> --team-id <TEAM_ID> \
 #       --password <app-specific password>
 #
@@ -35,7 +35,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 TEAM_ID="${TEAM_ID:-6T9RSL7KL6}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-rightkit-notary}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-clicklet-notary}"
 EXPORT_OPTIONS="${EXPORT_OPTIONS:-Scripts/ExportOptions.plist}"
 
 FORCE_DEVELOPMENT=0
@@ -95,12 +95,12 @@ elif [ "$FORCE_DEVELOPMENT" = "0" ]; then
 fi
 
 BUILD_DIR="$REPO_ROOT/.build"
-ARCHIVE="$BUILD_DIR/RightKit.xcarchive"
+ARCHIVE="$BUILD_DIR/Clicklet.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 STAGING="$BUILD_DIR/dmg"
-DMG="$BUILD_DIR/RightKit-$VERSION.dmg"
+DMG="$BUILD_DIR/Clicklet-$VERSION.dmg"
 
-echo "==> RightKit $VERSION  (team $TEAM_ID, $SIGNING signing)"
+echo "==> Clicklet $VERSION  (team $TEAM_ID, $SIGNING signing)"
 rm -rf "$ARCHIVE" "$EXPORT_DIR" "$STAGING" "$DMG" "$DMG.sha256"
 
 # ------------------------------------------------------------ build archive
@@ -108,7 +108,7 @@ echo "==> xcodegen generate"
 xcodegen generate
 
 echo "==> xcodebuild archive"
-xcodebuild -project RightKit.xcodeproj -scheme RightKit -configuration Release \
+xcodebuild -project Clicklet.xcodeproj -scheme Clicklet -configuration Release \
     -derivedDataPath "$BUILD_DIR/dd" -archivePath "$ARCHIVE" \
     archive -allowProvisioningUpdates
 
@@ -116,12 +116,12 @@ if [ "$SIGNING" = "developer-id" ]; then
     echo "==> xcodebuild -exportArchive"
     xcodebuild -exportArchive -archivePath "$ARCHIVE" \
         -exportOptionsPlist "$EXPORT_OPTIONS" -exportPath "$EXPORT_DIR"
-    APP="$EXPORT_DIR/RightKit.app"
+    APP="$EXPORT_DIR/Clicklet.app"
 else
     # A development-signed archive cannot be exported for distribution, and it
     # does not need to be: Products/Applications already holds the signed app.
     echo "==> taking the app straight out of the archive"
-    APP="$ARCHIVE/Products/Applications/RightKit.app"
+    APP="$ARCHIVE/Products/Applications/Clicklet.app"
 fi
 
 # --------------------------------------------------------- inspect the app
@@ -131,7 +131,7 @@ bundle_version="$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/
 [ "$bundle_version" = "$VERSION" ] || {
     echo "error: bundle reports $bundle_version, expected $VERSION" >&2; exit 1; }
 
-echo -n "    architectures: "; lipo -archs "$APP/Contents/MacOS/RightKit"
+echo -n "    architectures: "; lipo -archs "$APP/Contents/MacOS/Clicklet"
 
 # codesign's output is captured before it is matched. Piping into `grep -q` would
 # end the pipe as soon as grep matched, and with `set -o pipefail` the SIGPIPE
@@ -223,7 +223,7 @@ Done.
 
   1. Tag the commit this was built from:
 
-       git tag -a v$VERSION -m "RightKit $VERSION"
+       git tag -a v$VERSION -m "Clicklet $VERSION"
        git push origin v$VERSION
 
   2. Upload both assets to the GitHub release:

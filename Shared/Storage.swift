@@ -1,10 +1,10 @@
 import Foundation
 
 enum AppGroup {
-    static let fallbackIdentifier = "group.com.dozecat.RightKit"
+    static let fallbackIdentifier = "group.com.dozecat.Clicklet"
 
     static var identifier: String {
-        Bundle.main.object(forInfoDictionaryKey: "RightKitAppGroupIdentifier") as? String
+        Bundle.main.object(forInfoDictionaryKey: "ClickletAppGroupIdentifier") as? String
             ?? fallbackIdentifier
     }
 
@@ -16,7 +16,7 @@ enum AppGroup {
 enum AppPaths {
     static var supportDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/RightKit", isDirectory: true)
+            .appendingPathComponent("Library/Application Support/Clicklet", isDirectory: true)
     }
 
     static var scriptsDirectory: URL {
@@ -32,7 +32,7 @@ enum AppPaths {
 
     static var logsDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Logs/RightKit", isDirectory: true)
+            .appendingPathComponent("Library/Logs/Clicklet", isDirectory: true)
     }
 
     static var scriptLogsDirectory: URL {
@@ -41,7 +41,7 @@ enum AppPaths {
 }
 
 enum AppGroupStore {
-    static let catalogDidChangeNotification = Notification.Name("com.dozecat.RightKit.catalogDidChange")
+    static let catalogDidChangeNotification = Notification.Name("com.dozecat.Clicklet.catalogDidChange")
 
     private static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -228,7 +228,7 @@ enum AppGroupError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerUnavailable:
-            return "RightKit App Group container is unavailable."
+            return "Clicklet App Group container is unavailable."
         }
     }
 }

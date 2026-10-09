@@ -120,7 +120,7 @@ enum ArchiveFormats {
     /// Decides "is this an archive".
     ///
     /// Deliberately does not follow the compressor the user picked: whether a .rar
-    /// is an archive has nothing to do with which tool RightKit uses to handle it.
+    /// is an archive has nothing to do with which tool Clicklet uses to handle it.
     static let extensions: Set<String> = [
         "zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz2", "tbz",
         "xz", "txz", "lz", "lzma", "zst", "lz4", "br", "cab"

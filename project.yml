@@ -1,4 +1,4 @@
-name: RightKit
+name: Clicklet
 
 options:
   bundleIdPrefix: com.dozecat
@@ -14,19 +14,19 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    MARKETING_VERSION: "1.0.2"
-    CURRENT_PROJECT_VERSION: "3"
+    MARKETING_VERSION: "1.1.0"
+    CURRENT_PROJECT_VERSION: "4"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "6T9RSL7KL6"
     ENABLE_HARDENED_RUNTIME: YES
     DEAD_CODE_STRIPPING: YES
 
 targets:
-  RightKit:
+  Clicklet:
     type: application
     platform: macOS
     sources:
-      - path: RightKit
+      - path: Clicklet
         excludes:
           - "Info.plist"
           - "*.entitlements"
@@ -34,22 +34,22 @@ targets:
           - "Resources/BuiltinScripts"
       # Copied verbatim into Contents/Resources/BuiltinTemplates so that
       # NewFileService can resolve starter documents by subdirectory.
-      - path: RightKit/Resources/BuiltinTemplates
+      - path: Clicklet/Resources/BuiltinTemplates
         type: folder
         buildPhase: resources
       # Bundled script packages, copied verbatim so the seeder can hand them to
       # the user's scripts directory with their layout intact.
-      - path: RightKit/Resources/BuiltinScripts
+      - path: Clicklet/Resources/BuiltinScripts
         type: folder
         buildPhase: resources
       - path: Shared
       - path: AppCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit
-        PRODUCT_NAME: RightKit
-        INFOPLIST_FILE: RightKit/Info.plist
-        CODE_SIGN_ENTITLEMENTS: RightKit/RightKit.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.Clicklet
+        PRODUCT_NAME: Clicklet
+        INFOPLIST_FILE: Clicklet/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Clicklet/Clicklet.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Xcode 15+ generates Swift asset symbols (GeneratedAssetSymbols.swift) by
         # default. This project uses none of them — the icon comes from
@@ -85,10 +85,10 @@ targets:
           # to be in that bundle too — otherwise the context menu stays in the source
           # language. Added to the **existing** sources array: a second `sources:` key
           # would make the target drop the source files listed above.
-      - path: RightKit/Resources/Localizable.xcstrings
+      - path: Clicklet/Resources/Localizable.xcstrings
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.FinderExtension
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.Clicklet.FinderExtension
         PRODUCT_NAME: FinderExtension
         INFOPLIST_FILE: FinderExtension/Info.plist
         CODE_SIGN_ENTITLEMENTS: FinderExtension/FinderExtension.entitlements
@@ -107,13 +107,13 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKit.ScriptXPCService
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.Clicklet.ScriptXPCService
         PRODUCT_NAME: ScriptXPCService
         INFOPLIST_FILE: ScriptXPCService/Info.plist
         CODE_SIGN_ENTITLEMENTS: ScriptXPCService/ScriptXPCService.entitlements
         SKIP_INSTALL: YES
 
-  RightKitTests:
+  ClickletTests:
     type: bundle.unit-test
     platform: macOS
     sources:
@@ -122,25 +122,25 @@ targets:
       - path: AppCore
       # Only for its motion constants, which the reorder tests pin down. It has
       # no dependency beyond SwiftUI.
-      - path: RightKit/Views/ReorderMotion.swift
+      - path: Clicklet/Views/ReorderMotion.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.RightKitTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.dozecat.ClickletTests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
-  RightKit:
+  Clicklet:
     build:
       targets:
-        RightKit: all
+        Clicklet: all
         FinderExtension: all
         ScriptXPCService: all
     run:
       config: Debug
-      executable: RightKit
+      executable: Clicklet
     test:
       config: Debug
       targets:
-        - RightKitTests
+        - ClickletTests
     archive:
       config: Release

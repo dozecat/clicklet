@@ -16,7 +16,7 @@ struct StatusItemLabel: View {
         //
         // Normally it is a simplified outline of the app icon (rounded square
         // plus cursor) rather than a generic cursor symbol, which would not
-        // read as RightKit. When the extension is off it becomes a warning
+        // read as Clicklet. When the extension is off it becomes a warning
         // triangle, because at that point the menu is gone.
         if store.finderMenuState == .enabled {
             Image(nsImage: StatusItemImage.normal)
@@ -48,7 +48,7 @@ struct StatusItemMenu: View {
 
         Divider()
 
-        Button { NSApp.terminate(nil) } label: { L.t("退出 RightKit") }
+        Button { NSApp.terminate(nil) } label: { L.t("退出 Clicklet") }
             .keyboardShortcut("q", modifiers: .command)
     }
 }

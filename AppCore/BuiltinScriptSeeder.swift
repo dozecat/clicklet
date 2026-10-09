@@ -274,7 +274,7 @@ enum BuiltinScriptSeeder {
         // folder on would redistribute it. Record the provenance in the file so
         // that is discoverable wherever the PNG ends up. Deleting it is safe: the
         // next launch regenerates it on the receiving machine.
-        let provenance = "Generated locally by RightKit from \(identifier). "
+        let provenance = "Generated locally by Clicklet from \(identifier). "
             + "Do not redistribute; delete this file before sharing the script package."
 
         guard let png = pngData(from: image, provenance: provenance) else {

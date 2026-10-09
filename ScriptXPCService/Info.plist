@@ -18,8 +18,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>RightKitAppGroupIdentifier</key>
-	<string>$(TeamIdentifierPrefix)group.com.dozecat.RightKit</string>
+	<key>ClickletAppGroupIdentifier</key>
+	<string>$(TeamIdentifierPrefix)group.com.dozecat.Clicklet</string>
 	<key>XPCService</key>
 	<dict>
 		<key>ServiceType</key>

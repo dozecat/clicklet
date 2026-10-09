@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Reload the RightKit Finder extension after rebuilding it.
+# Reload the Clicklet Finder extension after rebuilding it.
 #
 # Why this is needed: Finder hosts a Finder Sync extension in its own process and
 # keeps that process alive. Rebuilding the app replaces the binary on disk, but
@@ -12,12 +12,12 @@
 #
 set -euo pipefail
 
-EXTENSION_ID="com.dozecat.RightKit.FinderExtension"
-APP_ID="com.dozecat.RightKit"
+EXTENSION_ID="com.dozecat.Clicklet.FinderExtension"
+APP_ID="com.dozecat.Clicklet"
 
-echo "==> Quitting RightKit (rebuilt by Xcode next time you run it)"
+echo "==> Quitting Clicklet (rebuilt by Xcode next time you run it)"
 osascript -e "tell application id \"$APP_ID\" to quit" >/dev/null 2>&1 ||
-    killall RightKit >/dev/null 2>&1 || true
+    killall Clicklet >/dev/null 2>&1 || true
 
 echo "==> Dropping the running extension process"
 # Finder relaunches it on the next right-click, picking up the new binary.
@@ -35,7 +35,7 @@ killall Finder >/dev/null 2>&1 || true
 echo
 echo "Done. Watch the extension work with:"
 found=0
-for log in "$HOME"/Library/Group\ Containers/*group.com.dozecat.RightKit/Logs/rightkit.log; do
+for log in "$HOME"/Library/Group\ Containers/*group.com.dozecat.Clicklet/Logs/clicklet.log; do
     if [ -f "$log" ]; then
         echo "    tail -f \"$log\""
         found=1

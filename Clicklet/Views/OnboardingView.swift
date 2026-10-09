@@ -87,7 +87,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(spacing: 18) {
             appIcon
-            L.t("欢迎使用 RightKit")
+            L.t("欢迎使用 Clicklet")
                 .font(.system(size: 28, weight: .semibold))
 
             languagePicker
@@ -179,7 +179,7 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             appIcon
             L.t("一切就绪").font(.system(size: 28, weight: .semibold))
-            L.t("右键访达里的文件或空白处，就能看到 RightKit 的菜单。")
+            L.t("右键访达里的文件或空白处，就能看到 Clicklet 的菜单。")
                 .font(.system(size: 13)).foregroundStyle(.secondary)
         }
     }

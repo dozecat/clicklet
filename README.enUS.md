@@ -1,17 +1,17 @@
 <p align="center">
-  <a href="https://github.com/dozecat/rightkit">
-    <img width="140" src="docs/images/app-icon.png" alt="RightKit app icon">
+  <a href="https://github.com/dozecat/clicklet">
+    <img width="140" src="docs/images/app-icon.png" alt="Clicklet app icon">
   </a>
 </p>
 
-<h1 align="center">RightKit</h1>
+<h1 align="center">Clicklet</h1>
 
 <p align="center">
   The actions you reach for most, in Finder's context menu.
 </p>
 
 <p align="center">
-  <a href="https://github.com/dozecat/rightkit/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/dozecat/rightkit?style=flat-square"></a>
+  <a href="https://github.com/dozecat/clicklet/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/dozecat/clicklet?style=flat-square"></a>
   <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-black?style=flat-square&logo=apple">
   <img alt="Swift 5.9" src="https://img.shields.io/badge/Swift-5.9-orange?style=flat-square&logo=swift">
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square"></a>
@@ -23,12 +23,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/dozecat/rightkit/releases">Download</a> ·
+  <a href="https://github.com/dozecat/clicklet/releases">Download</a> ·
   <a href="docs/DESIGN.md">Design doc</a> ·
-  <a href="https://github.com/dozecat/rightkit/issues">Feedback</a>
+  <a href="https://github.com/dozecat/clicklet/issues">Feedback</a>
 </p>
 
-**RightKit is a lightweight Finder enhancement for macOS.** Finder's own context menu is plain, and extending it usually means a third-party tool; RightKit is the lighter kind: just new file, copy path, open Terminal here, and compress/extract, shown only for what you have selected.
+**Clicklet is a lightweight Finder enhancement for macOS.** Finder's own context menu is plain, and extending it usually means a third-party tool; Clicklet is the lighter kind: just new file, copy path, open Terminal here, and compress/extract, shown only for what you have selected.
 
 It bundles no archiver: you choose between the system's own tools and [Keka](https://keka.io), and the menu's compress and extract options follow whatever that choice supports. And when those are not enough, write a shell script and drop it in the scripts folder — it becomes a menu item of its own.
 
@@ -54,9 +54,9 @@ Beyond the list, each item's toggle and order are managed in Settings and reach 
 
 ## 📦 Download & Install
 
-**[Download the latest release](https://github.com/dozecat/rightkit/releases)**, open it, and drag **RightKit** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a four-page guide appears, says what is still missing, and takes you straight to where each item is switched on. You can reopen it any time from the menu bar icon under Help → Setup Guide….
+**[Download the latest release](https://github.com/dozecat/clicklet/releases)**, open it, and drag **Clicklet** into your Applications folder. It needs macOS 13 Ventura or later. On first launch a four-page guide appears, says what is still missing, and takes you straight to where each item is switched on. You can reopen it any time from the menu bar icon under Help → Setup Guide….
 
-> **This build is not notarized by Apple**, so macOS will say it cannot verify the developer. To open it the first time, right-click RightKit and choose **Open**, then **Open** again in the dialog — or allow it under **System Settings → Privacy & Security**. You can also run `xattr -dr com.apple.quarantine /Applications/RightKit.app` in Terminal.
+> **This build is not notarized by Apple**, so macOS will say it cannot verify the developer. To open it the first time, right-click Clicklet and choose **Open**, then **Open** again in the dialog — or allow it under **System Settings → Privacy & Security**. You can also run `xattr -dr com.apple.quarantine /Applications/Clicklet.app` in Terminal.
 
 What to turn on the first time:
 
@@ -69,7 +69,7 @@ What to turn on the first time:
 
 > On older versions of macOS the Finder extension lives under **Privacy & Security → Extensions**. When you are not sure what is missing, open **Check Status…** from the menu bar icon.
 
-**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag RightKit to the Trash — scripts, templates and logs live in `~/Library/Application Support/RightKit/` and the App Group container (`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.RightKit/Logs`) if you want them gone too.
+**Updating**: download a new version and install it over the old one; there is no automatic updater yet. **Uninstalling**: turn off the Finder extension and drag Clicklet to the Trash — scripts, templates and logs live in `~/Library/Application Support/Clicklet/` and the App Group container (`open ~/Library/Group\ Containers/6T9RSL7KL6.group.com.dozecat.Clicklet/Logs`) if you want them gone too.
 
 ## 🧩 Scripts
 
@@ -78,7 +78,7 @@ The **Scripts** submenu in the context menu lists the scripts that match your se
 To add your own, drop a script package into the scripts folder (Settings → Scripts → `+` opens that folder for you) — the folder is the single source of truth, with no import step in the app.
 
 ```
-~/Library/Application Support/RightKit/Scripts/
+~/Library/Application Support/Clicklet/Scripts/
 └── Open in VS Code/
     ├── script.sh      # entry point, needs chmod +x
     ├── config.json    # metadata, optional
@@ -92,7 +92,7 @@ A minimal `script.sh`:
 # The selected paths arrive as arguments; the working directory
 # is the folder you right-clicked in.
 for f in "$@"; do
-    echo "$f" >> "$RIGHTKIT_DIR/selected.txt"
+    echo "$f" >> "$CLICKLET_DIR/selected.txt"
 done
 ```
 
@@ -107,7 +107,7 @@ done
 | `icon` | file name | An icon file inside the package |
 | `order` | number | Position within the submenu |
 
-At run time the selection arrives as `$@`, `RIGHTKIT_DIR` (the folder you right-clicked in) and `RIGHTKIT_FILES` (the selected paths, newline-separated) are in the environment, each script gets a 300-second timeout, and every run is logged to `~/Library/Logs/RightKit/Scripts/<script name>/`.
+At run time the selection arrives as `$@`, `CLICKLET_DIR` (the folder you right-clicked in) and `CLICKLET_FILES` (the selected paths, newline-separated) are in the environment, each script gets a 300-second timeout, and every run is logged to `~/Library/Logs/Clicklet/Scripts/<script name>/`.
 
 > **About PATH**: scripts are launched by the XPC service, which inherits launchd's minimal environment — only `/usr/bin:/bin:/usr/sbin:/sbin`. To use a Homebrew `python3` or `node`, add `export PATH="/opt/homebrew/bin:$PATH"` at the top of the script yourself.
 
@@ -115,10 +115,10 @@ For the remaining fields and how the built-in scripts are seeded, see the [desig
 
 ## Feedback
 
-Questions, bugs, and ideas are all welcome in [Issues](https://github.com/dozecat/rightkit/issues). Including your macOS version, the RightKit version, and what the self-check reports makes it much faster to sort out.
+Questions, bugs, and ideas are all welcome in [Issues](https://github.com/dozecat/clicklet/issues). Including your macOS version, the Clicklet version, and what the self-check reports makes it much faster to sort out.
 
 To build it yourself, or to work out why a rebuilt extension is not refreshing, see the [build guide](docs/BUILDING.md) (Chinese).
 
 ## 📄 License
 
-[GNU General Public License v3.0](LICENSE). RightKit is free software, and any redistributed derivative must stay open under the same licence.
+[GNU General Public License v3.0](LICENSE). Clicklet is free software, and any redistributed derivative must stay open under the same licence.

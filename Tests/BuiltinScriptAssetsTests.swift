@@ -14,7 +14,7 @@ final class BuiltinScriptAssetsTests: XCTestCase {
 
     private var packages: [URL] {
         let directory = root
-            .appendingPathComponent("RightKit/Resources/BuiltinScripts", isDirectory: true)
+            .appendingPathComponent("Clicklet/Resources/BuiltinScripts", isDirectory: true)
         let contents = (try? FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.isDirectoryKey],

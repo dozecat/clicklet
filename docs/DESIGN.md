@@ -2,7 +2,7 @@
 
 **1.1 定位与目标**
 
-RightKit 是一款 macOS 上的 Finder 右键增强工具，通过 Finder Sync 扩展向右键菜单注入常用操作，追求极简、快速与可扩展。
+Clicklet 是一款 macOS 上的 Finder 右键增强工具，通过 Finder Sync 扩展向右键菜单注入常用操作，追求极简、快速与可扩展。
 
 **1.2 设计理念**
 
@@ -13,8 +13,8 @@ RightKit 是一款 macOS 上的 Finder 右键增强工具，通过 Finder Sync �
 
 ##### 二、项目基本信息
 
-- 显示名：RightKit
-- Bundle Identifier：`com.dozecat.RightKit`，扩展为 `com.dozecat.RightKit.FinderExtension`
+- 显示名：Clicklet
+- Bundle Identifier：`com.dozecat.Clicklet`，扩展为 `com.dozecat.Clicklet.FinderExtension`
 - 目标系统：macOS 13 Ventura 及以上
 - 应用形态：代理应用（`LSUIElement`）。没有 Dock 图标，启动时不打开窗口，设置与自检从状态栏图标进入
 - 分发方式：独立分发（非 Mac App Store）。主应用不开沙盒，扩展是沙盒的，需开发者签名与公证
@@ -73,12 +73,12 @@ RightKit 是一款 macOS 上的 Finder 右键增强工具，通过 Finder Sync �
 
 脚本不铺在右键菜单里，而是折叠成一个「脚本」子菜单；它在菜单中的位置与开关由工具箱里的「脚本」条目决定。子菜单内容是当前选区下匹配且已启用的脚本，没有匹配项时不显示。
 
-- 脚本来源是固定目录 `~/Library/Application Support/RightKit/Scripts/`，一个功能一个文件夹包，放进即生效。文件是唯一事实源，设置界面只负责启用/停用与删除。
+- 脚本来源是固定目录 `~/Library/Application Support/Clicklet/Scripts/`，一个功能一个文件夹包，放进即生效。文件是唯一事实源，设置界面只负责启用/停用与删除。
 - 入口脚本固定为 `script.sh`，需有可执行权限，缺少或不可执行的包会被扫描跳过；元数据由包内可选的 `config.json` 声明，字段有 `name`、`icon`、`context`（`selection` / `files` / `folders` / `background` / `all`）、`multiple`、`extensions`、`confirm`、`order` 与 `applicationBundleIdentifier`。后一个字段指定借用哪个应用的真实图标：内置的「用 VS Code 打开」靠它在播种时从本机的 VS Code 生成图标，这份图标不进仓库。
 - 主应用每次激活时重新扫描脚本目录，放进去再切回来就能看到，无需重启。
 - 执行时扩展只提交脚本 ID；主应用校验菜单快照后，把任务交给内嵌的 XPC 服务。脚本在选中的文件/文件夹上运行，工作目录是右键所在目录，参数以 `$@` 传入。
 - 脚本内必须自己补 PATH：XPC 服务继承 launchd 的最小环境（`/usr/bin:/bin:/usr/sbin:/sbin`），Homebrew 的 `python3`、`node` 不在其中。
-- 执行约定：环境里注入 `RIGHTKIT_DIR`（当前目录）与 `RIGHTKIT_FILES`（换行分隔的选中路径）；默认 300 秒超时，超时终止；逐个串行执行；日志写在 `~/Library/Logs/RightKit/Scripts/<脚本名>/`。`confirm: true` 的脚本执行前弹确认。结果通过系统通知反馈，失败通知里带日志的最后一行。
+- 执行约定：环境里注入 `CLICKLET_DIR`（当前目录）与 `CLICKLET_FILES`（换行分隔的选中路径）；默认 300 秒超时，超时终止；逐个串行执行；日志写在 `~/Library/Logs/Clicklet/Scripts/<脚本名>/`。`confirm: true` 的脚本执行前弹确认。结果通过系统通知反馈，失败通知里带日志的最后一行。
 - 内置脚本两个：「用 VS Code 打开」与「运行 Python 脚本」，随 App 分发，启动时播种进脚本目录。四条规则：不覆盖用户改过的包、不复活用户删过的包、补上后续版本新增的包、升级未被改动过的副本。判定依据是 `seeded-scripts.json` 里的内容指纹，指纹只覆盖内置包提供的文件，所以用户往包里加图标、笔记、附加脚本既不会被覆盖，也不会冻结更新。
 
 ##### 四、设置界面
@@ -122,23 +122,23 @@ RightKit 是一款 macOS 上的 Finder 右键增强工具，通过 Finder Sync �
 
 | 组件 | 类型 | 职责 |
 | --- | --- | --- |
-| `RightKit.app` | 主应用 | 设置窗口与自检；接收 Finder 请求，建文件、编排压缩、运行脚本、发送通知 |
+| `Clicklet.app` | 主应用 | 设置窗口与自检；接收 Finder 请求，建文件、编排压缩、运行脚本、发送通知 |
 | `FinderExtension` | Finder Sync 扩展 | 沙盒内构建右键菜单；拷贝路径与文件名；其余操作写成 App Group 请求并唤起主应用 |
 | `Shared/` | 共享源码 | 数据模型、请求协议、App Group 存储访问，供三个进程共用 |
 | `ScriptXPCService` | XPC 服务 | 只接受主应用调用，按脚本 ID 校验后执行用户 `script.sh` |
 
 **5.2 进程与通信**
 
-- 扩展受沙盒与系统内存约束，只处理菜单与剪贴板。其余操作写入 App Group 的请求文件，再用 `rightkit://action/<uuid>` 唤起主应用；打开 URL 失败时（例如应用刚被移动，scheme 还没注册）直接启动主应用，主应用在启动时会把请求目录里剩下的请求全部处理掉。
+- 扩展受沙盒与系统内存约束，只处理菜单与剪贴板。其余操作写入 App Group 的请求文件，再用 `clicklet://action/<uuid>` 唤起主应用；打开 URL 失败时（例如应用刚被移动，scheme 还没注册）直接启动主应用，主应用在启动时会把请求目录里剩下的请求全部处理掉。
 - 主应用内嵌的 XPC Service 只对包含它的主应用可见，因此扩展不得直连 XPC。
 - 扩展与主应用通过 App Group 共享菜单快照与偏好；快照写盘后发一条 distributed notification，扩展收到再重新读取。
 - 结果反馈统一走系统通知（`UserNotifications`），失败通知可附带日志路径。
 
 **5.3 存储**
 
-- App Group 容器（`$(TeamIdentifierPrefix)group.com.dozecat.RightKit`）：`State/` 放菜单快照与偏好，`Requests/` 放 Finder 请求，`Templates/` 放用户模板。
-- 用户脚本：`~/Library/Application Support/RightKit/Scripts/`，与 App Group 容器分开；播种账本 `seeded-scripts.json` 在它的上一级目录。
-- 日志：`~/Library/Logs/RightKit/`，脚本日志在其 `Scripts/` 子目录。
+- App Group 容器（`$(TeamIdentifierPrefix)group.com.dozecat.Clicklet`）：`State/` 放菜单快照与偏好，`Requests/` 放 Finder 请求，`Templates/` 放用户模板。
+- 用户脚本：`~/Library/Application Support/Clicklet/Scripts/`，与 App Group 容器分开；播种账本 `seeded-scripts.json` 在它的上一级目录。
+- 日志：`~/Library/Logs/Clicklet/`，脚本日志在其 `Scripts/` 子目录。
 - 偏好 `AppPreferences` 带 `version`，载入时若低于当前版本就执行一次迁移并写回。v1 → v2 只做一件事：内置起始文档曾因资源缺失而无法创建，用户因此关掉了 Word/Excel/PowerPoint 模板；现在资源随包分发且能正常创建，于是把这些内置模板恢复为启用，保留用户设置的排序，其余偏好不动。
 
 ##### 六、约束与取舍
