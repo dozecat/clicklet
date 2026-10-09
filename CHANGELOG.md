@@ -1,12 +1,24 @@
 # Changelog
 
-All notable changes to RightKit are documented here. The format follows
+All notable changes to Clicklet are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Versions are also the release tags: `MARKETING_VERSION` in `project.yml`, the
 `v*` git tag and the release heading below always agree. See
 [docs/RELEASING.md](docs/RELEASING.md) for how a release is cut.
+
+## [1.1.0] - 2026-10-09
+
+### Changed
+
+- Renamed the project from RightKit to Clicklet. The bundle identifiers for the
+  app, Finder extension and XPC service are now `com.dozecat.Clicklet.*`, the App
+  Group is `group.com.dozecat.Clicklet`, the URL scheme is `clicklet://`, and the
+  user support and log directories moved to
+  `~/Library/Application Support/Clicklet` and `~/Library/Logs/Clicklet`.
+- Scripts now receive `CLICKLET_DIR` and `CLICKLET_FILES` instead of
+  `RIGHTKIT_DIR` and `RIGHTKIT_FILES`.
 
 ## [1.0.2] - 2026-10-04
 
@@ -122,7 +134,7 @@ outside the App Store.
   that reports each permission and offers a one-click fix.
 - Simplified Chinese and English, switched in the settings with no relaunch.
 - Notifications for compress, extract and script results; per-run script logs
-  under `~/Library/Logs/RightKit/Scripts/` with a 300-second timeout.
+  under `~/Library/Logs/Clicklet/Scripts/` with a 300-second timeout.
 
 ### Known limitations
 
@@ -136,6 +148,7 @@ outside the App Store.
   search results and network volumes are not covered.
 - 7z compression requires Keka; the system tools cover ZIP plus the tar family.
 
-[Unreleased]: https://github.com/dozecat/rightkit/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/dozecat/rightkit/releases/tag/v1.0.2
-[1.0.0]: https://github.com/dozecat/rightkit/releases/tag/v1.0.0
+[Unreleased]: https://github.com/dozecat/clicklet/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dozecat/clicklet/releases/tag/v1.1.0
+[1.0.2]: https://github.com/dozecat/clicklet/releases/tag/v1.0.2
+[1.0.0]: https://github.com/dozecat/clicklet/releases/tag/v1.0.0

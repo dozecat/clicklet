@@ -1,10 +1,10 @@
 # 发布流程
 
-面向维护者。目标产物是一个可分发的 `RightKit-<版本>.dmg` 及其 `.sha256`。
+面向维护者。目标产物是一个可分发的 `Clicklet-<版本>.dmg` 及其 `.sha256`。
 
 ## 两种模式
 
-RightKit 目前走**路径 B**：用本机的 Apple Development 证书签名、**不做公证**。原因是当前 Apple ID 是免费的个人团队（Personal Team），申请不到 Developer ID Application 证书，也无法送公证。
+Clicklet 目前走**路径 B**：用本机的 Apple Development 证书签名、**不做公证**。原因是当前 Apple ID 是免费的个人团队（Personal Team），申请不到 Developer ID Application 证书，也无法送公证。
 
 | | 路径 B（当前） | 路径 A（付费会员后） |
 |---|---|---|
@@ -28,12 +28,12 @@ RightKit 目前走**路径 B**：用本机的 Apple Development 证书签名、*
 Scripts/package-release.sh --development
 ```
 
-产物在 `.build/RightKit-<版本>.dmg`（`.build/` 已忽略，不入库）。
+产物在 `.build/Clicklet-<版本>.dmg`（`.build/` 已忽略，不入库）。
 
 4. 打 tag 并推送：
 
 ```bash
-git tag -a v1.0.0 -m "RightKit 1.0.0" && git push origin v1.0.0
+git tag -a v1.0.0 -m "Clicklet 1.0.0" && git push origin v1.0.0
 ```
 
 5. 建 GitHub Release，上传 `.dmg` 与 `.dmg.sha256`，正文用下面的模板。**正文里必须写明首次打开要手动放行**，README 的下载一节也已写入同样内容。
@@ -41,7 +41,7 @@ git tag -a v1.0.0 -m "RightKit 1.0.0" && git push origin v1.0.0
 
 ### 路径 B 必须一起交代/验证的事
 
-- **首次打开被 Gatekeeper 拦下**：这是未公证的必然结果。给用户三条路：右键点按 → 打开；「系统设置 → 隐私与安全性 → 仍要打开」；终端执行 `xattr -dr com.apple.quarantine /Applications/RightKit.app`。README 已写好这段。
+- **首次打开被 Gatekeeper 拦下**：这是未公证的必然结果。给用户三条路：右键点按 → 打开；「系统设置 → 隐私与安全性 → 仍要打开」；终端执行 `xattr -dr com.apple.quarantine /Applications/Clicklet.app`。README 已写好这段。
 - **必须在另一台 Mac 上实测**：开发签名的构建里，App 与扩展都没有 `embedded.provisionprofile`。主应用不开沙盒，写 `~/Library/Group Containers/` 不成问题；但**扩展是沙盒的**，它的 App Group 访问通常依赖描述文件授权。若扩展拿不到共享容器，右键菜单会根本不出现。自检面板里的 App Group 检查项可直接给出结论。首次对外发布前，请找一台干净的 Mac 走一遍完整流程。
 - **证书有效期**：当前 Apple Development 证书 2027-09-25 到期。到期后需要重新签名并重发，否则新下载的用户会更难打开（已安装的仍可用）。
 - **App 图标与权限**：与路径 A 完全一致，无需改动。
@@ -63,18 +63,18 @@ security find-identity -v -p codesigning | grep "Developer ID Application"
 2. **公证凭据**（密码是 App 专用密码，不是账号密码）：
 
 ```bash
-xcrun notarytool store-credentials rightkit-notary \
+xcrun notarytool store-credentials clicklet-notary \
     --apple-id "<你的 Apple ID>" --team-id 6T9RSL7KL6 \
     --password "<App 专用密码>"
 
-xcrun notarytool history --keychain-profile rightkit-notary    # 验证
+xcrun notarytool history --keychain-profile clicklet-notary    # 验证
 ```
 
-3. **开发者后台的 App Group**：扩展是沙盒的，`$(TeamIdentifierPrefix)group.com.dozecat.RightKit` 必须在后台为该 Team 注册，并包含在 Developer ID 配置文件里。归档后确认：
+3. **开发者后台的 App Group**：扩展是沙盒的，`$(TeamIdentifierPrefix)group.com.dozecat.Clicklet` 必须在后台为该 Team 注册，并包含在 Developer ID 配置文件里。归档后确认：
 
 ```bash
-codesign -d --entitlements :- RightKit.app | grep application-groups
-ls RightKit.app/Contents/embedded.provisionprofile
+codesign -d --entitlements :- Clicklet.app | grep application-groups
+ls Clicklet.app/Contents/embedded.provisionprofile
 ```
 
 ### 每次发布
@@ -91,11 +91,11 @@ ls RightKit.app/Contents/embedded.provisionprofile
 
 ```bash
 # 路径 B
-APP=.build/RightKit.xcarchive/Products/Applications/RightKit.app
+APP=.build/Clicklet.xcarchive/Products/Applications/Clicklet.app
 # 路径 A
-# APP=.build/export/RightKit.app
+# APP=.build/export/Clicklet.app
 
-lipo -archs "$APP/Contents/MacOS/RightKit"                     # 期望 x86_64 arm64
+lipo -archs "$APP/Contents/MacOS/Clicklet"                     # 期望 x86_64 arm64
 codesign -d --entitlements :- "$APP" | grep -c get-task-allow  # 期望 0
 codesign --verify --deep --strict "$APP"
 for n in "$APP/Contents/PlugIns/"*.appex "$APP/Contents/XPCServices/"*.xpc; do
@@ -105,10 +105,10 @@ ls "$APP/Contents/Resources/BuiltinTemplates" "$APP/Contents/Resources/BuiltinSc
 
 # 仅路径 A
 spctl -a -vvv -t exec "$APP"                                   # source=Notarized Developer ID
-xcrun stapler validate .build/RightKit-1.0.0.dmg
+xcrun stapler validate .build/Clicklet-1.0.0.dmg
 ```
 
-**App 图标**：`RightKit/Info.plist` 里**不需要**写图标键。`ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` 会让 actool 产出 `AppIcon.icns`，Xcode 再自动往 Info.plist 注入 `CFBundleIconFile` 与 `CFBundleIconName`。
+**App 图标**：`Clicklet/Info.plist` 里**不需要**写图标键。`ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon` 会让 actool 产出 `AppIcon.icns`，Xcode 再自动往 Info.plist 注入 `CFBundleIconFile` 与 `CFBundleIconName`。
 
 ## 归档产物自检（2026-10-03 实测）
 
@@ -119,7 +119,7 @@ xcrun stapler validate .build/RightKit-1.0.0.dmg
 | 架构 | `x86_64 arm64`（通用二进制，工程未设 `ARCHS`） |
 | 加固运行时 | `flags=0x10000(runtime)` ✓ |
 | Team | `TeamIdentifier=6T9RSL7KL6` ✓ |
-| 主应用 entitlements | `app-sandbox = false` + `application-groups = 6T9RSL7KL6.group.com.dozecat.RightKit` |
+| 主应用 entitlements | `app-sandbox = false` + `application-groups = 6T9RSL7KL6.group.com.dozecat.Clicklet` |
 | 扩展 entitlements | `app-sandbox = true` + 同一 App Group + `files.user-selected.read-only` |
 | XPC entitlements | `app-sandbox = false` + 同一 App Group |
 | `get-task-allow` | 不存在 ✓ |
@@ -144,7 +144,7 @@ xcrun stapler validate .build/RightKit-1.0.0.dmg
 ## Release Notes 模板（v1.0.0 草稿）
 
 ```markdown
-### RightKit 1.0.0
+### Clicklet 1.0.0
 
 第一个公开版本：把新建文件、拷贝路径、压缩解压这些常用操作放进 Finder 的右键菜单，
 只显示当前选中内容用得上的那些。
@@ -160,15 +160,15 @@ xcrun stapler validate .build/RightKit-1.0.0.dmg
 **系统要求**：macOS 13 Ventura 或更高版本
 
 **首次打开**：安装包未经 Apple 公证，macOS 会提示「无法验证开发者」。请右键点按
-RightKit → 打开，在弹窗里再点一次「打开」；或在「系统设置 → 隐私与安全性」里点
+Clicklet → 打开，在弹窗里再点一次「打开」；或在「系统设置 → 隐私与安全性」里点
 「仍要打开」。
 
-下载后把 RightKit 拖进「应用程序」，首次启动会弹出自检面板，逐项告诉你还需要开启
+下载后把 Clicklet 拖进「应用程序」，首次启动会弹出自检面板，逐项告诉你还需要开启
 哪些权限（访达扩展、辅助功能；用 7z 还需要 Keka 的主文件夹访问权限）。
 
 ---
 
-### RightKit 1.0.0
+### Clicklet 1.0.0
 
 First public release: new file, copy path, compress and extract — the everyday actions,
 in Finder's context menu, and only the ones that fit what you selected.
@@ -186,10 +186,10 @@ in Finder's context menu, and only the ones that fit what you selected.
 **Requires** macOS 13 Ventura or later.
 
 **First launch**: this build is not notarized, so macOS will say it cannot verify the
-developer. Right-click RightKit, choose Open, then Open again in the dialog — or allow
+developer. Right-click Clicklet, choose Open, then Open again in the dialog — or allow
 it under System Settings → Privacy & Security.
 
-Drag RightKit into your Applications folder; the self-check panel on first launch walks
+Drag Clicklet into your Applications folder; the self-check panel on first launch walks
 through the permissions it still needs (Finder extension, Accessibility, and Keka's home
 folder access for 7z).
 ```
