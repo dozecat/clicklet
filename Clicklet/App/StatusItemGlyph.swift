@@ -53,8 +53,8 @@ enum StatusItemImage {
     /// gives it is up to the menu bar; this is the size we submit.
     private static let size: CGFloat = 18
 
-    /// The supplied shape, converted to the black-plus-alpha template a menu
-    /// bar extra needs.
+    /// The supplied shape, kept in colour rather than as a template, so the
+    /// menu bar shows the artwork itself.
     static let normal: NSImage = make()
 
     private static func make() -> NSImage {
@@ -82,9 +82,13 @@ enum StatusItemImage {
         // The 512px source is submitted at the logical size; the bitmap itself
         // is left for the system to use on Retina displays.
         image.size = NSSize(width: size, height: size)
-        // Template, so the system owns the colour: light and dark menu bars,
-        // and the inversion while selected.
-        image.isTemplate = true
+        // Deliberately not a template: the artwork keeps its own colours, so the
+        // system no longer picks black or white for the menu bar and no longer
+        // inverts it while the menu is open. Light bars, dark bars and the open
+        // state were all checked against renders before that trade was taken.
+        // The hand-drawn fallback above stays a template on purpose: it is a
+        // black shape that only reads once the system inverts it.
+        image.isTemplate = false
         return image
     }
 }
